@@ -9,8 +9,10 @@ import FaviconSettings from './FaviconSettings';
 import ImportPresetDialog from './ImportPresetDialog';
 import ImportExport from './ImportExport';
 import ConfirmDialog from '../common/ConfirmDialog';
+import AboutDialog from '../common/AboutDialog';
 import Toast from '../common/Toast';
 import { useSettingsStore } from '../../store/useSettingsStore';
+import { useIconsStore } from '../../store/useIconsStore';
 import { getServices } from '../../services/serviceContainer';
 import DataRepository from '../../services/DataRepository';
 import { initializeAllStores, clearAllPendingDeletes } from '../../services/storeInitializer';
@@ -35,6 +37,8 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
   const [showCleanupConfirm, setShowCleanupConfirm] = useState(false);
   const [isCleaningUp, setIsCleaningUp] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
+  const [showAboutDialog, setShowAboutDialog] = useState(false);
+  const [showClearSitesConfirm, setShowClearSitesConfirm] = useState(false);
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info' | 'warning'; message: string; onContinue?: () => void; continueText?: string } | null>(null);
   
   const authService = getServices().authService;
@@ -106,6 +110,16 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
 
   const handleCloseImportDialog = () => {
     setShowImportDialog(false);
+  };
+
+  const handleClearAllSites = () => {
+    setShowClearSitesConfirm(true);
+  };
+
+  const handleConfirmClearAllSites = () => {
+    setShowClearSitesConfirm(false);
+    useIconsStore.getState().clearAllSites();
+    setToast({ type: 'success', message: '已清空所有站点' });
   };
 
   const handleConfirmCleanupIcons = async (cursor?: string, prefix?: string) => {
@@ -246,17 +260,28 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
           >
             导入预设站点
           </button>
+          <button
+            onClick={handleClearAllSites}
+            className="logout-button"
+          >
+            清空所有站点
+          </button>
           <ImportExport />
         </div>
 
         <div className="settings-section">
           <h3>账户</h3>
-          <button 
+          <button
             onClick={() => setShowLogoutConfirm(true)}
             className="logout-button"
           >
             注销登录
           </button>
+        </div>
+
+        <div className="settings-section">
+          <h3>关于</h3>
+          <button onClick={() => setShowAboutDialog(true)}>关于 HarborPage</button>
         </div>
       </SettingsWindow>
 
@@ -290,11 +315,26 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
         onCancel={handleCancelCleanupIcons}
       />
 
+      {/* 清空所有站点确认对话框 */}
+      <ConfirmDialog
+        isOpen={showClearSitesConfirm}
+        title="确认清空所有站点"
+        message="确定要清空所有站点吗？这将删除所有网站快捷方式和文件夹，此操作不可恢复。"
+        onConfirm={handleConfirmClearAllSites}
+        onCancel={() => setShowClearSitesConfirm(false)}
+      />
+
       {/* 导入预设站点对话框 */}
       <ImportPresetDialog
         key={showImportDialog ? 'open' : 'closed'}
         isOpen={showImportDialog}
         onClose={handleCloseImportDialog}
+      />
+
+      {/* 关于对话框 */}
+      <AboutDialog
+        isOpen={showAboutDialog}
+        onClose={() => setShowAboutDialog(false)}
       />
 
       {/* Toast提示 */}

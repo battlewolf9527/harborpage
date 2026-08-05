@@ -1,16 +1,24 @@
 # HarborPage - 个人导航页面
 
-一个基于 React + Vite + Cloudflare Workers 构建的现代化个人导航页面，支持网站图标管理、文件夹分类、搜索引擎切换、天气显示、待办事项、笔记等功能。
+一个基于 React + Vite + Cloudflare Workers 构建的现代化个人导航页面，支持网站图标管理、文件夹分类、搜索引擎切换、天气显示、待办事项、笔记、数据导入导出等功能。
+
+## 界面预览
+
+<div align="center">
+  <img src="screenshots/DEMO.png" width="300" style="margin: 5px;">
+</div>
 
 ## ✨ 功能特性
 
 ### 🌐 网站图标管理
 - 添加、修改、删除网站快捷方式
-- 自动获取网站图标（Favicon），使用 Google favicon 服务
-- 支持自定义图标地址和图标上传
-- 图标缓存到 Cloudflare R2（可选）
+- 多来源图标获取：HTML 解析、常见路径探测、多 Favicon 源 fallback
+- 支持三种图标输入方式：图标 URL、文字（生成带颜色文字图标）、Emoji
+- 图标智能获取对话框：自动从多种渠道收集候选图标供用户选择
+- 图标缓存到 Cloudflare R2（可选），前端信号量并发控制（3 并发）
 - 拖拽排序和移动图标
 - 右键菜单快速操作
+- 长按进入编辑模式
 
 ### 📁 文件夹功能
 - 拖拽图标到另一个图标上创建文件夹
@@ -21,8 +29,9 @@
 
 ### 🔍 搜索功能
 - 多搜索引擎支持（Google、百度、必应等）
-- 自定义添加搜索引擎
+- 自定义添加、编辑、删除搜索引擎
 - 搜索引擎图标自动获取
+- 拖拽排序搜索引擎
 - 快速切换搜索引擎
 - 默认搜索引擎同步到云端存储
 
@@ -32,6 +41,7 @@
 - 和风天气API支持
 - 显示当前温度和天气状态
 - 显示时间和日期（点击日期切换农历）
+- 时钟使用 ref 直接 DOM 操作，避免每秒触发 React 重渲染
 
 ### ✅ 待办事项
 - 添加、编辑、删除待办事项
@@ -47,10 +57,20 @@
 ### 🎨 壁纸管理
 - Bing每日壁纸
 - 随机Bing壁纸
-- 本地图片上传
+- 本地图片上传（R2 或 IndexedDB 降级存储）
 - 纯色背景
 - 模糊度和遮罩浓度调节
-- 壁纸代理支持（白名单域名限制）
+- 壁纸代理支持（域名白名单限制）
+- 自动定时更换壁纸
+
+### 📤 数据导入导出
+- 分类导出：搜索引擎、网站、待办列表、笔记、其它设置
+- 分类导入：勾选需要导入的数据类别
+- 导入时自动检测文件中不存在的数据并禁用选择
+- 导入进度条显示当前进度及任务内容
+- 导入时遮罩层禁止用户操作
+- 导入时 ID 冲突自动处理（合并模式生成新 ID）
+- 导入后图标自动预缓存
 
 ### 🔐 安全认证
 - JWT 登录认证
@@ -58,14 +78,25 @@
 - 7天 Token 有效期
 - 自动登出处理
 - 敏感信息存储在 Cloudflare Secrets
+- 构建产物自动清理 .dev.vars 机密文件
 
 ### ⚙️ 设置面板
 - 图标行列数设置
 - 壁纸设置
-- 搜索引擎管理
+- 搜索引擎管理（弹出式对话框 + 拖拽排序）
+- 图标源管理（自定义 Favicon 源配置）
 - 待办事项管理
 - 笔记管理
 - 预设站点导入
+- 数据导入导出
+- 自动保存设置
+
+### 💾 自动保存
+- 未保存变更检测与提示
+- 倒计时自动保存（可配置时长）
+- 保存进度指示
+- 手动保存与自动保存并存
+- 页面刷新前未保存提示
 
 ## 🛠️ 技术栈
 
@@ -172,6 +203,14 @@ npm run deploy
 6. **移动图标**：拖拽网站图标到文件夹图标上移入文件夹
 7. **移出文件夹**：在文件夹中拖拽图标到文件夹窗口外
 
+### 图标设置
+- **留空**：自动获取网站 favicon
+- **图标 URL**：直接填写图片链接
+- **文字**：输入任意文字（如 "Ba"），生成带颜色的文字图标
+- **Emoji**：输入 emoji 字符（如 🚀）
+- **上传**：手动上传图标到 R2
+- **智能获取**：自动从 HTML、常见路径、图标源获取候选图标
+
 ### 搜索功能
 1. 在搜索框中输入关键词
 2. 点击搜索引擎图标切换搜索引擎
@@ -183,87 +222,139 @@ npm run deploy
 3. 选择壁纸来源（Bing每日壁纸/随机Bing壁纸/本地图片/纯色背景）
 4. 调整模糊度和遮罩浓度
 
-### 导入预设站点
+### 数据导入导出
 1. 打开设置面板
-2. 选择"导入预设站点"
-3. 选择要导入的站点
-4. 点击"导入"按钮
+2. 选择"导入导出"
+3. 导出：勾选需要导出的数据类别，点击导出
+4. 导入：选择导入文件后，勾选需要导入的数据类别，确认导入
+5. 导入过程中会显示进度条，禁止其他操作
 
 ## 📁 项目结构
 
 ```
 harborpage/
-├── src/                          # 前端源代码
-│   ├── components/               # React组件
-│   │   ├── common/               # 通用组件
-│   │   │   ├── ConfirmDialog.tsx
-│   │   │   ├── EditWebsite.tsx
-│   │   │   ├── FolderItem.tsx
-│   │   │   ├── IconItem.tsx
-│   │   │   ├── LoginModal.tsx
-│   │   │   ├── Notes.tsx
-│   │   │   ├── TodoList.tsx
-│   │   │   └── WebsiteItem.tsx
-│   │   ├── features/             # 功能组件
-│   │   │   ├── FolderWindow.tsx
-│   │   │   ├── Search.tsx
-│   │   │   ├── SearchManager.tsx
-│   │   │   ├── TodoSidebar.tsx
-│   │   │   ├── WallpaperManager.tsx
-│   │   │   └── Weather.tsx
-│   │   ├── layout/               # 布局组件
-│   │   │   ├── Background.tsx
-│   │   │   └── IconsContainer.tsx
-│   │   └── ui/                   # UI组件
-│   │       ├── IconSettings.tsx
-│   │       ├── ImportFileDialog.tsx
-│   │       ├── ImportPresetDialog.tsx
-│   │       ├── Settings.tsx
-│   │       └── SettingsWindow.tsx
-│   ├── data/                     # 数据文件
-│   │   └── presetSites.json      # 预设站点数据
-│   ├── hooks/                    # 自定义Hooks
-│   │   ├── useClickOutside.ts
-│   │   ├── useDragAndDrop.ts
-│   │   └── useImport.ts
-│   ├── services/                 # 服务层
-│   │   ├── AuthService.ts        # 认证服务
-│   │   ├── ConfigService.ts      # 配置服务
-│   │   ├── DataManager.ts        # 数据管理
-│   │   ├── IconDownloadQueue.ts  # 图标下载队列
-│   │   ├── IconManager.ts        # 图标管理器
-│   │   └── ServicesContext.tsx   # 服务上下文
-│   ├── store/                    # 状态管理
-│   │   ├── useIconsStore.ts      # 图标状态
-│   │   └── useSettingsStore.ts   # 设置状态
-│   ├── types/                    # 类型定义
+├── src/                              # 前端源代码
+│   ├── components/                   # React组件
+│   │   ├── common/                   # 通用组件
+│   │   │   ├── AutoFetchDialog.tsx   # 智能获取图标对话框
+│   │   │   ├── ConfirmDialog.tsx     # 确认对话框
+│   │   │   ├── DraggableIconWrapper.tsx
+│   │   │   ├── EditWebsite.tsx       # 网站编辑表单
+│   │   │   ├── ErrorBoundary.tsx     # 错误边界
+│   │   │   ├── FolderItem.tsx        # 文件夹项
+│   │   │   ├── FolderNameDialog.tsx  # 文件夹命名对话框
+│   │   │   ├── IconGrid.tsx          # 图标网格
+│   │   │   ├── IconItem.tsx          # 图标项
+│   │   │   ├── ImportProgressOverlay.tsx # 导入进度遮罩
+│   │   │   ├── LoginModal.tsx        # 登录弹窗
+│   │   │   ├── Notes.tsx             # 笔记组件
+│   │   │   ├── SavePrompt.tsx        # 保存提示组件
+│   │   │   ├── SaveProgressIndicator.tsx
+│   │   │   ├── SaveTooltip.tsx
+│   │   │   ├── Toast.tsx             # 轻提示组件
+│   │   │   ├── TodoList.tsx          # 待办列表
+│   │   │   ├── TreeSelector.tsx      # 树形选择器
+│   │   │   └── WebsiteItem.tsx       # 网站项
+│   │   ├── features/                 # 功能组件
+│   │   │   ├── FolderWindow.tsx      # 文件夹窗口
+│   │   │   ├── Search.tsx            # 搜索栏
+│   │   │   ├── SearchManager.tsx     # 搜索引擎管理
+│   │   │   ├── TodoSidebar.tsx       # 待办侧边栏
+│   │   │   ├── WallpaperManager.tsx  # 壁纸管理
+│   │   │   └── Weather.tsx           # 天气显示
+│   │   ├── layout/                   # 布局组件
+│   │   │   ├── Background.tsx        # 背景层
+│   │   │   └── IconsContainer.tsx    # 图标容器
+│   │   └── ui/                       # UI组件
+│   │       ├── FaviconSettings.tsx   # 图标源设置
+│   │       ├── ImportExport.tsx      # 导入导出
+│   │       ├── ImportPresetDialog.tsx # 预设站点导入
+│   │       ├── Settings.tsx          # 设置面板
+│   │       └── SettingsWindow.tsx    # 设置窗口
+│   ├── data/                         # 数据文件
+│   │   └── presetSites.json          # 预设站点数据
+│   ├── hooks/                        # 自定义Hooks
+│   │   ├── useAddWebsiteShortcut.ts  # 添加网站快捷键
+│   │   ├── useAuth.ts                # 认证
+│   │   ├── useAutoSave.ts            # 自动保存
+│   │   ├── useAutoSaveSettings.ts    # 自动保存设置
+│   │   ├── useClickOutside.ts        # 点击外部检测
+│   │   ├── useDataInitialization.ts  # 数据初始化
+│   │   ├── useDeleteIcon.ts          # 删除图标
+│   │   ├── useDragAndDrop.ts         # 拖拽
+│   │   ├── useIconDropHandler.ts     # 图标拖放处理
+│   │   ├── useImport.ts              # 导入
+│   │   ├── useLongPress.ts           # 长按
+│   │   ├── useTreeSelection.ts       # 树形选择
+│   │   ├── useWallpaperInit.ts       # 壁纸初始化
+│   │   ├── useWeather.ts             # 天气
+│   │   ├── useWeatherLocation.ts     # 天气定位
+│   │   └── useWeatherLunar.ts        # 农历
+│   ├── services/                     # 服务层
+│   │   ├── AuthService.ts            # 认证服务
+│   │   ├── autoFetchService.ts       # 智能获取图标服务
+│   │   ├── ChangeTracker.ts          # 变更追踪
+│   │   ├── ConfigService.ts          # 配置服务
+│   │   ├── DataManager.ts            # 数据管理
+│   │   ├── DataRepository.ts         # 数据仓库（统一持久化层）
+│   │   ├── FaviconConfigService.ts   # Favicon源配置服务
+│   │   ├── IconDownloadQueue.ts      # 图标下载队列（信号量并发）
+│   │   ├── IconManager.ts            # 图标管理器
+│   │   ├── iconUtils.ts              # 图标工具
+│   │   ├── serviceContainer.ts       # 服务容器
+│   │   ├── Services.ts               # 服务接口
+│   │   └── storeInitializer.ts       # Store初始化
+│   ├── store/                        # 状态管理（Zustand）
+│   │   ├── index.ts
+│   │   ├── persistence.ts            # 持久化
+│   │   ├── selectors.ts              # 选择器
+│   │   ├── useIconsStore.ts          # 图标状态
+│   │   ├── useIconsUIStore.ts        # 图标UI状态
+│   │   ├── useImportStore.ts         # 导入状态
+│   │   ├── useNotesStore.ts          # 笔记状态
+│   │   ├── useSearchStore.ts         # 搜索状态
+│   │   ├── useSettingsStore.ts       # 设置状态
+│   │   ├── useTodoStore.ts           # 待办状态
+│   │   └── useWallpaperStore.ts      # 壁纸状态
+│   ├── types/                        # 类型定义
 │   │   └── index.ts
-│   ├── utils/                    # 工具函数
-│   │   ├── deviceUtils.ts
-│   │   └── importExportUtils.ts
-│   ├── App.tsx                   # 主应用组件
-│   ├── main.tsx                  # 应用入口
-│   └── index.css                 # 全局样式
-├── worker/                       # Cloudflare Workers代码
-│   ├── middleware/               # 中间件
-│   │   └── auth.ts               # 认证中间件
-│   ├── routes/                   # API路由
-│   │   ├── auth.ts               # 认证接口
-│   │   ├── bing.ts               # Bing壁纸接口
-│   │   ├── data.ts               # 数据接口
-│   │   ├── icon.ts               # 图标接口
-│   │   ├── wallpaper.ts          # 壁纸代理接口
-│   │   └── weather.ts            # 天气接口
-│   ├── utils/                    # Worker工具函数
-│   │   ├── crypto.ts             # 加密工具
-│   │   └── icon.ts               # 图标处理工具
-│   ├── index.ts                  # Worker入口文件
-│   └── types.ts                  # Worker类型定义
-├── public/                       # 静态资源
-├── .dev.vars.sample              # 本地环境变量示例
-├── .env.sample                   # 前端构建变量示例
-├── wrangler.sample.jsonc         # Wrangler配置示例
-└── package.json                  # 项目配置
+│   ├── utils/                        # 工具函数
+│   │   ├── deviceUtils.ts            # 设备工具
+│   │   ├── idUtils.ts                # ID生成
+│   │   ├── importExportUtils.ts      # 导入导出工具
+│   │   ├── logger.ts                 # 日志
+│   │   └── wallpaperStorage.ts       # 壁纸存储
+│   ├── App.tsx                       # 主应用组件
+│   ├── main.tsx                      # 应用入口
+│   └── index.css                     # 全局样式
+├── worker/                           # Cloudflare Workers代码
+│   ├── middleware/                   # 中间件
+│   │   └── auth.ts                   # 认证中间件
+│   ├── routes/                       # API路由
+│   │   ├── auth.ts                   # 认证接口
+│   │   ├── bing.ts                   # Bing壁纸接口
+│   │   ├── data.ts                   # 数据接口
+│   │   ├── icon.ts                   # 图标接口
+│   │   ├── icon-cleanup.ts           # 图标清理
+│   │   ├── icon-upload.ts            # 图标上传
+│   │   ├── title.ts                  # 标题获取
+│   │   ├── wallpaper.ts              # 壁纸代理
+│   │   ├── wallpaper-upload.ts       # 壁纸上传
+│   │   └── weather.ts                # 天气接口
+│   ├── utils/                        # Worker工具函数
+│   │   ├── constants.ts              # 常量
+│   │   ├── crypto.ts                 # 加密工具
+│   │   ├── icon.ts                   # 图标处理
+│   │   ├── md5.ts                    # MD5哈希
+│   │   └── streamLimit.ts            # 流限制
+│   ├── index.ts                      # Worker入口文件
+│   └── types.ts                      # Worker类型定义
+├── public/                           # 静态资源
+├── .dev.vars.sample                  # 本地环境变量示例
+├── .env.sample                       # 前端构建变量示例
+├── wrangler.sample.jsonc             # Wrangler配置示例
+├── vite.config.ts                    # Vite配置
+└── package.json                      # 项目配置
 ```
 
 ## 🔧 API 接口
@@ -273,27 +364,39 @@ harborpage/
 - `GET /api/auth/status` - 检查认证状态
 
 ### 数据管理
-- `GET /api/data` - 获取用户数据
+- `GET /api/data` - 获取全部用户数据
 - `GET /api/data?key={key}` - 获取单个数据项
 - `POST /api/data?key={key}` - 保存用户数据
 - `DELETE /api/data?key={key}` - 删除用户数据
 
 ### 图标管理
 - `GET /api/icon?type={type}&hashInput={hashInput}&downloadUrl={downloadUrl}` - 获取图标（从R2获取或下载）
-- `POST /api/icon` - 下载并缓存图标到 R2（缓存模式不需要认证）
+- `POST /api/icon` - 下载并缓存图标到 R2
 - `POST /api/icon/upload` - 上传图标（需认证，R2可用时，文件大小限制100KB）
 - `DELETE /api/icon?type={type}&hashInput={hashInput}` - 删除图标（需认证）
 - `DELETE /api/icon?action=cleanup` - 清理未使用的图标（需认证，支持分批清理）
+- `GET /api/icon/autofetch?url={url}` - 获取网站图标候选列表（仅分析页面结构，不下载）
+- `POST /api/icon/download` - 下载单个图标并返回 data URL（供前端并发调用）
+- `POST /api/icon/autofetch/cache` - 将 data URL 图标缓存到 R2
+- `POST /api/icon/cache-url` - 将指定 URL 的图标缓存到 R2
+
+### 图标源管理
+- `GET /api/favicon/sources` - 获取 Favicon 源配置
+- `POST /api/favicon/sources` - 保存 Favicon 源配置
 
 ### 天气服务
 - `GET /api/weather?lat={lat}&lon={lon}` - 获取天气信息
 - `GET /api/geo?location={location}` - 城市搜索
 
 ### 壁纸代理
-- `GET /api/wallpaper?url={url}` - 壁纸图片代理（白名单限制）
+- `GET /api/wallpaper?url={url}` - 壁纸图片代理（域名白名单限制）
+- `POST /api/wallpaper/upload` - 上传壁纸到 R2
 
 ### Bing API 代理
-- `GET /api/bing/*` - 代理 Bing API 请求（如 `/api/bing/HPImageArchive.aspx?format=js&idx=0&n=1` 获取每日壁纸）
+- `GET /api/bing/*` - 代理 Bing API 请求
+
+### 标题获取
+- `GET /api/title?url={url}` - 获取网站标题
 
 ## 🎨 自定义
 
@@ -301,7 +404,14 @@ harborpage/
 1. 打开设置面板
 2. 选择"搜索设置"
 3. 点击"管理搜索引擎"
-4. 添加新的搜索引擎信息
+4. 点击添加或编辑现有搜索引擎
+
+### 配置 Favicon 源
+1. 打开设置面板
+2. 选择"图标源设置"
+3. 添加、编辑、删除或拖拽排序 Favicon 源
+- 系统默认提供 Google、DuckDuckGo、gstatic 三个源
+- 按优先级依次尝试，直到获取到有效图标
 
 ### 修改图标行列数
 1. 打开设置面板
@@ -319,29 +429,44 @@ harborpage/
 项目采用组件化开发模式，每个功能模块都有独立的组件和样式文件。
 
 ### 状态管理
-使用 Zustand 进行全局状态管理，数据持久化到 Cloudflare KV。
+使用 Zustand 进行全局状态管理，数据持久化到 Cloudflare KV。Store 选择器使用 `useShallow` 避免不必要的重渲染。
 
 ### 服务注入
-服务通过 `ServicesContext` 注入，避免直接导入导致的耦合问题。
+服务通过 `serviceContainer` 动态获取，支持服务替换和测试。
 
-### 样式规范
-- 组件样式独立管理
-- 使用 CSS 变量保持一致性
-- 响应式设计
+### 数据持久化
+- `DataRepository` 作为统一持久化层，禁止直接访问 localStorage
+- 认证错误处理集中在 `DataRepository.handleAuthResponse()`
+- `DataManager` 使用不可变更新（`this.data = { ...this.data, ... }`）
+- localStorage 键统一使用 `harborpage_` 前缀
+
+### 图标缓存机制
+- 前端通过信号量模式控制并发（3 个并发请求）
+- 图标缓存失败后显示 🌐 图标，避免重复请求
+- 多源 Fallback：Google → DuckDuckGo → gstatic → mzkit
+- Favicon 源由后端统一管理，前端通过 API 获取
+
+### 图标文件命名规则
+- 用户上传图标：`md5("upload_{id}_{timestamp}").png`
+- 预览保存图标：`md5("save_{id}_{timestamp}").png`
+- 智能获取缓存图标：`md5("cache_{id}_{timestamp}").png`
+- 自动 Favicon 缓存：`md5(domain).png`（固定文件名，便于预测）
+- R2 存储路径前缀：`WebSites/`、`SearchEngines/`
 
 ### 安全规范
 - JWT 认证保护所有敏感 API
 - 密码 SHA-256 加密传输
-- 壁纸代理域名白名单限制（bing.com、s.cn.bing.net、images.unsplash.com、bing.img.run）
+- 壁纸代理域名白名单限制
 - 请求大小限制（壁纸最大 10MB）
 - 敏感变量存储在 `.dev.vars`（本地）或 Cloudflare Secrets（生产）
+- 构建产物自动清理 `.dev.vars`（通过 `devVarsCleanup` 插件）
 
-### 图标管理规范
-- R2 存储路径前缀：`WebSites/` 用于网站图标，`SearchEngines/` 用于搜索引擎图标
-- 用户上传图标使用 `type_id_domain_timestamp` 生成 MD5 哈希命名
-- 非用户上传图标使用 `hashInput`（域名或图标URL）生成 MD5 哈希命名
-- R2 存储仅在 `R2_URL` 和 R2 BUCKET 都配置时生效
-- 图标下载队列使用 GET 请求调用缓存接口（避免认证要求）
+### 性能优化
+- 时钟组件使用 ref 直接 DOM 操作，避免每秒触发 React 重渲染
+- 图标下载使用信号量并发控制（3 并发）
+- URL 输入防抖（3 秒）后更新预览
+- Store 选择器使用 `useShallow` 减少不必要的重渲染
+- `useEffect` 依赖项精确控制，避免循环触发
 
 ## 🤝 贡献
 

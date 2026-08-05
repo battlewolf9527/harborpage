@@ -39,6 +39,7 @@ interface IconsState {
   initialize: (icons: Website[]) => void;
   processPendingDeletes: (onProgress?: (current: number, total: number) => void) => Promise<void>;
   clearPendingDeletes: () => void;
+  clearAllSites: () => void;
 }
 
 const initialState = {
@@ -303,6 +304,30 @@ export const useIconsStore = create<IconsState>((set, get) => ({
 
   clearPendingDeletes: () => {
     set({ pendingDeletes: [] });
+  },
+
+  clearAllSites: () => {
+    const { websites, pendingDeletes } = get();
+
+    // 收集所有站点（含文件夹内子项）中有 URL 的项，用于 R2 图标清理
+    const newItems: PendingDeleteItem[] = [];
+    const collectItems = (icons: Website[]) => {
+      for (const icon of icons) {
+        if (icon.url) {
+          newItems.push({ id: icon.id, url: icon.url });
+        }
+        if (icon.isFolder && icon.children) {
+          collectItems(icon.children);
+        }
+      }
+    };
+    collectItems(websites);
+
+    set({
+      websites: [],
+      pendingDeletes: [...pendingDeletes, ...newItems],
+      openFolder: null,
+    });
   },
 
   createFolder: (folderName?: string) => {

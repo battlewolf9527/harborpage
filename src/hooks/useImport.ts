@@ -3,8 +3,6 @@ import type { Website, ImportableWebsite } from '../types';
 import { useIconsStore } from '../store/useIconsStore';
 import { useIconsUIStore } from '../store/useIconsUIStore';
 import { useImportStore } from '../store/useImportStore';
-import { getServices } from '../services/serviceContainer';
-import { getFaviconUrl } from '../services/IconManager';
 import { generateId } from '../utils/idUtils';
 import createLogger from '../utils/logger';
 
@@ -99,6 +97,10 @@ export const useImport = (): UseImportResult => {
     setImportMessage('正在准备导入...');
 
     try {
+      // 让渡到下一个微任务，确保调用方（ImportPresetDialog）的 onClose() 先执行，
+      // 避免组件卸载时 useEffect cleanup 清除尚未设置的清理定时器
+      await Promise.resolve();
+
       const requiredFolders = new Set<string>();
       if (importStructure) {
         sitesToImport.forEach(site => {
@@ -132,19 +134,6 @@ export const useImport = (): UseImportResult => {
 
         // 为导入的站点生成新 ID，避免与已有站点 ID 冲突
         const newId = generateId();
-
-        // 仅当图标 URL 为空时才预缓存（自动 favicon 模式）
-        // icon 字段不为空时（用户自定义 URL 或 R2 URL）由前端直接加载，不需要预缓存
-        if (site.url && !site.icon) {
-          try {
-            const domain = new URL(site.url).hostname;
-            const downloadUrl = getFaviconUrl(domain);
-            const { iconManager } = getServices();
-            await iconManager.preloadIcon('site', newId, downloadUrl, domain);
-          } catch (error) {
-            logger.error(`预缓存图标失败: ${site.name}`, error);
-          }
-        }
 
         const { parentFolder: _, id: _originalId, ...siteData } = site;
         const newSite: Website = {
