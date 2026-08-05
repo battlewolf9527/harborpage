@@ -1,0 +1,372 @@
+.todo-list {
+  padding: 0.6vw 0;
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9vw;
+}
+
+.todo-list h3 {
+  font-size: 0.7vw;
+  font-weight: 600;
+  margin: 0 0 0.9vw 0;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.add-todo {
+  display: flex;
+  gap: 0.5vw;
+  align-items: center;
+  position: relative;
+}
+
+.add-todo input {
+  flex: 1;
+  padding: 0.55vw 0.7vw;
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  background: var(--background-light);
+  color: var(--text-primary);
+  font-size: 0.55vw;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: all var(--transition-fast);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.add-todo input:focus {
+  border-color: var(--primary-color);
+  background: var(--background-white);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+}
+
+.add-todo input::placeholder {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.add-todo button {
+  padding: 0.55vw 0.9vw;
+  border: none;
+  border-radius: var(--border-radius-lg);
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  color: white;
+  font-size: 0.55vw;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.add-todo button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left var(--transition-normal);
+}
+
+.add-todo button:hover::before {
+  left: 100%;
+}
+
+.add-todo button:hover {
+  background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+}
+
+.add-todo button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.todo-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5vw;
+  max-height: 16vw;
+  overflow-y: auto;
+  padding-right: 0.3vw;
+  position: relative;
+}
+
+/* 滚动条样式 */
+.todo-items::-webkit-scrollbar {
+  width: 0.3vw;
+}
+
+.todo-items::-webkit-scrollbar-track {
+  background: var(--background-light);
+  border-radius: 8px;
+}
+
+.todo-items::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 8px;
+  transition: background var(--transition-fast);
+}
+
+.todo-items::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55vw;
+  padding: 0.55vw 0.7vw;
+  background: var(--background-white);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.todo-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+  border-radius: var(--border-radius-lg) 0 0 var(--border-radius-lg);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform var(--transition-normal);
+}
+
+.todo-item:hover {
+  border-color: var(--primary-light);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.todo-item:hover::before {
+  transform: scaleY(1);
+}
+
+.todo-item input[type="checkbox"] {
+  width: 0.7vw;
+  height: 0.7vw;
+  accent-color: var(--primary-color);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.todo-item input[type="checkbox"]:hover {
+  transform: scale(1.1);
+}
+
+.todo-item input[type="checkbox"]:checked {
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.todo-item span {
+  flex: 1;
+  color: var(--text-primary);
+  font-size: 0.55vw;
+  line-height: 1.5;
+  transition: all var(--transition-fast);
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.todo-item span.completed {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.todo-item .delete-todo {
+  width: 1.3vw;
+  height: 1.3vw;
+  padding: 0;
+  border: none;
+  border-radius: var(--border-radius-md);
+  background: var(--background-light);
+  color: var(--text-secondary);
+  font-size: 0.55vw;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.todo-item .delete-todo::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 72, 153, 0.2), transparent);
+  transition: left var(--transition-normal);
+}
+
+.todo-item .delete-todo:hover::before {
+  left: 100%;
+}
+
+.todo-item .delete-todo:hover {
+  background: #ffe6f0;
+  color: var(--secondary-color);
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(236, 72, 153, 0.2);
+}
+
+.todo-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.55vw 0.7vw;
+  background: var(--background-white);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.todo-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+}
+
+.todo-footer span {
+  color: var(--text-secondary);
+  font-size: 0.5vw;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+}
+
+.todo-footer button {
+  padding: 0.3vw 0.6vw;
+  border: none;
+  border-radius: var(--border-radius-md);
+  background: var(--background-light);
+  color: var(--text-secondary);
+  font-size: 0.5vw;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.todo-footer button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(236, 72, 153, 0.2), transparent);
+  transition: left var(--transition-normal);
+}
+
+.todo-footer button:hover::before {
+  left: 100%;
+}
+
+.todo-footer button:hover {
+  background: #ffe6f0;
+  color: var(--secondary-color);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(236, 72, 153, 0.2);
+}
+
+/* 空状态样式 */
+.todo-items:empty::before {
+  content: '还没有待办事项，点击上方添加吧！';
+  display: block;
+  text-align: center;
+  padding: 2.2vw 0.7vw;
+  color: var(--text-secondary);
+  font-style: italic;
+  font-size: 0.55vw;
+  background: var(--background-light);
+  border: 2px dashed var(--border-color);
+  border-radius: var(--border-radius-lg);
+  margin-bottom: 0.9vw;
+  position: relative;
+  transition: all var(--transition-normal);
+}
+
+.todo-items:empty::after {
+  content: '✨';
+  display: block;
+  font-size: 1.2vw;
+  margin-bottom: 0.6vw;
+  animation: bounce 2s infinite;
+}
+
+/* 动画效果 */
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-8px);
+  }
+  60% {
+    transform: translateY(-4px);
+  }
+}
+
+/* 新添加的待办事项动画 */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.todo-item {
+  animation: slideInUp 300ms ease-out;
+}
+
+/* 完成待办事项动画 */
+@keyframes todoSlideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+}
+
+.todo-item span.completed {
+  animation: todoSlideOut 300ms ease-out;
+}

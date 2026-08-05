@@ -1,0 +1,185 @@
+/* 全屏进度遮罩 */
+.fullscreen-progress-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.2s ease;
+}
+
+/* 主容器 - 玻璃卡片 */
+.progress-container {
+  background: linear-gradient(145deg, rgba(30, 30, 40, 0.9), rgba(20, 20, 30, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 48px 56px;
+  min-width: 420px;
+  max-width: 480px;
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    0 1px 0 rgba(255, 255, 255, 0.1) inset;
+  text-align: center;
+  animation: slideUp 0.4s ease-out;
+}
+
+/* 动态图标 */
+.progress-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  position: relative;
+  box-shadow:
+    0 10px 30px -5px rgba(102, 126, 234, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  animation: iconPulse 2s ease-in-out infinite;
+}
+
+.progress-icon::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+  z-index: -1;
+  opacity: 0.5;
+  filter: blur(8px);
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.1); }
+}
+
+/* 标题 */
+.progress-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+
+/* 当前导入项 - 渐变色文字 */
+.progress-message {
+  margin: 0;
+  font-size: 15px;
+  color: #a0a0b0;
+  margin-bottom: 32px;
+  font-weight: 500;
+}
+
+.progress-message strong {
+  background: linear-gradient(90deg, #667eea, #f093fb);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 600;
+}
+
+/* 导入进度条容器 */
+.import-progress-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+/* 导入进度条轨道 */
+.import-progress-bar-large {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 100px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* 导入进度条填充 - 渐变 + 光泽动画 */
+.import-progress-fill-large {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  border-radius: 100px;
+  position: relative;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+}
+
+/* 光泽扫过效果 */
+.import-progress-fill-large::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: shimmerProgress 2s infinite;
+}
+
+@keyframes shimmerProgress {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* 导入百分比文字 */
+.import-progress-percentage {
+  font-size: 18px;
+  font-weight: 700;
+  color: #667eea;
+  min-width: 48px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+}
+
+/* 底部提示 */
+.progress-hint {
+  margin: 0;
+  font-size: 13px;
+  color: #606070;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.progress-hint::before {
+  content: '•';
+  color: #667eea;
+  font-size: 20px;
+  line-height: 0;
+  animation: blinkProgress 2s infinite;
+}
+
+@keyframes blinkProgress {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}

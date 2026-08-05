@@ -1,0 +1,111 @@
+/* 网站图标网格区域 */
+.icons-container {
+  margin-bottom: 60px;
+  width: 70%;
+  max-height: 80vh; /* 限制最大高度，留出空间给其他元素 */
+  overflow-y: auto; /* 启用垂直滚动 */
+  overflow-x: hidden; /* 隐藏水平滚动 */
+  padding: 20px;
+  animation: fadeInUp 0.8s ease 0.4s both;
+  /* 始终预留12px的滚动条空间，防止显示/隐藏时抖动 */
+  padding-right: 32px; /* 20px原padding + 12px滚动条空间 */
+}
+
+/* 滚动条始终存在但默认透明 */
+.icons-container::-webkit-scrollbar {
+  width: 12px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* 显示滚动条 */
+.icons-container.show-scrollbar::-webkit-scrollbar {
+  opacity: 1;
+}
+
+/* 滚动条轨道 */
+.icons-container.show-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+}
+
+/* 滚动条滑块 */
+.icons-container.show-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+/* 滚动条滑块悬停 */
+.icons-container.show-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scaleX(1.1);
+}
+
+/* 滚动条角落 */
+.icons-container::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox 滚动条样式 - 始终预留空间 */
+.icons-container {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s ease;
+}
+
+.icons-container.show-scrollbar {
+  scrollbar-color: rgba(255, 255, 255, 0.2) rgba(0, 0, 0, 0.1);
+}
+
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 24px;
+  justify-items: center;
+}
+
+.icon-item .folder-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  .icon-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .icon-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  
+  .icon-circle {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+  }
+  
+  .icons-container {
+    margin-bottom: 40px;
+    max-height: 70vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .icon-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  
+  .icons-container {
+    max-height: 60vh;
+  }
+}

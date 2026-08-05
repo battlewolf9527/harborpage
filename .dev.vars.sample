@@ -1,0 +1,15 @@
+# HarborPage - Worker 环境变量示例
+# 将此文件复制为 .dev.vars 并填写实际的 API Key
+# 
+# 说明：
+# - .dev.vars 由 Wrangler CLI 在本地开发时加载
+# - 变量会注入到 Worker 运行时，通过 env.xxx 访问
+# - 生产环境请使用 wrangler secret put 命令设置敏感变量
+
+# ==================== 认证配置 ====================
+PASSWORD=<YOUR_LOGIN_PASSWORD>
+JWT_SECRET=<YOUR_JWT_SECRET>
+
+# ==================== 天气 API 配置（和风天气） ====================
+WEATHER_API_KEY=<YOUR_WEATHER_API_KEY>
+WEATHER_API_HOST=<YOUR_WEATHER_API_HOST>

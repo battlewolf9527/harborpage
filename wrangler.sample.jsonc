@@ -1,0 +1,60 @@
+/**
+ * HarborPage - Cloudflare Workers 配置示例
+ * 将此文件复制为 wrangler.jsonc 并填写实际的 Cloudflare 资源 ID
+ * 
+ * 配置步骤：
+ * 1. 复制此文件为 wrangler.jsonc
+ * 2. 创建 KV 命名空间：wrangler kv:namespace create USER_DATA
+ * 3. 创建 R2 存储桶：wrangler r2:bucket create harbor
+ * 4. 将生成的 ID 填入对应位置
+ * 5. 设置敏感信息：wrangler secret put WEATHER_API_KEY
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "harborpage",
+	"main": "worker/index.ts",
+	"compatibility_date": "2026-03-17",
+	"assets": {
+		"directory": "./dist/client",
+		"binding": "ASSETS",
+		"not_found_handling": "single-page-application"
+	},
+	"observability": {
+		"enabled": true
+	},
+	"upload_source_maps": true,
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	// KV命名空间配置
+	// 创建命令: wrangler kv:namespace create USER_DATA
+	"kv_namespaces": [
+	{
+		"binding": "USER_DATA",
+		"id": "<YOUR_KV_NAMESPACE_ID>",
+		// 本地开发时的预览ID（可选）
+		"preview_id": "<YOUR_KV_PREVIEW_ID>"
+	}
+	],
+	// R2存储桶配置
+	// 创建命令: wrangler r2:bucket create harbor
+	"r2_buckets": [
+    {
+      "binding": "BUCKET",
+      "bucket_name": "<YOUR_BUCKET_NAME>"
+    }
+  	],
+	// 环境变量（非敏感配置）
+	"vars": {
+		// R2存储桶的访问URL
+		"R2_URL": "https://<YOUR_R2_DOMAIN>/icons",
+		
+		// 启用R2自动图标缓存
+		"ENABLE_R2_CDN": "false"
+	}
+	// 敏感环境变量请使用 wrangler secret put 命令设置，切勿放在 vars 中：
+	//   wrangler secret put PASSWORD
+	//   wrangler secret put JWT_SECRET
+	//   wrangler secret put WEATHER_API_KEY
+	//   wrangler secret put WEATHER_API_HOST
+}

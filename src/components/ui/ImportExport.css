@@ -1,0 +1,314 @@
+/* 导入/导出组件样式 */
+
+/* 隐藏原生文件输入，由按钮触发 */
+.ie-file-input {
+  display: none;
+}
+
+/* 导出文件名对话框遮罩 */
+.ie-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  animation: ieFadeIn 0.2s ease;
+}
+
+/* 对话框卡片 */
+.ie-dialog {
+  width: 90%;
+  max-width: 420px;
+  background: rgba(30, 30, 30, 0.95);
+  border-radius: 16px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  animation: ieSlideUp 0.3s ease-out;
+}
+
+/* 对话框头部 */
+.ie-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ie-dialog-header h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.ie-close-btn {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ie-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 1);
+}
+
+/* 对话框主体 */
+.ie-dialog-body {
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ie-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.ie-filename-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.ie-filename-input:focus {
+  outline: none;
+  border-color: rgba(100, 100, 255, 0.5);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ie-filename-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.ie-hint {
+  margin: 6px 0 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* 对话框底部按钮 */
+.ie-dialog-footer {
+  padding: 16px 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.ie-btn {
+  padding: 9px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ie-btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.ie-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.ie-btn-primary {
+  background: rgba(6, 182, 212, 0.9);
+  color: white;
+}
+
+.ie-btn-primary:hover {
+  background: rgba(6, 182, 212, 1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+}
+
+.ie-btn-danger {
+  background: rgba(239, 68, 68, 0.85);
+  color: white;
+}
+
+.ie-btn-danger:hover {
+  background: rgba(239, 68, 68, 1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* 导入确认对话框：摘要与方式说明 */
+.ie-summary {
+  margin: 0 0 14px 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.ie-mode-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.ie-mode-hint {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.ie-mode-label {
+  display: inline-block;
+  min-width: 34px;
+  margin-right: 8px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* 分区标题 */
+.ie-section-label {
+  margin-top: 6px;
+}
+
+/* 勾选项组 */
+.ie-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 单个勾选项 */
+.ie-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: background 0.2s ease;
+  user-select: none;
+  position: relative;
+}
+
+.ie-checkbox-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ie-checkbox-item.ie-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ie-checkbox-item.ie-disabled:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* 隐藏原生 checkbox */
+.ie-checkbox-item input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 自定义 checkbox 外观 */
+.ie-checkbox-custom {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+/* 选中状态 */
+.ie-checkbox-item input[type="checkbox"]:checked ~ .ie-checkbox-custom {
+  background: rgba(6, 182, 212, 0.9);
+  border-color: rgba(6, 182, 212, 0.9);
+}
+
+.ie-checkbox-item input[type="checkbox"]:checked ~ .ie-checkbox-custom::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 1px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* 勾选项标签 */
+.ie-checkbox-label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* 数量显示 */
+.ie-checkbox-count {
+  margin-left: auto;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* 禁用按钮 */
+.ie-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+@keyframes ieFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ieSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,228 @@
+/* 搜索框区域 */
+.search-container {
+  margin-bottom: 60px;
+  text-align: center;
+  animation: fadeInUp 0.8s ease 0.2s both;
+  width: 30%;
+  transition: width 0.3s ease;
+  margin: 0 auto;
+  padding-bottom: 20px;
+}
+
+.search-container.focused {
+  width: 40%;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.search-wrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 28px;
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  z-index: 1;
+}
+
+.search-engine-dropdown {
+  position: relative;
+  z-index: 9999;
+}
+
+.search-engine-button {
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.search-engine-button:hover {
+  background: rgba(0, 0, 0, 0.4);
+  transform: scale(1.05);
+}
+
+.search-engine-button:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.search-engine-button:active {
+  transform: scale(0.95);
+}
+
+.search-engine-icon {
+  font-size: 16px;
+}
+
+.search-engine-favicon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: contain;
+  object-position: center center;
+  display: block;
+}
+
+/* 搜索引擎图标回退样式 */
+.search-engine-fallback {
+  font-size: 14px;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.search-engine-list {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.search-engine-option {
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-engine-option:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.search-engine-option:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.search-input {
+  flex: 1;
+  height: 56px;
+  padding: 0 16px;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 16px;
+  font-weight: 400;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.search-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.search-input:focus {
+  padding-right: 20px;
+}
+
+.search-submit-button {
+  height: 40px;
+  padding: 0 20px;
+  margin-right: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 20px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.search-submit-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.search-submit-button:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.search-submit-button:active {
+  transform: scale(0.95);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .search-wrapper {
+    width: 90%;
+    margin: 0 auto;
+  }
+  
+  .search-input {
+    font-size: 14px;
+  }
+  
+  .search-submit-button {
+    padding: 0 16px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-container {
+    margin-bottom: 40px;
+  }
+  
+  .search-wrapper {
+    width: 95%;
+  }
+  
+  .search-engine-button {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .search-input {
+    height: 48px;
+    font-size: 13px;
+  }
+  
+  .search-submit-button {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+}

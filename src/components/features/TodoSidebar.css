@@ -1,0 +1,308 @@
+/* TodoSidebar.css */
+:root {
+  --primary-color: #6366f1;
+  --primary-light: #818cf8;
+  --primary-dark: #4f46e5;
+  --secondary-color: #ec4899;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --background-light: #f8fafc;
+  --background-white: #ffffff;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --border-radius-sm: 0.375rem;
+  --border-radius-md: 0.5rem;
+  --border-radius-lg: 0.75rem;
+  --border-radius-full: 9999px;
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 300ms ease-in-out;
+  --transition-slow: 500ms ease-in-out;
+}
+
+.todo-sidebar {
+  position: fixed;
+  right: -15vw;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 60vh;
+  width: 15vw;
+  background: var(--background-white);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+  border-radius: 0.8vw 0 0 0.8vw;
+  transition: all var(--transition-normal);
+  z-index: 1002;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+  overflow: visible;
+}
+
+.todo-sidebar.expanded {
+  right: 0;
+  box-shadow: var(--shadow-lg);
+}
+
+.todo-sidebar.animating {
+  pointer-events: none;
+}
+
+/* 圆形图标按钮 */
+.sidebar-icon {
+  position: fixed;
+  right: -1.1vw;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2.2vw;
+  height: 2.2vw;
+  cursor: pointer;
+  z-index: 1000;
+  transition: all var(--transition-normal);
+  opacity: 0.3;
+}
+
+.sidebar-icon:hover {
+  right: 0;
+  opacity: 1;
+}
+
+.todo-sidebar.expanded ~ .sidebar-icon {
+  right: 0 !important;
+  transform: translateY(-50%) rotate(180deg);
+  opacity: 1 !important;
+  box-shadow: var(--shadow-md);
+  z-index: 1000;
+}
+
+.todo-sidebar.expanded ~ .sidebar-icon:hover {
+  transform: translateY(-50%) rotate(180deg) scale(1.1);
+  box-shadow: var(--shadow-lg);
+}
+
+.icon-container {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border-radius: var(--border-radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  position: relative;
+  transition: all var(--transition-normal);
+  border: 0.16vw solid var(--background-white);
+}
+
+.icon-container:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-lg);
+}
+
+.icon-container svg {
+  color: white;
+  width: 0.9vw;
+  height: 0.9vw;
+  transition: all var(--transition-fast);
+}
+
+/* 气球提示 */
+.tooltip {
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(30, 41, 59, 0.95);
+  color: white;
+  padding: 0.4vw 0.8vw;
+  border-radius: var(--border-radius-md);
+  font-size: 0.65vw;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--transition-fast);
+  pointer-events: none;
+  z-index: 1001;
+  margin-right: 0.6vw;
+  box-shadow: var(--shadow-md);
+}
+
+.tooltip::after {
+  content: '';
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-left-color: rgba(30, 41, 59, 0.95);
+}
+
+.sidebar-icon:hover .tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* 提醒徽章 */
+.badge {
+  position: absolute;
+  top: -0.2vw;
+  left: -0.2vw;
+  background: var(--secondary-color);
+  color: white;
+  border-radius: var(--border-radius-full);
+  width: 0.9vw;
+  height: 0.9vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.45vw;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  box-shadow: 0 0.12vw 0.25vw rgba(236, 72, 153, 0.3);
+  animation: pulse 2s infinite;
+  z-index: 1002;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(236, 72, 153, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0);
+  }
+}
+
+/* 侧边栏内容 */
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1.1vw 0.9vw;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(20px);
+  transition: all var(--transition-normal);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9vw;
+  margin-top: 0.8vw;
+  position: relative;
+  border-radius: inherit;
+}
+
+.todo-sidebar.expanded .sidebar-content {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+  transition-delay: 150ms;
+}
+
+.sidebar-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3vw;
+  margin-bottom: 0.6vw;
+}
+
+.sidebar-header h2 {
+  margin: 0;
+  font-size: 0.9vw;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  line-height: 1.2;
+}
+
+.todo-count {
+  display: flex;
+  align-items: baseline;
+  gap: 0.15vw;
+}
+
+.count-number {
+  font-size: 0.7vw;
+  font-weight: 700;
+  color: var(--primary-color);
+  font-family: 'Inter', sans-serif;
+}
+
+.count-label {
+  font-size: 0.55vw;
+  color: var(--text-secondary);
+  font-family: 'Inter', sans-serif;
+}
+
+/* 滚动条样式 */
+.sidebar-content::-webkit-scrollbar {
+  width: 0.3vw;
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+  background: var(--background-light);
+  border-radius: 8px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 8px;
+  transition: background var(--transition-fast);
+}
+
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* 动画效果 */
+@keyframes sidebarFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.todo-sidebar.expanded .sidebar-header {
+  animation: sidebarFadeIn 400ms ease-out;
+}
+
+.todo-sidebar.expanded .sidebar-content > *:not(.sidebar-header) {
+  animation: sidebarFadeIn 400ms ease-out;
+  animation-delay: 200ms;
+  animation-fill-mode: both;
+}
+
+/* 展开/收起动画 */
+@keyframes todo-slide-in {
+  from {
+    transform: translateX(100%) translateY(-50%);
+  }
+  to {
+    transform: translateX(0) translateY(-50%);
+  }
+}
+
+@keyframes todo-slide-out {
+  from {
+    transform: translateX(0) translateY(-50%);
+  }
+  to {
+    transform: translateX(100%) translateY(-50%);
+  }
+}
+
+.todo-sidebar.expanded {
+  animation: todo-slide-in 300ms ease-out;
+}
+
+.todo-sidebar:not(.expanded) {
+  animation: todo-slide-out 300ms ease-in;
+}

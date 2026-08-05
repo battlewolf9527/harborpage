@@ -1,0 +1,375 @@
+/* Favicon Settings Component */
+.favicon-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.favicon-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.favicon-settings-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.favicon-settings-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.favicon-settings-hint {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.favicon-settings-hint code {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.favicon-sources-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.favicon-source-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: grab;
+}
+
+.favicon-source-item:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.favicon-source-item.dragging {
+  opacity: 0.5;
+  cursor: grabbing;
+}
+
+.favicon-source-item.disabled {
+  opacity: 0.5;
+}
+
+.favicon-source-drag {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 14px;
+  cursor: grab;
+  user-select: none;
+  line-height: 1;
+}
+
+.favicon-source-item.dragging .favicon-source-drag {
+  cursor: grabbing;
+}
+
+.favicon-source-priority {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.favicon-source-content {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.favicon-source-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.favicon-builtin-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(100, 100, 255, 0.15);
+  color: rgba(150, 150, 255, 0.9);
+  font-weight: 400;
+}
+
+.favicon-source-url {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.favicon-source-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.favicon-icon-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.favicon-icon-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.favicon-icon-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.favicon-icon-btn-delete:hover {
+  background: rgba(239, 68, 68, 0.2) !important;
+  color: #ef4444 !important;
+}
+
+.favicon-toggle {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.favicon-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.favicon-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.15);
+  transition: 0.3s;
+  border-radius: 18px;
+}
+
+.favicon-toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 2px;
+  bottom: 2px;
+  background-color: rgba(255, 255, 255, 0.8);
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.favicon-toggle input:checked + .favicon-toggle-slider {
+  background-color: rgba(59, 130, 246, 0.7);
+}
+
+.favicon-toggle input:checked + .favicon-toggle-slider:before {
+  transform: translateX(18px);
+}
+
+/* Buttons */
+.favicon-btn {
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.favicon-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.favicon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.favicon-btn-add {
+  background: rgba(6, 182, 212, 0.15);
+  border-color: rgba(6, 182, 212, 0.4);
+  color: #06b6d4;
+}
+
+.favicon-btn-add:hover {
+  background: rgba(6, 182, 212, 0.25) !important;
+}
+
+.favicon-btn-reset {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.favicon-btn-save {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
+  color: #60a5fa;
+}
+
+.favicon-btn-save:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.35) !important;
+}
+
+.favicon-btn-cancel {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Add Dialog */
+.favicon-add-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: favicon-fade-in 0.2s ease;
+}
+
+.favicon-add-dialog {
+  background: rgba(30, 30, 30, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 24px;
+  width: 380px;
+  max-width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: favicon-dialog-in 0.25s ease;
+}
+
+.favicon-add-dialog h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+}
+
+.favicon-add-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.favicon-add-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.favicon-add-field label {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.favicon-required {
+  color: #ef4444;
+}
+
+.favicon-field-hint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.favicon-field-hint code {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 10px;
+}
+
+.favicon-add-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.favicon-confirm-text {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  margin: 0 0 20px 0;
+}
+
+.favicon-confirm-text strong {
+  color: rgba(255, 255, 255, 1);
+}
+
+.favicon-btn-delete-confirm {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #ef4444;
+}
+
+.favicon-btn-delete-confirm:hover {
+  background: rgba(239, 68, 68, 0.35) !important;
+}
+
+@keyframes favicon-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes favicon-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

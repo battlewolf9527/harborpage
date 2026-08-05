@@ -1,0 +1,55 @@
+/* 文件夹图标网格样式 */
+.folder-icon-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* 文件夹预览网格 - 田字形排列 */
+.folder-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+/* 文件夹预览项 */
+.folder-preview-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 3px;
+  width: 100%;
+  height: 100%;
+}
+
+/* 文件夹预览图片 */
+.folder-preview-image {
+  width: 85%;
+  height: 85%;
+  object-fit: contain;
+  object-position: center center;
+  border-radius: 4px;
+}
+
+/* 空文件夹图标 */
+.folder-empty-icon {
+  font-size: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 文件夹预览图片回退样式 */
+.folder-preview-item .icon-fallback {
+  font-size: 14px;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+}

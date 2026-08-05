@@ -1,0 +1,421 @@
+/* SavePrompt.css - 完整优化版 */
+
+/* 图标容器 */
+.save-prompt-icon-only {
+  position: fixed;
+  top: 30px;
+  right: 120px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: slideIn 0.5s ease-out;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.save-prompt-icon-only.exiting {
+  opacity: 0;
+  transform: scale(0.8) translateY(-20px);
+}
+
+@media (max-width: 768px) {
+  .save-prompt-icon-only {
+    top: 20px;
+    right: 100px;
+  }
+}
+
+.save-icon-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.countdown-ring {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  z-index: 1;
+}
+
+.countdown-circle {
+  transform: rotate(-90deg);
+  background: transparent;
+  overflow: visible;
+}
+
+.countdown-circle-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 2;
+}
+
+.countdown-circle-progress {
+  fill: none;
+  stroke: rgba(250, 204, 21, 0.8);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear;
+  filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.5));
+}
+
+.save-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: relative;
+  z-index: 2;
+}
+
+.save-icon:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.save-prompt-icon-only.has-changes .save-icon {
+  background: rgba(250, 204, 21, 0.2);
+  border-color: rgba(250, 204, 21, 0.4);
+  animation: pulse 2s infinite;
+}
+
+.save-icon.saving {
+  background: rgba(100, 181, 246, 0.2) !important;
+  border-color: rgba(100, 181, 246, 0.4) !important;
+  animation: pulse-blue 1.5s infinite;
+  cursor: not-allowed;
+}
+
+.save-icon.saved {
+  background: rgba(76, 175, 80, 0.2) !important;
+  border-color: rgba(76, 175, 80, 0.4) !important;
+  cursor: not-allowed;
+  animation: none !important;
+}
+
+.save-icon.error {
+  background: rgba(239, 68, 68, 0.2) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  animation: pulse-red 1.5s infinite;
+  cursor: pointer;
+}
+
+.save-prompt-icon-only:hover .save-icon:not(.saving):not(.saved) {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.save-prompt-icon-only:hover .save-icon.error {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+/* 提示框 */
+.save-tooltip {
+  position: absolute;
+  top: 60px;
+  right: 0;
+  width: 300px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  animation: savePromptFadeIn 0.3s ease-out;
+  pointer-events: auto;
+}
+
+.tooltip-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tooltip-content h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.tooltip-content p {
+  margin: 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  line-height: 1.4;
+}
+
+.tooltip-content.error {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.save-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(59, 130, 246, 0.8);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+  align-self: flex-start;
+}
+
+.save-button:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.save-button:disabled {
+  background: rgba(59, 130, 246, 0.4);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 自动保存控制 */
+.auto-save-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.auto-save-control span {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* 安卓风格开关 */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.2);
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: rgba(59, 130, 246, 0.8);
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(26px);
+}
+
+/* 动画 */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes savePromptFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(250, 204, 21, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(250, 204, 21, 0);
+  }
+}
+
+@keyframes pulse-blue {
+  0% {
+    box-shadow: 0 0 0 0 rgba(100, 181, 246, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(100, 181, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(100, 181, 246, 0);
+  }
+}
+
+@keyframes pulse-red {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .save-prompt-icon-only {
+    top: 15px;
+    right: 15px;
+  }
+
+  .save-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+  }
+
+  .save-tooltip {
+    width: 260px;
+    padding: 16px;
+    top: 54px;
+  }
+
+  .tooltip-content h3 {
+    font-size: 14px;
+  }
+
+  .tooltip-content p {
+    font-size: 12px;
+  }
+
+  .save-button {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+}
+
+/* 保存进度条 */
+.save-progress {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+.save-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.8), rgba(100, 181, 246, 1));
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* 保存进度指示器 */
+.save-progress-indicator {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(30, 30, 30, 0.95);
+  border-radius: 12px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+  animation: fadeIn 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.progress-text {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.progress-bar-container {
+  width: 60px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(6, 182, 212, 0.9), rgba(59, 130, 246, 0.9));
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.progress-bar.loading {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.3), rgba(100, 181, 246, 0.6), rgba(59, 130, 246, 0.3));
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
+  width: 30% !important;
+}
+
+@keyframes loading-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}

@@ -1,0 +1,6 @@
+.icon-grid {
+  display: grid;
+  gap: 20px;
+  justify-content: flex-start;
+  align-items: flex-start;
+}

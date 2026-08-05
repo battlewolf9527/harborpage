@@ -1,0 +1,116 @@
+.wallpaper-manager {
+  padding: 20px;
+  color: white;
+}
+
+.wallpaper-manager h3 {
+  margin-bottom: 24px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.wallpaper-sources {
+  margin-bottom: 32px;
+}
+
+.wallpaper-sources h4 {
+  margin-bottom: 16px;
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.source-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.source-item {
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.source-item:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.source-item.selected {
+  background: rgba(255, 255, 255, 0.3);
+  border-left: 4px solid white;
+}
+
+.local-upload {
+  margin-top: 12px;
+  margin-bottom: 32px;
+}
+
+.local-upload input {
+  color: white;
+}
+
+.solid-color {
+  margin-top: 12px;
+  margin-bottom: 32px;
+}
+
+.solid-color input {
+  width: 100%;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.wallpaper-options {
+  margin-bottom: 32px;
+}
+
+.wallpaper-options h4 {
+  margin-bottom: 16px;
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.option-item {
+  margin-bottom: 20px;
+}
+
+.option-item label {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.option-item input[type="checkbox"] {
+  width: auto;
+  cursor: pointer;
+}
+
+.option-item input[type="range"] {
+  width: 100%;
+  cursor: pointer;
+}
+
+.wallpaper-preview {
+  margin-top: 24px;
+}
+
+.wallpaper-preview h4 {
+  margin-bottom: 16px;
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.preview-image {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}

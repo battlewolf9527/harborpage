@@ -1,0 +1,143 @@
+{
+  "sites": [
+    {
+      "id": "preset-search",
+      "name": "搜索引擎",
+      "url": "",
+      "icon": "",
+      "isFolder": true,
+      "children": [
+        {"id": "preset-google", "name": "Google", "url": "https://www.google.com", "icon": "", "isFolder": false},
+        {"id": "preset-bing", "name": "Bing", "url": "https://www.bing.com", "icon": "", "isFolder": false},
+        {"id": "preset-yahoo", "name": "Yahoo", "url": "https://www.yahoo.com", "icon": "", "isFolder": false},
+        {"id": "preset-duckduckgo", "name": "DuckDuckGo", "url": "https://duckduckgo.com", "icon": "", "isFolder": false}
+      ]
+    },
+    {
+      "id": "preset-social",
+      "name": "社交媒体",
+      "url": "",
+      "icon": "",
+      "isFolder": true,
+      "children": [
+        {"id": "preset-twitter", "name": "Twitter", "url": "https://www.twitter.com", "icon": "", "isFolder": false},
+        {"id": "preset-facebook", "name": "Facebook", "url": "https://www.facebook.com", "icon": "", "isFolder": false},
+        {"id": "preset-instagram", "name": "Instagram", "url": "https://www.instagram.com", "icon": "", "isFolder": false},
+        {"id": "preset-linkedin", "name": "LinkedIn", "url": "https://www.linkedin.com", "icon": "", "isFolder": false},
+        {"id": "preset-pinterest", "name": "Pinterest", "url": "https://www.pinterest.com", "icon": "", "isFolder": false},
+        {"id": "preset-reddit", "name": "Reddit", "url": "https://www.reddit.com", "icon": "", "isFolder": false},
+        {"id": "preset-tiktok", "name": "TikTok", "url": "https://www.tiktok.com", "icon": "", "isFolder": false}
+      ]
+    },
+    {
+      "id": "preset-video",
+      "name": "视频网站",
+      "url": "",
+      "icon": "",
+      "isFolder": true,
+      "children": [
+        {"id": "preset-youtube", "name": "YouTube", "url": "https://www.youtube.com", "icon": "", "isFolder": false},
+        {"id": "preset-netflix", "name": "Netflix", "url": "https://www.netflix.com", "icon": "", "isFolder": false},
+        {"id": "preset-disney", "name": "Disney+", "url": "https://www.disneyplus.com", "icon": "", "isFolder": false},
+        {"id": "preset-hulu", "name": "Hulu", "url": "https://www.hulu.com", "icon": "", "isFolder": false},
+        {"id": "preset-amazonprime", "name": "Amazon Prime", "url": "https://www.primevideo.com", "icon": "", "isFolder": false}
+      ]
+    },
+    {
+      "id": "preset-music",
+      "name": "音乐网站",
+      "url": "",
+      "icon": "",
+      "isFolder": true,
+      "children": [
+        {"id": "preset-spotify", "name": "Spotify", "url": "https://www.spotify.com", "icon": "", "isFolder": false},
+        {"id": "preset-applemusic", "name": "Apple Music", "url": "https://www.apple.com/apple-music", "icon": "", "isFolder": false},
+        {"id": "preset-youtubemusic", "name": "YouTube Music", "url": "https://music.youtube.com", "icon": "", "isFolder": false},
+        {"id": "preset-soundcloud", "name": "SoundCloud", "url": "https://soundcloud.com", "icon": "", "isFolder": false}
+      ]
+    },
+    {
+      "id": "preset-shopping",
+      "name": "购物网站",
+      "url": "",
+      "icon": "",
+      "isFolder": true,
+      "children": [
+        {"id": "preset-amazon", "name": "Amazon", "url": "https://www.amazon.com", "icon": "", "isFolder": false},
+        {"id": "preset-ebay", "name": "eBay", "url": "https://www.ebay.com", "icon": "", "isFolder": false},
+        {"id": "preset-aliexpress", "name": "AliExpress", "url": "https://www.aliexpress.com", "icon": "", "isFolder": false},
+        {"id": "preset-walmart", "name": "Walmart", "url": "https://www.walmart.com", "icon": "", "isFolder": false},
+        {"id": "preset-bestbuy", "name": "Best Buy", "url": "https://www.bestbuy.com", "icon": "", "isFolder": false}
+      ]
+    },
+    {
+      "id": "preset-news",
+      "name": "新闻网站",
+      "url": "",
+      "icon": "",
+      "isFolder": true,
+      "children": [
+        {"id": "preset-cnn", "name": "CNN", "url": "https://www.cnn.com", "icon": "", "isFolder": false},
+        {"id": "preset-bbc", "name": "BBC", "url": "https://www.bbc.com", "icon": "", "isFolder": false},
+        {"id": "preset-nytimes", "name": "The New York Times", "url": "https://www.nytimes.com", "icon": "", "isFolder": false},
+        {"id": "preset-guardian", "name": "The Guardian", "url": "https://www.theguardian.com", "icon": "", "isFolder": false},
+        {"id": "preset-reuters", "name": "Reuters", "url": "https://www.reuters.com", "icon": "", "isFolder": false}
+      ]
+    },
+    {
+      "id": "preset-dev",
+      "name": "开发者工具",
+      "url": "",
+      "icon": "",
+      "isFolder": true,
+      "children": [
+        {"id": "preset-github", "name": "GitHub", "url": "https://www.github.com", "icon": "", "isFolder": false},
+        {"id": "preset-stackoverflow", "name": "Stack Overflow", "url": "https://www.stackoverflow.com", "icon": "", "isFolder": false},
+        {"id": "preset-gitlab", "name": "GitLab", "url": "https://www.gitlab.com", "icon": "", "isFolder": false},
+        {"id": "preset-bitbucket", "name": "Bitbucket", "url": "https://www.bitbucket.org", "icon": "", "isFolder": false},
+        {"id": "preset-codepen", "name": "CodePen", "url": "https://codepen.io", "icon": "", "isFolder": false}
+      ]
+    },
+    {
+      "id": "preset-learning",
+      "name": "学习网站",
+      "url": "",
+      "icon": "",
+      "isFolder": true,
+      "children": [
+        {"id": "preset-wikipedia", "name": "Wikipedia", "url": "https://www.wikipedia.org", "icon": "", "isFolder": false},
+        {"id": "preset-coursera", "name": "Coursera", "url": "https://www.coursera.org", "icon": "", "isFolder": false},
+        {"id": "preset-udemy", "name": "Udemy", "url": "https://www.udemy.com", "icon": "", "isFolder": false},
+        {"id": "preset-khanacademy", "name": "Khan Academy", "url": "https://www.khanacademy.org", "icon": "", "isFolder": false},
+        {"id": "preset-edx", "name": "edX", "url": "https://www.edx.org", "icon": "", "isFolder": false}
+      ]
+    },
+    {
+      "id": "preset-tools",
+      "name": "工具网站",
+      "url": "",
+      "icon": "",
+      "isFolder": true,
+      "children": [
+        {"id": "preset-googledrive", "name": "Google Drive", "url": "https://drive.google.com", "icon": "", "isFolder": false},
+        {"id": "preset-dropbox", "name": "Dropbox", "url": "https://www.dropbox.com", "icon": "", "isFolder": false},
+        {"id": "preset-notion", "name": "Notion", "url": "https://www.notion.so", "icon": "", "isFolder": false},
+        {"id": "preset-figma", "name": "Figma", "url": "https://www.figma.com", "icon": "", "isFolder": false},
+        {"id": "preset-canva", "name": "Canva", "url": "https://www.canva.com", "icon": "", "isFolder": false}
+      ]
+    },
+    {
+      "id": "preset-other",
+      "name": "常用网站",
+      "url": "",
+      "icon": "",
+      "isFolder": true,
+      "children": [
+        {"id": "preset-weather", "name": "Weather", "url": "https://www.weather.com", "icon": "", "isFolder": false},
+        {"id": "preset-googlemaps", "name": "Google Maps", "url": "https://www.google.com/maps", "icon": "", "isFolder": false},
+        {"id": "preset-gmail", "name": "Gmail", "url": "https://mail.google.com", "icon": "", "isFolder": false},
+        {"id": "preset-outlook", "name": "Outlook", "url": "https://outlook.live.com", "icon": "", "isFolder": false}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,534 @@
+.settings-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+.settings-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 400px;
+  height: 100%;
+  background: rgba(30, 30, 30, 0.95);
+  backdrop-filter: blur(20px);
+  padding: 40px;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.4);
+  animation: settings-slide-in 0.4s ease;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 1000;
+  transition: transform 0.4s ease;
+  overflow-y: auto;
+}
+
+.settings-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.settings-panel::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.settings-panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.settings-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.settings-panel.closing {
+  animation: settings-slide-out 0.4s ease forwards;
+}
+
+@keyframes settings-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes settings-slide-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.settings-panel .panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.settings-panel h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  color: white;
+}
+
+.back-button {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(100, 100, 255, 0.5);
+  transform: scale(1.1);
+}
+
+.settings-section {
+  margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.grid-settings {
+  margin-top: 15px;
+  display: flex;
+  gap: 15px;
+}
+
+.setting-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.setting-item label {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.setting-item input {
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  font-size: 14px;
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+}
+
+.setting-item input:focus {
+  outline: none;
+  border-color: rgba(100, 100, 255, 0.5);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tool-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.tool-buttons button {
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+  text-align: left;
+}
+
+.tool-buttons button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(100, 100, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.settings-section h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: white;
+  font-family: 'Poppins', sans-serif;
+}
+
+.settings-section button {
+  padding: 10px 16px;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  border-radius: 8px;
+  background: rgba(6, 182, 212, 0.1);
+  color: #06b6d4;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.settings-section button:hover {
+  background: rgba(6, 182, 212, 0.2);
+  border-color: rgba(6, 182, 212, 0.5);
+  transform: translateY(-1px);
+}
+
+.settings-section button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 通用输入框样式 */
+.settings-panel input[type="text"],
+.settings-panel input[type="number"] {
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  font-size: 14px;
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.settings-panel input[type="text"]:focus,
+.settings-panel input[type="number"]:focus {
+  outline: none;
+  border-color: rgba(100, 100, 255, 0.5);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.settings-panel input[type="text"]::placeholder,
+.settings-panel input[type="number"]::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* 通用按钮样式 */
+.settings-panel button {
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+}
+
+.settings-panel button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(100, 100, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.settings-panel button:active {
+  transform: translateY(0);
+}
+
+/* 主要按钮样式 */
+.settings-panel button.primary {
+  background: rgba(102, 126, 234, 0.8);
+  border-color: rgba(102, 126, 234, 0.5);
+}
+
+.settings-panel button.primary:hover {
+  background: rgba(102, 126, 234, 1);
+  border-color: rgba(102, 126, 234, 0.8);
+}
+
+/* 滑动条样式 - 与壁纸管理器保持一致 */
+.settings-panel input[type="range"] {
+  width: 100%;
+  cursor: pointer;
+  margin: 8px 0;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  outline: none;
+}
+
+.settings-panel input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: rgba(59, 130, 246, 0.8);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.settings-panel input[type="range"]::-webkit-slider-thumb:hover {
+  background: rgba(59, 130, 246, 1);
+  transform: scale(1.1);
+}
+
+/* 安卓风格开关 */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.2);
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: rgba(59, 130, 246, 0.8);
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(26px);
+}
+
+/* 选项项目样式 */
+.setting-item label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.option-item {
+  margin-bottom: 15px;
+}
+
+.option-item label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.option-item label > .toggle-switch {
+  margin-top: 8px;
+  align-self: flex-start;
+}
+
+.option-item input[type="range"] {
+  width: 100%;
+  cursor: pointer;
+}
+
+.option-item .reset-button {
+  width: 100%;
+  padding: 10px 16px;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  border-radius: 8px;
+  background: rgba(6, 182, 212, 0.1);
+  color: #06b6d4;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+  text-align: center;
+}
+
+.option-item .reset-button:hover {
+  background: rgba(6, 182, 212, 0.2);
+  border-color: rgba(6, 182, 212, 0.4);
+  transform: translateY(-1px);
+}
+
+/* 表单样式 */
+.settings-panel .form-group {
+  margin-bottom: 16px;
+}
+
+.settings-panel .form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 8px;
+}
+
+.settings-panel .form-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+/* 卡片样式 */
+.settings-panel .card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+}
+
+.settings-panel .card:hover {
+  border-color: rgba(100, 100, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 保存区域样式 */
+.save-section {
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.unsaved-indicator {
+  background: rgba(250, 204, 21, 0.1);
+  border: 1px solid rgba(250, 204, 21, 0.3);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.unsaved-indicator span {
+  color: #facc15;
+  font-size: 14px;
+  font-weight: 500;
+  flex: 1;
+}
+
+.save-button {
+  padding: 14px 24px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(59, 130, 246, 0.8);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+  text-align: center;
+}
+
+.save-button:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+}
+
+.save-button:disabled {
+  background: rgba(156, 163, 175, 0.5);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.save-success {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 8px;
+  padding: 16px;
+  color: #10b981;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  animation: settingsFadeIn 0.3s ease-out;
+}
+
+.save-error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  padding: 16px;
+  color: #ef4444;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  animation: settingsFadeIn 0.3s ease-out;
+}
+
+@keyframes settingsFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 注销按钮样式 */
+.logout-button {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #ef4444 !important;
+}
+
+.logout-button:hover {
+  background: rgba(239, 68, 68, 0.25) !important;
+  border-color: rgba(239, 68, 68, 0.5) !important;
+}
