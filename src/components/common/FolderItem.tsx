@@ -56,6 +56,7 @@ const FolderItem: React.FC<FolderItemProps> = ({
       onClick={onClick}
       role="listitem"
       ariaLabel={icon.name}
+      label={<div className="icon-label">{icon.name}</div>}
     >
       <div className="icon-circle folder-icon-grid">
         {childIcons.length > 0 ? (
@@ -83,7 +84,6 @@ const FolderItem: React.FC<FolderItemProps> = ({
           <span className="folder-empty-icon">📁</span>
         )}
       </div>
-      <div className="icon-label">{icon.name}</div>
     </DraggableIconWrapper>
   );
 };

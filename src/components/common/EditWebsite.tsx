@@ -120,8 +120,8 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
 
     if (!newIcon.name.trim()) {
       newErrors.name = '请输入网站名称';
-    } else if (newIcon.name.trim().length > 20) {
-      newErrors.name = '网站名称不能超过20个字符';
+    } else if (newIcon.name.trim().length > 80) {
+      newErrors.name = '网站名称不能超过80个字符';
     }
 
     if (!newIcon.url.trim()) {
@@ -535,7 +535,7 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
               }
             }}
             onKeyDown={handleKeyPress}
-            maxLength={20}
+            maxLength={80}
             className={`edit-website-input ${errors.name ? 'error' : ''}`}
           />
           {errors.name && <div className="edit-website-error">{errors.name}</div>}

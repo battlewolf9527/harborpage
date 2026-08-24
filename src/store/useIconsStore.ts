@@ -12,18 +12,25 @@ interface PendingDeleteItem {
   url: string;
 }
 
+interface PendingFolderCreation {
+  draggedIconId: string;
+  targetIconId: string;
+}
+
 interface IconsState {
   websites: Website[];
   openFolder: OpenFolder | null;
   draggedIcon: Website | null;
   targetIconId: string | null;
   pendingDeletes: PendingDeleteItem[];
+  pendingFolderCreation: PendingFolderCreation | null;
 
   setWebsiteIcons: (icons: Website[]) => void;
   setOpenFolder: (folder: OpenFolder | null) => void;
   setDraggedIcon: (icon: Website | null) => void;
   setTargetIconId: (id: string | null) => void;
   setPendingDeletes: (items: PendingDeleteItem[]) => void;
+  setPendingFolderCreation: (pending: PendingFolderCreation | null) => void;
 
   addIcon: (icon: Website) => void;
   updateIcon: (icon: Website) => void;
@@ -48,6 +55,7 @@ const initialState = {
   draggedIcon: null as Website | null,
   targetIconId: null as string | null,
   pendingDeletes: [] as PendingDeleteItem[],
+  pendingFolderCreation: null as PendingFolderCreation | null,
 };
 
 export const useIconsStore = create<IconsState>((set, get) => ({
@@ -68,6 +76,7 @@ export const useIconsStore = create<IconsState>((set, get) => ({
   setDraggedIcon: (icon) => set({ draggedIcon: icon }),
   setTargetIconId: (id) => set({ targetIconId: id }),
   setPendingDeletes: (items) => set({ pendingDeletes: items }),
+  setPendingFolderCreation: (pending) => set({ pendingFolderCreation: pending }),
 
   addIcon: (icon) => {
     const { websites } = get();
@@ -331,16 +340,25 @@ export const useIconsStore = create<IconsState>((set, get) => ({
   },
 
   createFolder: (folderName?: string) => {
-    const { websites, draggedIcon, targetIconId, openFolder } = get();
+    const { websites, pendingFolderCreation, openFolder } = get();
 
-    if (!folderName || !draggedIcon || !targetIconId) {
+    if (!pendingFolderCreation) {
       return;
     }
 
-    const draggedIconObj = websites.find(icon => icon.id === draggedIcon.id);
+    // 用户取消对话框时清空待创建状态
+    if (!folderName) {
+      set({ pendingFolderCreation: null, targetIconId: null });
+      return;
+    }
+
+    const { draggedIconId, targetIconId } = pendingFolderCreation;
+
+    const draggedIconObj = websites.find(icon => icon.id === draggedIconId);
     const targetIconObj = websites.find(icon => icon.id === targetIconId);
 
     if (!draggedIconObj || !targetIconObj) {
+      set({ pendingFolderCreation: null });
       return;
     }
 
@@ -355,7 +373,7 @@ export const useIconsStore = create<IconsState>((set, get) => ({
     // 在 targetIcon 原位置插入新文件夹，跳过 draggedIcon 和 targetIcon
     const newIcons = websites.flatMap(icon => {
       if (icon.id === targetIconId) return [newFolder];
-      if (icon.id === draggedIcon.id) return [];
+      if (icon.id === draggedIconId) return [];
       return [icon];
     });
 
@@ -366,7 +384,7 @@ export const useIconsStore = create<IconsState>((set, get) => ({
       newOpenFolder = { ...openFolder, websites: folder?.children || [] };
     }
 
-    set({ websites: newIcons, targetIconId: null, openFolder: newOpenFolder });
+    set({ websites: newIcons, pendingFolderCreation: null, targetIconId: null, openFolder: newOpenFolder });
   },
 }));
 

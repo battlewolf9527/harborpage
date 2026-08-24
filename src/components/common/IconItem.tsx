@@ -62,6 +62,7 @@ const IconItem: React.FC<IconItemProps> = ({
       onDragOverOutside={onDragOverOutside}
       onClick={onClick}
       onContextMenu={onContextMenu}
+      label={<div className="icon-label">{icon.name}</div>}
     >
       <div className="icon-circle">
         {isUrl ? (
@@ -78,7 +79,6 @@ const IconItem: React.FC<IconItemProps> = ({
           iconContent || '🌐'
         )}
       </div>
-      <div className="icon-label">{icon.name}</div>
     </DraggableIconWrapper>
   );
 };

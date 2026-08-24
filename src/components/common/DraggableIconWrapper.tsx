@@ -19,6 +19,7 @@ interface DraggableIconWrapperProps {
   onContextMenu?: ((e: React.MouseEvent) => void) | undefined;
   role?: string;
   ariaLabel?: string;
+  label?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -38,6 +39,7 @@ const DraggableIconWrapper: React.FC<DraggableIconWrapperProps> = ({
   onContextMenu,
   role,
   ariaLabel,
+  label,
   children,
 }) => {
   const wrapperClassName = `icon-wrapper ${isDragOverIcon ? 'drag-over' : ''} ${
@@ -54,15 +56,6 @@ const DraggableIconWrapper: React.FC<DraggableIconWrapperProps> = ({
 
   return (
     <div className={`icon-item ${isDragging ? 'dragging' : ''}`}>
-      {/* 左侧外部拖放区域 */}
-      <div
-        className="icon-drop-zone icon-drop-zone-left"
-        data-icon-id={icon.id}
-        onDragOver={handleDragOverOutside('before')}
-        onDragLeave={onDragLeave}
-        onDrop={onDrop}
-      />
-
       <div
         draggable={draggable}
         data-icon-id={icon.id}
@@ -82,17 +75,27 @@ const DraggableIconWrapper: React.FC<DraggableIconWrapperProps> = ({
           }
         }}
       >
+        {/* 左侧外部拖放区域：放在 wrapper 内部，确保始终紧贴 wrapper 左侧 */}
+        <div
+          className="icon-drop-zone icon-drop-zone-left"
+          data-icon-id={icon.id}
+          onDragOver={handleDragOverOutside('before')}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
+        />
         {children}
+        {/* 右侧外部拖放区域：放在 wrapper 内部，确保始终紧贴 wrapper 右侧 */}
+        <div
+          className="icon-drop-zone icon-drop-zone-right"
+          data-icon-id={icon.id}
+          onDragOver={handleDragOverOutside('after')}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
+        />
       </div>
 
-      {/* 右侧外部拖放区域 */}
-      <div
-        className="icon-drop-zone icon-drop-zone-right"
-        data-icon-id={icon.id}
-        onDragOver={handleDragOverOutside('after')}
-        onDragLeave={onDragLeave}
-        onDrop={onDrop}
-      />
+      {/* label 放在 icon-wrapper 外部，宽度不再受 wrapper 限制，可达到 grid 单元格宽度 */}
+      {label}
     </div>
   );
 };

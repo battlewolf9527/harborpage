@@ -7,8 +7,7 @@ export function useIconDropHandler(
   websites: Website[],
   onIconsChange: (icons: Website[]) => void
 ) {
-  const setDraggedIcon = useIconsStore((s) => s.setDraggedIcon);
-  const setTargetIconId = useIconsStore((s) => s.setTargetIconId);
+  const setPendingFolderCreation = useIconsStore((s) => s.setPendingFolderCreation);
   const setShowFolderNameDialog = useIconsUIStore((s) => s.setShowFolderNameDialog);
 
   const handleDrop = useCallback((
@@ -39,14 +38,18 @@ export function useIconDropHandler(
     }
 
     if (!targetIcon.isFolder && !draggedIcon.isFolder) {
-      setTargetIconId(targetIconId);
-      setDraggedIcon(draggedIcon);
+      // 暂存两个图标 ID，待用户在对话框中输入名称后由 createFolder 读取。
+      // 不能依赖 store.draggedIcon，因为它会被 dragend 事件清空。
+      setPendingFolderCreation({
+        draggedIconId: draggedIcon.id,
+        targetIconId,
+      });
       setShowFolderNameDialog(true);
       return true;
     }
 
     return false;
-  }, [websites, onIconsChange, setDraggedIcon, setTargetIconId, setShowFolderNameDialog]);
+  }, [websites, onIconsChange, setPendingFolderCreation, setShowFolderNameDialog]);
 
   return handleDrop;
 }
