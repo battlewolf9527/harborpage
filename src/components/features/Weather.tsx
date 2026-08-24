@@ -32,10 +32,11 @@ const Weather: React.FC = () => {
     lunarInfo,
     currentDate,
     handleDateClick,
+    weatherApiAvailable,
   } = useWeather();
 
   return (
-    <div className="weather-info">
+    <div className={`weather-info${weatherApiAvailable ? '' : ' weather-info--compact'}`}>
       <div className="weather-header">
         <div
           className="date"
@@ -44,7 +45,9 @@ const Weather: React.FC = () => {
         >
           {showLunar ? lunarInfo : currentDate}
         </div>
-        <div className="city" title={locationMethod}>📍 {cityName || '定位中...'}</div>
+        {weatherApiAvailable && (
+          <div className="city" title={locationMethod}>📍 {cityName || '定位中...'}</div>
+        )}
       </div>
 
       <div className="time-weather-row">
@@ -52,7 +55,7 @@ const Weather: React.FC = () => {
           <Clock />
         </div>
 
-        {weatherLoading ? (
+        {weatherApiAvailable && (weatherLoading ? (
           <div className="weather-content">
             <i className="weather-icon qi-999"></i>
             <div className="weather-details">
@@ -86,7 +89,7 @@ const Weather: React.FC = () => {
               <span className="weather-desc">无法获取天气</span>
             </div>
           </div>
-        )}
+        ))}
       </div>
     </div>
   );

@@ -24,8 +24,12 @@ interface WeatherCacheEntry {
 }
 
 export function useWeather() {
+  const { configService } = getServices();
+  const weatherApiAvailable = configService.isWeatherApiAvailable();
+
   const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [weatherLoading, setWeatherLoading] = useState<boolean>(true);
+  // 未配置天气API时，直接跳过所有 loading/定位/API 调用
+  const [weatherLoading, setWeatherLoading] = useState<boolean>(weatherApiAvailable);
   const [weatherError, setWeatherError] = useState<string | null>(null);
   const [cityName, setCityName] = useState<string | null>(null);
 
@@ -129,6 +133,7 @@ export function useWeather() {
 
   const { locationMethod } = useWeatherLocation({
     fetchWeatherData,
+    enabled: weatherApiAvailable,
   });
 
   const {
@@ -148,6 +153,7 @@ export function useWeather() {
     lunarInfo,
     currentDate,
     handleDateClick,
+    weatherApiAvailable,
   };
 }
 

@@ -147,17 +147,21 @@ const WallpaperManager: React.FC = () => {
     try {
       const formData = new FormData();
       formData.append('file', file);
+      const headers = new Headers(AuthService.getAuthHeaders());
+      // 传递当前壁纸 URL，供后端清理上一张壁纸文件
+      if (wallpaper && !wallpaper.startsWith('data:')) {
+        headers.set('X-Previous-Wallpaper', wallpaper);
+      }
       const response = await fetch('/api/wallpaper/upload', {
         method: 'POST',
-        headers: AuthService.getAuthHeaders(),
+        headers,
         body: formData,
       });
 
       if (response.ok) {
         const data = await response.json();
-        // R2 上传成功，用 R2 URL + 时间戳防缓存
-        const wallpaperUrl = `${data.wallpaperUrl}?t=${Date.now()}`;
-        setWallpaper(wallpaperUrl, 'local');
+        // 内容 hash 文件名天然防缓存，URL 直接使用
+        setWallpaper(data.wallpaperUrl, 'local');
         return;
       }
       // R2 不可用（503）或其他错误，降级到浏览器存储
@@ -178,7 +182,7 @@ const WallpaperManager: React.FC = () => {
       }
     };
     reader.readAsDataURL(file);
-  }, [setWallpaper]);
+  }, [setWallpaper, wallpaper]);
 
   const handleColorChange = useCallback((color: string) => {
     setSolidColor(color);

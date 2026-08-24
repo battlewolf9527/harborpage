@@ -136,6 +136,36 @@
   font-weight: 500;
 }
 
+/* 天气API未配置时的紧凑模式：仅显示日期和时间 */
+.weather-info--compact {
+  padding: 0.5vw;
+  max-width: 18vw;
+  min-width: 11vw;
+}
+
+.weather-info--compact .weather-header {
+  justify-content: center;
+  margin-bottom: 0.3vw;
+}
+
+.weather-info--compact .time-weather-row {
+  justify-content: center;
+}
+
+.weather-info--compact .time {
+  margin-right: 0;
+  width: 7.8vw;
+  min-width: 7.8vw;
+  font-variant-numeric: tabular-nums;
+  justify-content: center;
+}
+
+.weather-info--compact .time-text {
+  display: inline-block;
+  min-width: 7.8vw;
+  text-align: center;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .weather-info {
