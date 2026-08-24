@@ -7,11 +7,13 @@ async function configHandler(_request: Request, _url: URL, env: Env): Promise<Re
   const hasR2Url = !!env.R2_URL;
   const r2StorageAvailable = hasBucket && hasR2Url;
   const enableR2Cdn = r2StorageAvailable && env.ENABLE_R2_CDN === 'true';
+  const weatherApiAvailable = !!(env.WEATHER_API_KEY && env.WEATHER_API_HOST);
 
   return Response.json({
     r2Url: env.R2_URL || '',
     enableR2Cdn,
     r2StorageAvailable,
+    weatherApiAvailable,
   });
 }
 

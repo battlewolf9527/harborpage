@@ -28,6 +28,9 @@ class AuthService {
 
   // SHA-256 哈希函数
   private async sha256(message: string): Promise<string> {
+    if (!crypto?.subtle) {
+      throw new Error('CRYPTO_SUBTLE_UNAVAILABLE');
+    }
     const encoder = new TextEncoder();
     const data = encoder.encode(message);
     const hash = await crypto.subtle.digest('SHA-256', data);
@@ -37,10 +40,22 @@ class AuthService {
   }
 
   // 登录 - 发送密码的 SHA-256 哈希值
-  public async login(password: string): Promise<boolean> {
+  public async login(password: string): Promise<{ success: boolean; error?: string }> {
+    let passwordHash: string;
     try {
-      const passwordHash = await this.sha256(password);
-      
+      passwordHash = await this.sha256(password);
+    } catch (error) {
+      logger.error('密码哈希失败', error);
+      if (error instanceof Error && error.message === 'CRYPTO_SUBTLE_UNAVAILABLE') {
+        return {
+          success: false,
+          error: '当前环境不支持密码加密，请通过 HTTPS 或 localhost 访问',
+        };
+      }
+      return { success: false, error: '密码加密失败，请稍后重试' };
+    }
+
+    try {
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: {
@@ -61,12 +76,13 @@ class AuthService {
         } catch (configError) {
           logger.error('获取配置失败', configError);
         }
-        return true;
+        return { success: true };
       }
-      return false;
+      // 密码错误（401）或其他非 OK 状态，统一显示默认错误
+      return { success: false };
     } catch (error) {
       logger.error('登录失败', error);
-      return false;
+      return { success: false, error: '网络请求失败，请稍后重试' };
     }
   }
 

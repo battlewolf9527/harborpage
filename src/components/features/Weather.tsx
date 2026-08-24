@@ -61,11 +61,11 @@ const Weather: React.FC = () => {
             </div>
           </div>
         ) : weatherError ? (
-          <div className="weather-content">
+          <div className="weather-content" title={weatherError}>
             <i className="weather-icon qi-999"></i>
             <div className="weather-details">
-              <span className="temperature">错误</span>
-              <span className="weather-desc">{weatherError}</span>
+              <span className="temperature">天气</span>
+              <span className="weather-desc">不可用</span>
             </div>
           </div>
         ) : weather ? (

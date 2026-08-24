@@ -11,6 +11,7 @@ interface AppConfig {
   r2Url: string;
   enableR2Cdn: boolean;
   r2StorageAvailable: boolean;
+  weatherApiAvailable: boolean;
 }
 
 class ConfigService {
@@ -62,6 +63,10 @@ class ConfigService {
 
   public isR2StorageAvailable(): boolean {
     return this.config?.r2StorageAvailable === true;
+  }
+
+  public isWeatherApiAvailable(): boolean {
+    return this.config?.weatherApiAvailable === true;
   }
 
   // 从后端获取配置（需认证）

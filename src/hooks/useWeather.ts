@@ -55,6 +55,15 @@ export function useWeather() {
   }, []);
 
   const fetchWeatherData = useCallback(async (latitude: number, longitude: number) => {
+    const { configService } = getServices();
+
+    if (!configService.isWeatherApiAvailable()) {
+      setWeatherError('天气API未配置');
+      setWeatherLoading(false);
+      setCityName('未知城市');
+      return;
+    }
+
     try {
       const { authService } = getServices();
       const lat = latitude.toFixed(2);

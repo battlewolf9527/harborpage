@@ -15,7 +15,7 @@
 	"main": "worker/index.ts",
 	"compatibility_date": "2026-03-17",
 	"assets": {
-		"directory": "./dist/client",
+		"directory": "./dist/client/client",
 		"binding": "ASSETS",
 		"not_found_handling": "single-page-application"
 	},

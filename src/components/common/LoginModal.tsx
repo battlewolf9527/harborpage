@@ -22,14 +22,14 @@ function LoginModal({ onLogin }: LoginModalProps) {
     setIsLoading(true);
     setError('');
 
-    const success = await getServices().authService.login(password);
-    
-    if (success) {
+    const result = await getServices().authService.login(password);
+
+    if (result.success) {
       onLogin();
     } else {
-      setError('密码错误，请重试');
+      setError(result.error || '密码错误，请重试');
     }
-    
+
     setIsLoading(false);
   };
 
