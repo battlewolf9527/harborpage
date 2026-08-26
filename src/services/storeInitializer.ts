@@ -1,10 +1,11 @@
-import type { UserData, Website, SearchEngine, Todo, Note } from '../types';
+import type { UserData, Website, SearchEngine, Todo, Note, Page } from '../types';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useIconsStore } from '../store/useIconsStore';
 import { useWallpaperStore } from '../store/useWallpaperStore';
 import { useSearchStore } from '../store/useSearchStore';
 import { useTodoStore } from '../store/useTodoStore';
 import { useNotesStore } from '../store/useNotesStore';
+import { usePagesStore } from '../store/usePagesStore';
 import { getServices } from './serviceContainer';
 import createLogger from '../utils/logger';
 
@@ -43,7 +44,7 @@ function syncToDataManager(): void {
   });
 
   safeSync('websites', () => {
-    const ws: Website[] = useIconsStore.getState().websites ?? [];
+    const ws: Website[] = useIconsStore.getState().getWebsites() ?? [];
     dataManager.updateWebsiteIcons(ws);
   });
 
@@ -70,6 +71,16 @@ function syncToDataManager(): void {
     dataManager.updateNotes(ns);
   });
 
+  safeSync('pages', () => {
+    const ps: Page[] = usePagesStore.getState().pages ?? [];
+    dataManager.updatePages(ps);
+  });
+
+  safeSync('currentPageId', () => {
+    const cpid: string = usePagesStore.getState().currentPageId ?? '';
+    dataManager.updateCurrentPageId(cpid);
+  });
+
   const failedSyncs = Object.entries(syncResults)
     .filter(([, success]) => !success)
     .map(([name]) => name);
@@ -93,7 +104,9 @@ export function initializeAllStores(data: UserData): void {
   };
 
   safeInit('settings', () => useSettingsStore.getState().initialize(data.settings));
-  safeInit('icons', () => useIconsStore.getState().initialize(data.websites ?? []));
+  safeInit('pages', () => usePagesStore.getState().initialize(data.pages, data.currentPageId, data.websites));
+  // ⚠️ 注意：websites 由 pages 管理，这里不要再传 []（之前传 [] 会触发 icons initialize 把 pages 刚写入的网站清空！）
+  safeInit('icons', () => useIconsStore.getState().initialize());
   safeInit('wallpaper', () => useWallpaperStore.getState().initialize(data.wallpaper));
   safeInit('search', () => useSearchStore.getState().initialize(data.searchEngines, data.settings?.defaultSearchEngineId));
   safeInit('todos', () => useTodoStore.getState().initialize(data.todos ?? data.todoList ?? []));
@@ -129,12 +142,14 @@ export async function initializeAllStoresAsync(
   };
 
   const steps: Array<[string, number, string, () => void]> = [
-    ['settings', 20, '正在初始化设置...', () => useSettingsStore.getState().initialize(data.settings)],
-    ['icons', 35, '正在初始化网站...', () => useIconsStore.getState().initialize(data.websites ?? [])],
-    ['wallpaper', 45, '正在初始化壁纸...', () => useWallpaperStore.getState().initialize(data.wallpaper)],
-    ['search', 60, '正在初始化搜索引擎...', () => useSearchStore.getState().initialize(data.searchEngines, data.settings?.defaultSearchEngineId)],
-    ['todos', 72, '正在初始化待办列表...', () => useTodoStore.getState().initialize(data.todos ?? data.todoList ?? [])],
-    ['notes', 82, '正在初始化笔记...', () => useNotesStore.getState().initialize(data.notes)],
+    ['settings', 15, '正在初始化设置...', () => useSettingsStore.getState().initialize(data.settings)],
+    ['pages', 30, '正在初始化页面...', () => usePagesStore.getState().initialize(data.pages, data.currentPageId, data.websites)],
+    // ⚠️ 注意：websites 由 pages 管理，这里不要再传 []（之前传 [] 会触发 icons initialize 把 pages 刚写入的网站清空！）
+    ['icons', 40, '正在初始化网站...', () => useIconsStore.getState().initialize()],
+    ['wallpaper', 50, '正在初始化壁纸...', () => useWallpaperStore.getState().initialize(data.wallpaper)],
+    ['search', 65, '正在初始化搜索引擎...', () => useSearchStore.getState().initialize(data.searchEngines, data.settings?.defaultSearchEngineId)],
+    ['todos', 77, '正在初始化待办列表...', () => useTodoStore.getState().initialize(data.todos ?? data.todoList ?? [])],
+    ['notes', 87, '正在初始化笔记...', () => useNotesStore.getState().initialize(data.notes)],
   ];
 
   for (const [name, percent, task, fn] of steps) {

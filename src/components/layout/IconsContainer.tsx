@@ -14,6 +14,7 @@ interface IconsContainerProps {
   onOpenFolder: (id: string, name: string, websites: Website[]) => void;
   onEditIcon?: (icon: Website) => void;
   onDeleteIcon?: (iconId: string) => void;
+  onMoveToPage?: (icon: Website) => void;
 }
 
 const IconsContainer: React.FC<IconsContainerProps> = memo(({
@@ -23,6 +24,7 @@ const IconsContainer: React.FC<IconsContainerProps> = memo(({
   onOpenFolder,
   onEditIcon,
   onDeleteIcon,
+  onMoveToPage,
 }) => {
   const [showScrollbar, setShowScrollbar] = useState(false);
   const scrollTimeoutRef = useRef<number | null>(null);
@@ -84,6 +86,7 @@ const IconsContainer: React.FC<IconsContainerProps> = memo(({
         onOpenFolder={onOpenFolder}
         onEditIcon={onEditIcon}
         onDeleteIcon={onDeleteIcon}
+        onMoveToPage={onMoveToPage}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onDragOverIcon={handleDragOverIcon}

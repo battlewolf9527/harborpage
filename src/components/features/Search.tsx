@@ -14,23 +14,37 @@ interface SearchProps {
 
 const Search: React.FC<SearchProps> = ({ onSearch }) => {
   const { iconManager } = getServices();
-  const { searchEngines, defaultSearchEngineId, setDefaultSearchEngineId } = useSearchSelector();
+  const { searchEngines, defaultSearchEngineId } = useSearchSelector();
   const [showSearchDropdown, setShowSearchDropdown] = useState<boolean>(false)
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number, left: number }>({ top: 0, left: 0 })
   const [isFocused, setIsFocused] = useState<boolean>(false)
   const [query, setQuery] = useState<string>('')
+  // 主页面选中的搜索引擎：**仅本地临时状态**，不写回 store，不触发持久化，因此不出现"需要保存"提示。
+  // - 初始化时同步 store 的 defaultSearchEngineId（设置面板改默认值会同步到这里）
+  // - 用户手动点击切换后：hasSwitchedManually=true，不再被 store 的同步覆盖
+  const [selectedEngineId, setSelectedEngineId] = useState<string>('');
+  const hasSwitchedManuallyRef = useRef<boolean>(false);
   const searchEngineButtonRef = useRef<HTMLButtonElement>(null)
+
+  // 初始化 / store 默认值变化 → 仅当用户没手动切换过时同步
+  React.useEffect(() => {
+    if (!hasSwitchedManuallyRef.current) {
+      const firstAvailableId = searchEngines[0]?.id ?? '';
+      const validId = searchEngines.some(e => e.id === defaultSearchEngineId)
+        ? defaultSearchEngineId
+        : firstAvailableId;
+      setSelectedEngineId(validId);
+    }
+  }, [searchEngines, defaultSearchEngineId]);
 
   const effectiveSearchEngine = useMemo(() => {
     if (searchEngines.length === 0) return null;
-    
-    let engine = searchEngines.find(e => e.id === defaultSearchEngineId);
+    let engine = searchEngines.find(e => e.id === selectedEngineId);
     if (!engine) {
       engine = searchEngines[0];
     }
-    
     return engine;
-  }, [searchEngines, defaultSearchEngineId]);
+  }, [searchEngines, selectedEngineId]);
 
   const handleSearchEngineClick = useCallback(() => {
     if (searchEngineButtonRef.current) {
@@ -44,9 +58,13 @@ const Search: React.FC<SearchProps> = ({ onSearch }) => {
   }, [showSearchDropdown])
 
   const handleEngineSelect = useCallback((engine: SearchEngine) => {
-    setDefaultSearchEngineId(engine.id);
+    // ⚠️ 关键：仅更新本地选中状态，不再调用 setDefaultSearchEngineId
+    // 这样不会触发 setupAutoPersist → dataManager.updateDefaultSearchEngineId → saveToLocal，
+    // 也就不会出现"需要保存"的提示；Settings 中改默认搜索引擎的流程仍然走正常持久化路径。
+    hasSwitchedManuallyRef.current = true;
+    setSelectedEngineId(engine.id);
     setShowSearchDropdown(false);
-  }, [setDefaultSearchEngineId]);
+  }, []);
 
   const handleSearchSubmit = useCallback(() => {
     const trimmedQuery = query.trim();
@@ -112,7 +130,7 @@ const Search: React.FC<SearchProps> = ({ onSearch }) => {
                   return (
                     <button 
                       key={engine.id}
-                      className={`search-engine-option ${engine.id === defaultSearchEngineId ? 'selected' : ''}`}
+                      className={`search-engine-option ${engine.id === selectedEngineId ? 'selected' : ''}`}
                       onClick={() => handleEngineSelect(engine)}
                     >
                       {renderSearchEngineIcon(engine, iconUrl, 'search-engine-favicon', 'search-engine-icon')} {engine.name}

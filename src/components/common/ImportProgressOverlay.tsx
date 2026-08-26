@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useImportStore } from '../../store/useImportStore';
+import { usePagesStore, DEFAULT_PAGE_NAME } from '../../store/usePagesStore';
 import { getServices } from '../../services/serviceContainer';
 import { initializeAllStoresAsync, clearAllPendingDeletes } from '../../services/storeInitializer';
 import Toast from './Toast';
@@ -64,6 +65,19 @@ const ImportProgressOverlay: React.FC<ImportProgressOverlayProps> = ({
           setImportMessage('正在清理...');
           await nextFrame();
           clearAllPendingDeletes();
+
+          // 导入完成后，确保落在"默认页面"：如果导入进来的网站都在默认页面里（旧格式迁移
+          // 或 pages 合并时默认页有新网站），强制切到默认页面让用户立刻看到导入结果，
+          // 避免还停留在其他空页面导致误以为"没导入进来"
+          try {
+            const pagesState = usePagesStore.getState();
+            const defaultPage = pagesState.pages.find(p => p.name === DEFAULT_PAGE_NAME);
+            if (defaultPage && defaultPage.websites.length > 0 && pagesState.currentPageId !== defaultPage.id) {
+              pagesState.setCurrentPageId(defaultPage.id);
+            }
+          } catch {
+            /* 非关键逻辑，异常不影响导入结果 */
+          }
         } finally {
           dataManager.endInitialization();
         }

@@ -4,6 +4,7 @@ import type { Website, OpenFolder } from '../types';
 import { setupAutoPersist } from './persistence';
 import { generateId } from '../utils/idUtils';
 import createLogger from '../utils/logger';
+import { usePagesStore } from './usePagesStore';
 
 const logger = createLogger('IconsStore');
 
@@ -18,14 +19,16 @@ interface PendingFolderCreation {
 }
 
 interface IconsState {
-  websites: Website[];
   openFolder: OpenFolder | null;
   draggedIcon: Website | null;
   targetIconId: string | null;
   pendingDeletes: PendingDeleteItem[];
   pendingFolderCreation: PendingFolderCreation | null;
 
+  // ---- websites 代理方法（读写通过 pagesStore）----
+  getWebsites: () => Website[];
   setWebsiteIcons: (icons: Website[]) => void;
+
   setOpenFolder: (folder: OpenFolder | null) => void;
   setDraggedIcon: (icon: Website | null) => void;
   setTargetIconId: (id: string | null) => void;
@@ -43,14 +46,13 @@ interface IconsState {
   addIconToFolder: (folderName: string, icon: Website) => void;
   createFolder: (folderName?: string) => void;
   createFolderDirectly: (folderName: string) => void;
-  initialize: (icons: Website[]) => void;
+  initialize: (icons?: Website[]) => void;
   processPendingDeletes: (onProgress?: (current: number, total: number) => void) => Promise<void>;
   clearPendingDeletes: () => void;
   clearAllSites: () => void;
 }
 
 const initialState = {
-  websites: [] as Website[],
   openFolder: null as OpenFolder | null,
   draggedIcon: null as Website | null,
   targetIconId: null as string | null,
@@ -58,17 +60,32 @@ const initialState = {
   pendingFolderCreation: null as PendingFolderCreation | null,
 };
 
+// 辅助函数：同步 websites 到当前页面
+const syncToCurrentPage = (websites: Website[], openFolder: OpenFolder | null): OpenFolder | null => {
+  const pagesStore = usePagesStore.getState();
+  const currentPageId = pagesStore.currentPageId;
+  if (currentPageId) {
+    pagesStore.updatePageWebsites(currentPageId, websites);
+  }
+  // 同步 openFolder
+  if (openFolder) {
+    const folder = websites.find(item => item.isFolder && item.id === openFolder.id);
+    return { ...openFolder, websites: folder?.children || [] };
+  }
+  return openFolder;
+};
+
 export const useIconsStore = create<IconsState>((set, get) => ({
   ...initialState,
 
+  getWebsites: () => {
+    return usePagesStore.getState().getCurrentPageWebsites();
+  },
+
   setWebsiteIcons: (icons) => {
     set((state) => {
-      if (!state.openFolder) return { websites: icons };
-      const folder = icons.find(item => item.isFolder && item.id === state.openFolder!.id);
-      return {
-        websites: icons,
-        openFolder: { ...state.openFolder, websites: folder?.children || [] },
-      };
+      const newOpenFolder = syncToCurrentPage(icons, state.openFolder);
+      return { openFolder: newOpenFolder };
     });
   },
 
@@ -79,13 +96,13 @@ export const useIconsStore = create<IconsState>((set, get) => ({
   setPendingFolderCreation: (pending) => set({ pendingFolderCreation: pending }),
 
   addIcon: (icon) => {
-    const { websites } = get();
+    const websites = get().getWebsites();
     const updatedIcons = [...websites, icon];
     get().setWebsiteIcons(updatedIcons);
   },
 
   updateIcon: (updatedIcon) => {
-    const { websites } = get();
+    const websites = get().getWebsites();
 
     const updatedIcons = websites.map(icon => {
       if (icon.id === updatedIcon.id) {
@@ -106,7 +123,8 @@ export const useIconsStore = create<IconsState>((set, get) => ({
   },
 
   deleteIcon: (iconId) => {
-    const { websites, pendingDeletes, openFolder } = get();
+    const websites = get().getWebsites();
+    const { pendingDeletes, openFolder } = get();
 
     let iconToDelete: Website | null = null;
 
@@ -148,11 +166,13 @@ export const useIconsStore = create<IconsState>((set, get) => ({
       newOpenFolder = { ...openFolder, websites: folder?.children || [] };
     }
 
-    set({ websites: updatedIcons, pendingDeletes: newPendingDeletes, openFolder: newOpenFolder });
+    set({ pendingDeletes: newPendingDeletes, openFolder: newOpenFolder });
+    get().setWebsiteIcons(updatedIcons);
   },
 
   dragIconOut: (icon) => {
-    const { openFolder, websites } = get();
+    const { openFolder } = get();
+    const websites = get().getWebsites();
     if (!openFolder) return;
 
     const updatedFolderWebsites = openFolder.websites.filter(i => i.id !== icon.id);
@@ -173,7 +193,8 @@ export const useIconsStore = create<IconsState>((set, get) => ({
   },
 
   changeFolderName: (newName) => {
-    const { openFolder, websites } = get();
+    const { openFolder } = get();
+    const websites = get().getWebsites();
     if (!openFolder) return;
 
     const folderIndex = websites.findIndex(item => item.isFolder && item.id === openFolder.id);
@@ -184,13 +205,14 @@ export const useIconsStore = create<IconsState>((set, get) => ({
     newIcons[folderIndex] = { ...targetFolder, name: newName };
 
     set({
-      websites: newIcons,
       openFolder: { ...openFolder, name: newName },
     });
+    get().setWebsiteIcons(newIcons);
   },
 
   disbandFolder: () => {
-    const { openFolder, websites } = get();
+    const { openFolder } = get();
+    const websites = get().getWebsites();
     if (!openFolder) return;
 
     const folderIndex = websites.findIndex(item => item.isFolder && item.id === openFolder.id);
@@ -206,11 +228,13 @@ export const useIconsStore = create<IconsState>((set, get) => ({
       ...iconsToRelease
     ];
 
-    set({ websites: newIcons, openFolder: null });
+    set({ openFolder: null });
+    get().setWebsiteIcons(newIcons);
   },
 
   deleteFolder: () => {
-    const { openFolder, websites, pendingDeletes } = get();
+    const { openFolder, pendingDeletes } = get();
+    const websites = get().getWebsites();
     if (!openFolder) return;
 
     const folderIndex = websites.findIndex(item => item.isFolder && item.id === openFolder.id);
@@ -230,14 +254,15 @@ export const useIconsStore = create<IconsState>((set, get) => ({
     const newIcons = websites.filter((_, index) => index !== folderIndex);
 
     set({
-      websites: newIcons,
       pendingDeletes: newPendingDeletes,
       openFolder: null,
     });
+    get().setWebsiteIcons(newIcons);
   },
 
   updateFolderIcons: (icons) => {
-    const { openFolder, websites } = get();
+    const { openFolder } = get();
+    const websites = get().getWebsites();
     if (!openFolder) return;
 
     const folderIndex = websites.findIndex(item => item.isFolder && item.id === openFolder.id);
@@ -251,7 +276,7 @@ export const useIconsStore = create<IconsState>((set, get) => ({
   },
 
   addIconToFolder: (folderName, icon) => {
-    const { websites } = get();
+    const websites = get().getWebsites();
 
     const folderIndex = websites.findIndex(item => item.isFolder && item.name === folderName);
     if (folderIndex === -1) return;
@@ -272,7 +297,7 @@ export const useIconsStore = create<IconsState>((set, get) => ({
   },
 
   createFolderDirectly: (folderName) => {
-    const { websites } = get();
+    const websites = get().getWebsites();
 
     const exists = websites.some(item => item.isFolder && item.name === folderName);
     if (exists) return;
@@ -289,9 +314,15 @@ export const useIconsStore = create<IconsState>((set, get) => ({
     get().setWebsiteIcons(newIcons);
   },
 
-  initialize: (icons: Website[]) => {
-    if (icons !== undefined && icons !== null) {
-      set({ websites: icons });
+  initialize: (icons?: Website[]) => {
+    // ⚠️ 注意：初始化主流程由 usePagesStore.initialize 完成（pages 内的 websites 才是唯一真源）。
+    // 这里保留兼容：只有当调用方明确传入了非空的 websites 数组时，才把它同步到当前页。
+    // 严禁传入空数组 []（之前 storeInitializer 传 [] 的写法会把 pages 初始化刚写进去的网站全清空！）。
+    if (icons !== undefined && icons !== null && icons.length > 0) {
+      const currentPageId = usePagesStore.getState().currentPageId;
+      if (currentPageId) {
+        usePagesStore.getState().updatePageWebsites(currentPageId, icons);
+      }
     }
   },
 
@@ -316,7 +347,8 @@ export const useIconsStore = create<IconsState>((set, get) => ({
   },
 
   clearAllSites: () => {
-    const { websites, pendingDeletes } = get();
+    const websites = get().getWebsites();
+    const { pendingDeletes } = get();
 
     // 收集所有站点（含文件夹内子项）中有 URL 的项，用于 R2 图标清理
     const newItems: PendingDeleteItem[] = [];
@@ -333,14 +365,15 @@ export const useIconsStore = create<IconsState>((set, get) => ({
     collectItems(websites);
 
     set({
-      websites: [],
       pendingDeletes: [...pendingDeletes, ...newItems],
       openFolder: null,
     });
+    get().setWebsiteIcons([]);
   },
 
   createFolder: (folderName?: string) => {
-    const { websites, pendingFolderCreation, openFolder } = get();
+    const websites = get().getWebsites();
+    const { pendingFolderCreation, openFolder } = get();
 
     if (!pendingFolderCreation) {
       return;
@@ -384,10 +417,12 @@ export const useIconsStore = create<IconsState>((set, get) => ({
       newOpenFolder = { ...openFolder, websites: folder?.children || [] };
     }
 
-    set({ websites: newIcons, pendingFolderCreation: null, targetIconId: null, openFolder: newOpenFolder });
+    set({ pendingFolderCreation: null, targetIconId: null, openFolder: newOpenFolder });
+    get().setWebsiteIcons(newIcons);
   },
 }));
 
 setupAutoPersist(useIconsStore, [
-  { key: 'websites', persist: (icons) => getServices().dataManager.updateWebsiteIcons(icons as Website[]) },
+  // websites 的持久化现在通过 usePagesStore 完成
+  // 这里仅作占位，保留未来扩展可能
 ]);

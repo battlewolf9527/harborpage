@@ -13,9 +13,11 @@ import SavePrompt from './components/common/SavePrompt';
 import LoginModal from './components/common/LoginModal';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import ImportProgressOverlay from './components/common/ImportProgressOverlay';
-import { useSettingsSelector, useIconsDataSelector, useIconsUISelector, useImportSelector } from './store/selectors'
+import MoveToPageDialog from './components/common/MoveToPageDialog';
+import { useSettingsSelector, useIconsDataSelector, useIconsUISelector, useImportSelector, usePagesSelector } from './store/selectors'
 import Weather from './components/features/Weather'
 import TodoSidebar from './components/features/TodoSidebar'
+import PagesSidebar from './components/features/PagesSidebar'
 import type { Website, SearchEngine } from './types'
 import { useAuth } from './hooks/useAuth';
 import { useDataInitialization } from './hooks/useDataInitialization';
@@ -76,6 +78,15 @@ function App() {
   } = useIconsUISelector();
 
   const { isImporting, importProgress, importMessage } = useImportSelector();
+  const { currentPageId } = usePagesSelector();
+
+  // 跨页移动：fromPageId 通常 = currentPageId；将来扩展 FolderWindow 内部移动时可灵活指定
+  const [moveDialog, setMoveDialog] = useState<{ fromPageId: string; iconIds: string[] } | null>(null);
+  const handleOpenMoveDialog = useCallback((icon: Website) => {
+    if (currentPageId) {
+      setMoveDialog({ fromPageId: currentPageId, iconIds: [icon.id] });
+    }
+  }, [currentPageId]);
 
   const { showConfirmDialog, handleDeleteIcon, confirmDeleteIcon, cancelDeleteIcon } = useDeleteIcon();
 
@@ -195,6 +206,7 @@ function App() {
         onOpenFolder={(id, name, websites) => setOpenFolder({ id, name, websites })}
         onEditIcon={handleEditIcon}
         onDeleteIcon={handleDeleteIcon}
+        onMoveToPage={handleOpenMoveDialog}
       />
       
       {isEditMode && (
@@ -222,7 +234,8 @@ function App() {
         onDeleteIcon={handleDeleteIcon}
         onDisbandFolder={disbandFolder}
         onDeleteFolder={deleteFolder}
-        disableClickOutside={showEditIcon || showAddIcon || showSettings}
+        onMoveToPage={handleOpenMoveDialog}
+        disableClickOutside={showEditIcon || showAddIcon || showSettings || !!moveDialog}
       />
       
       <Settings 
@@ -280,7 +293,15 @@ function App() {
         onCancel={cancelDeleteIcon}
       />
 
+      <PagesSidebar />
       <TodoSidebar />
+
+      <MoveToPageDialog
+        isOpen={!!moveDialog}
+        fromPageId={moveDialog?.fromPageId ?? ''}
+        iconIds={moveDialog?.iconIds ?? []}
+        onClose={() => setMoveDialog(null)}
+      />
       
       <FolderNameDialog
         isOpen={showFolderNameDialog}

@@ -1,8 +1,10 @@
-import type { UserData, Website, SearchEngine, Todo, Note, Settings, WallpaperType } from '../types';
+import type { UserData, Website, SearchEngine, Todo, Note, Settings, WallpaperType, Page } from '../types';
 import ChangeTracker from './ChangeTracker';
 import DataRepository from './DataRepository';
 import { STORAGE_KEYS } from '../constants';
 import { mergeById } from '../utils/importExportUtils';
+import { generateId } from '../utils/idUtils';
+import { DEFAULT_PAGE_NAME } from '../store/usePagesStore';
 import createLogger from '../utils/logger';
 
 const logger = createLogger('DataManager');
@@ -126,23 +128,60 @@ class DataManager {
     mode: 'overwrite' | 'merge' = 'overwrite',
   ): UserData {
     const current = this.data;
+
+    // 预处理：旧格式兼容 —— 如果 imported.pages 为空/undefined 但 imported.websites 非空，
+    // 把旧 websites upsert 成一个名为 DEFAULT_PAGE_NAME 的页面（已存在则复用 id 并合并网站，
+    // 否则新建），保证后续链路 pages 通路就能拿到导入的网站数据且不产生重名默认页
+    let normalizedImported = imported;
+    const importedLegacyWebsites = imported.websites;
+    const importedPages = imported.pages;
+    const needsLegacyMigration =
+      (!importedPages || importedPages.length === 0) &&
+      importedLegacyWebsites && importedLegacyWebsites.length > 0;
+    if (needsLegacyMigration) {
+      const existingDefaultInCurrent = (current.pages ?? []).find(p => p.name === DEFAULT_PAGE_NAME);
+      let migratedPage: Page;
+      if (existingDefaultInCurrent) {
+        migratedPage = {
+          ...existingDefaultInCurrent,
+          websites: mergeById(existingDefaultInCurrent.websites, importedLegacyWebsites),
+        };
+      } else {
+        migratedPage = {
+          id: generateId('page-'),
+          name: DEFAULT_PAGE_NAME,
+          websites: importedLegacyWebsites,
+          createdAt: Date.now(),
+        };
+      }
+      normalizedImported = { ...imported, pages: [migratedPage] };
+      // 旧格式迁移：强制指向迁移页 id，保证下游 initialize 后直接切到默认页面看到结果
+      normalizedImported.currentPageId = migratedPage.id;
+    }
+
     let merged: UserData;
 
     if (mode === 'merge') {
       merged = {
         ...current,
-        websites: mergeById(current.websites, imported.websites ?? []),
-        searchEngines: mergeById(current.searchEngines, imported.searchEngines ?? []),
-        todos: mergeById(current.todos ?? current.todoList, imported.todos ?? []),
-        notes: mergeById(current.notes, imported.notes ?? []),
+        websites: mergeById(current.websites, normalizedImported.websites ?? []),
+        pages: mergeById(current.pages, normalizedImported.pages ?? []),
+        searchEngines: mergeById(current.searchEngines, normalizedImported.searchEngines ?? []),
+        todos: mergeById(current.todos ?? current.todoList, normalizedImported.todos ?? []),
+        notes: mergeById(current.notes, normalizedImported.notes ?? []),
       };
       // 设置项字段级合并：导入字段覆盖，未导入字段保留
-      if (imported.settings) {
-        merged.settings = { ...(current.settings ?? {}), ...imported.settings };
+      if (normalizedImported.settings) {
+        merged.settings = { ...(current.settings ?? {}), ...normalizedImported.settings };
+      }
+      // 条件赋值 currentPageId，避免 exactOptionalPropertyTypes 问题
+      const mergedPageId = normalizedImported.currentPageId ?? current.currentPageId;
+      if (mergedPageId !== undefined) {
+        merged.currentPageId = mergedPageId;
       }
     } else {
       // 覆盖：导入数据整体替换（壁纸通过 current 保留）
-      merged = { ...current, ...imported };
+      merged = { ...current, ...normalizedImported };
     }
 
     this.data = merged;
@@ -160,6 +199,8 @@ class DataManager {
     // 标记导入的键为已变更，触发保存提示以同步到云端
     ChangeTracker.markChanged('settings');
     ChangeTracker.markChanged('websites');
+    ChangeTracker.markChanged('pages');
+    // ⚠️ currentPageId 不再持久化（刷新永远显示第一页），不进入 ChangeTracker
     ChangeTracker.markChanged('searchEngines');
     ChangeTracker.markChanged('todos');
     ChangeTracker.markChanged('notes');
@@ -174,9 +215,15 @@ class DataManager {
     return this.data.settings!;
   }
 
-  private updateData(key: string, updater: () => void, persistToLocalStorage?: { key: string; value: string }): void {
+  private updateData(
+    key: string,
+    updater: () => void,
+    persistToLocalStorage?: { key: string; value: string },
+    options?: { markAsChanged?: boolean },
+  ): void {
     updater();
-    if (!this.isInitializing()) {
+    const { markAsChanged = true } = options ?? {};
+    if (!this.isInitializing() && markAsChanged) {
       ChangeTracker.markChanged(key);
     }
     if (persistToLocalStorage) {
@@ -285,16 +332,48 @@ class DataManager {
   }
 
   public updateDefaultSearchEngineId(engineId: string): void {
-    this.updateData('settings', () => {
-      this.data = {
-        ...this.data,
-        settings: { ...this.ensureSettings(), defaultSearchEngineId: engineId },
-      };
-    }, { key: STORAGE_KEYS.DEFAULT_SEARCH_ENGINE_ID, value: engineId });
+    // 主页面切换默认搜索引擎 → 写内存 + 本地持久化 + 云端静默同步，
+    // 但**不 markChanged**，这样 SavePrompt 不会弹出"需要保存"的图标和倒计时提醒。
+    // 项目约束：defaultSearchEngineId 必须同步到云端（不能只写本地）。
+    // 云同步失败时仅打日志，有双重兜底：① saveToLocal 已防刷新丢失 ② 用户之后任何触发
+    // settings 键 markChanged 的操作（如 autoSave / faviconSources）都会重新整体上传 settings。
+    this.updateData(
+      'settings',
+      () => {
+        this.data = {
+          ...this.data,
+          settings: { ...this.ensureSettings(), defaultSearchEngineId: engineId },
+        };
+      },
+      { key: STORAGE_KEYS.DEFAULT_SEARCH_ENGINE_ID, value: engineId },
+      { markAsChanged: false },
+    );
+
+    // ⚠️ 不经过 ChangeTracker / saveChanges，不触发任何 UI（SavePrompt/Toast/倒计时）
+    const settingsSnapshot = { ...this.ensureSettings() };
+    (async () => {
+      try {
+        await DataRepository.saveKeyToAPI('settings', settingsSnapshot);
+      } catch (err) {
+        logger.warn('defaultSearchEngineId 静默云同步失败（后续操作会自动重试）：', err);
+      }
+    })();
   }
 
   public updateFaviconSources(sources: import('../types').FaviconSource[]): void {
     this.updateSettingsField('faviconSources', sources);
+  }
+
+  public updatePages(pages: Page[]): void {
+    this.updateData('pages', () => {
+      this.data = { ...this.data, pages };
+    });
+  }
+
+  public updateCurrentPageId(id: string): void {
+    this.updateData('currentPageId', () => {
+      this.data = { ...this.data, currentPageId: id };
+    });
   }
 }
 

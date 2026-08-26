@@ -1,4 +1,4 @@
-import type { Website, ImportableWebsite, SearchEngine, Todo, Note, Settings, UserData } from '../types';
+import type { Website, ImportableWebsite, SearchEngine, Todo, Note, Settings, UserData, Page } from '../types';
 import { EXPORT_FILE_PREFIX } from '../constants';
 import ConfigService from '../services/ConfigService';
 import { generateId } from './idUtils';
@@ -52,6 +52,13 @@ export const cleanUserDataR2Urls = (data: UserData): UserData => {
 
   if (cleaned.websites) {
     cleaned.websites = cleaned.websites.map(website => cleanWebsiteR2Urls(website, r2Domain));
+  }
+
+  if (cleaned.pages) {
+    cleaned.pages = cleaned.pages.map((page: Page) => ({
+      ...page,
+      websites: page.websites.map(website => cleanWebsiteR2Urls(website, r2Domain)),
+    }));
   }
 
   if (cleaned.searchEngines) {
@@ -199,6 +206,8 @@ export interface FullExportData {
   exportDate: string;
   settings?: Settings;
   websites?: Website[];
+  pages?: Page[];
+  currentPageId?: string;
   searchEngines?: SearchEngine[];
   todos?: Todo[];
   notes?: Note[];
@@ -208,6 +217,7 @@ export interface FullExportData {
 export interface DataSelection {
   searchEngines: boolean;
   websites: boolean;
+  pages: boolean;
   todos: boolean;
   notes: boolean;
   settings: boolean;
@@ -266,8 +276,20 @@ export const buildFullExportData = (data: UserData, selection: DataSelection): F
     version: FULL_EXPORT_VERSION,
     exportDate: new Date().toISOString(),
   };
+  if (selection.pages && cleaned.pages) {
+    result.pages = cleaned.pages.map((page: Page) => ({
+      ...page,
+      websites: cleanWebsitesForExport(page.websites),
+    }));
+    if (cleaned.currentPageId) {
+      result.currentPageId = cleaned.currentPageId;
+    }
+  }
   if (selection.websites) {
-    result.websites = cleanWebsitesForExport(cleaned.websites ?? []);
+    // 若导出了 pages 就不再重复导出根级 websites（向后兼容用）
+    if (!selection.pages) {
+      result.websites = cleanWebsitesForExport(cleaned.websites ?? []);
+    }
   }
   if (selection.searchEngines) {
     result.searchEngines = cleaned.searchEngines ?? [];
@@ -332,19 +354,33 @@ const validateNote = (item: unknown): item is Note => {
   );
 };
 
+// 校验 Page 对象
+const validatePage = (item: unknown): item is Page => {
+  if (typeof item !== 'object' || item === null) return false;
+  const page = item as Page;
+  return (
+    typeof page.id === 'string' &&
+    typeof page.name === 'string' &&
+    Array.isArray(page.websites) &&
+    page.websites.every(validateWebsite)
+  );
+};
+
 // 校验全量导入数据（字段可选，至少存在一个数据字段）
 export const validateFullImportData = (data: unknown): data is FullExportData => {
   if (typeof data !== 'object' || data === null) return false;
   const d = data as FullExportData;
 
   if (d.websites !== undefined && (!Array.isArray(d.websites) || !d.websites.every(validateWebsite))) return false;
+  if (d.pages !== undefined && (!Array.isArray(d.pages) || !d.pages.every(validatePage))) return false;
+  if (d.currentPageId !== undefined && typeof d.currentPageId !== 'string') return false;
   if (d.searchEngines !== undefined && (!Array.isArray(d.searchEngines) || !d.searchEngines.every(validateSearchEngine))) return false;
   if (d.todos !== undefined && (!Array.isArray(d.todos) || !d.todos.every(validateTodo))) return false;
   if (d.notes !== undefined && (!Array.isArray(d.notes) || !d.notes.every(validateNote))) return false;
   if (d.settings !== undefined && (typeof d.settings !== 'object' || d.settings === null)) return false;
 
   // 至少要有一个数据字段
-  const hasAnyData = d.websites !== undefined || d.searchEngines !== undefined ||
+  const hasAnyData = d.websites !== undefined || d.pages !== undefined || d.searchEngines !== undefined ||
     d.todos !== undefined || d.notes !== undefined || d.settings !== undefined;
   if (!hasAnyData) return false;
 

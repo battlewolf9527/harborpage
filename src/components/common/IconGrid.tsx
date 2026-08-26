@@ -11,6 +11,7 @@ interface IconGridProps {
   onOpenFolder?: ((id: string, name: string, websites: Website[]) => void) | undefined;
   onEditIcon: ((icon: Website) => void) | undefined;
   onDeleteIcon: ((iconId: string) => void) | undefined;
+  onMoveToPage?: ((icon: Website) => void) | undefined;
   onDragStart: (e: React.DragEvent, icon: Website) => void;
   onDragEnd: () => void;
   onDragOverIcon: (e: React.DragEvent, iconId: string) => void;
@@ -30,6 +31,7 @@ const IconGrid: React.FC<IconGridProps> = ({
   onOpenFolder,
   onEditIcon,
   onDeleteIcon,
+  onMoveToPage,
   onDragStart,
   onDragEnd,
   onDragOverIcon,
@@ -102,6 +104,7 @@ const IconGrid: React.FC<IconGridProps> = ({
               {...sharedProps}
               onClick={() => handleFolderClick(icon)}
               onDrop={handleFolderDrop}
+              onMoveToPage={onMoveToPage}
             />
           );
         }
@@ -112,6 +115,7 @@ const IconGrid: React.FC<IconGridProps> = ({
             onDropOnIcon={handleWebsiteDrop}
             onEdit={onEditIcon}
             onDelete={onDeleteIcon}
+            onMoveToPage={onMoveToPage}
           />
         );
       })}

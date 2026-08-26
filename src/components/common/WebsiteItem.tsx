@@ -19,6 +19,7 @@ interface WebsiteItemProps {
   dragOverPosition?: ('before' | 'after' | 'center' | 'invalid' | null) | undefined;
   onEdit?: ((icon: Website) => void) | undefined;
   onDelete?: ((iconId: string) => void) | undefined;
+  onMoveToPage?: ((icon: Website) => void) | undefined;
   onDragOverOutside?: ((position: 'before' | 'after') => void) | undefined;
 }
 
@@ -35,6 +36,7 @@ const WebsiteItem: React.FC<WebsiteItemProps> = ({
   dragOverPosition,
   onEdit,
   onDelete,
+  onMoveToPage,
   onDragOverOutside,
 }) => {
   const [showContextMenu, setShowContextMenu] = useState(false);
@@ -91,17 +93,24 @@ const WebsiteItem: React.FC<WebsiteItemProps> = ({
     setShowContextMenu(false);
   }, [onDelete, icon.id]);
 
+  const handleMoveToPage = useCallback(() => {
+    onMoveToPage?.(icon);
+    setShowContextMenu(false);
+  }, [onMoveToPage, icon]);
+
   // 键盘导航支持
-  const handleMenuKeyDown = useCallback((e: React.KeyboardEvent, action: 'edit' | 'delete') => {
+  const handleMenuKeyDown = useCallback((e: React.KeyboardEvent, action: 'edit' | 'delete' | 'move') => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       if (action === 'edit') {
         handleEdit();
+      } else if (action === 'move') {
+        handleMoveToPage();
       } else {
         handleDelete();
       }
     }
-  }, [handleEdit, handleDelete]);
+  }, [handleEdit, handleDelete, handleMoveToPage]);
 
   const handleClickOutside = useCallback(() => {
     setShowContextMenu(false);
@@ -158,6 +167,15 @@ const WebsiteItem: React.FC<WebsiteItemProps> = ({
               onKeyDown={(e) => handleMenuKeyDown(e, 'edit')}
             >
               修改
+            </li>
+            <li
+              className="context-menu-item"
+              role="menuitem"
+              tabIndex={0}
+              onClick={handleMoveToPage}
+              onKeyDown={(e) => handleMenuKeyDown(e, 'move')}
+            >
+              移动到页面…
             </li>
             <li
               className="context-menu-item context-menu-item-danger"

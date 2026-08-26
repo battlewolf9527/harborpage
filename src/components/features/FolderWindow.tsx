@@ -18,6 +18,7 @@ interface FolderWindowProps {
   onDeleteIcon?: (iconId: string) => void;
   onDisbandFolder?: () => void;
   onDeleteFolder?: () => void;
+  onMoveToPage?: (icon: Website) => void;
   disableClickOutside?: boolean;
 }
 
@@ -217,6 +218,7 @@ const FolderWindow: React.FC<FolderWindowProps> = memo(({
   onDeleteIcon,
   onDisbandFolder,
   onDeleteFolder,
+  onMoveToPage,
   disableClickOutside = false,
 }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -460,6 +462,7 @@ const FolderWindow: React.FC<FolderWindowProps> = memo(({
               iconColumns={iconColumns}
               onEditIcon={onEditIcon}
               onDeleteIcon={onDeleteIcon}
+              onMoveToPage={onMoveToPage}
               onDragStart={handleDragStart}
               onDragEnd={handleDragEndWithOut}
               onDragOverIcon={handleDragOverIcon}

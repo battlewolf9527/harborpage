@@ -1,0 +1,481 @@
+/* PagesSidebar.css - 与 TodoSidebar 对称的左侧页面切换栏 */
+:root {
+  --page-primary-color: #10b981;
+  --page-primary-light: #34d399;
+  --page-primary-dark: #059669;
+  --page-secondary-color: #f59e0b;
+}
+
+.pages-sidebar {
+  position: fixed;
+  left: -15vw;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 60vh;
+  width: 15vw;
+  background: var(--background-white);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+  border-radius: 0 0.8vw 0.8vw 0;
+  transition: all var(--transition-normal);
+  z-index: 1002;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+  overflow: visible;
+}
+
+.pages-sidebar.expanded {
+  left: 0;
+  box-shadow: var(--shadow-lg);
+}
+
+.pages-sidebar.animating {
+  pointer-events: none;
+}
+
+/* 圆形图标按钮 - 左侧 */
+.pages-sidebar-icon {
+  position: fixed;
+  left: -1.1vw;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2.2vw;
+  height: 2.2vw;
+  cursor: pointer;
+  z-index: 1000;
+  transition: all var(--transition-normal);
+  opacity: 0.3;
+}
+
+.pages-sidebar-icon:hover {
+  left: 0;
+  opacity: 1;
+}
+
+.pages-sidebar.expanded ~ .pages-sidebar-icon {
+  left: 0 !important;
+  transform: translateY(-50%) rotate(180deg);
+  opacity: 1 !important;
+  box-shadow: var(--shadow-md);
+  z-index: 1000;
+}
+
+.pages-sidebar.expanded ~ .pages-sidebar-icon:hover {
+  transform: translateY(-50%) rotate(180deg) scale(1.1);
+  box-shadow: var(--shadow-lg);
+}
+
+.pages-icon-container {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--page-primary-color), var(--page-secondary-color));
+  border-radius: var(--border-radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  position: relative;
+  transition: all var(--transition-normal);
+  border: 0.16vw solid var(--background-white);
+}
+
+.pages-icon-container:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-lg);
+}
+
+.pages-icon-container svg {
+  color: white;
+  width: 0.9vw;
+  height: 0.9vw;
+  transition: all var(--transition-fast);
+}
+
+/* 气球提示 */
+.pages-tooltip {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(30, 41, 59, 0.95);
+  color: white;
+  padding: 0.4vw 0.8vw;
+  border-radius: var(--border-radius-md);
+  font-size: 0.65vw;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--transition-fast);
+  pointer-events: none;
+  z-index: 1001;
+  margin-left: 0.6vw;
+  box-shadow: var(--shadow-md);
+}
+
+.pages-tooltip::after {
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-right-color: rgba(30, 41, 59, 0.95);
+}
+
+.pages-sidebar-icon:hover .pages-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* 侧边栏内容 */
+.pages-sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1.1vw 0.9vw;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-20px);
+  transition: all var(--transition-normal);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5vw;
+  margin-top: 0.8vw;
+  position: relative;
+  border-radius: inherit;
+}
+
+.pages-sidebar.expanded .pages-sidebar-content {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+  transition-delay: 150ms;
+}
+
+.pages-sidebar-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3vw;
+  margin-bottom: 0.6vw;
+}
+
+.pages-sidebar-header h2 {
+  margin: 0;
+  font-size: 0.9vw;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  line-height: 1.2;
+}
+
+/* 添加页面按钮 */
+.add-page-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3vw;
+  width: 100%;
+  padding: 0.5vw 0.8vw;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--border-radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.65vw;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: 'Inter', sans-serif;
+}
+
+.add-page-btn:hover {
+  border-color: var(--page-primary-color);
+  color: var(--page-primary-color);
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.add-page-btn svg {
+  width: 0.7vw;
+  height: 0.7vw;
+}
+
+/* 页面列表 */
+.pages-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3vw;
+  flex: 1;
+}
+
+.page-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5vw;
+  padding: 0.5vw 0.7vw;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+  position: relative;
+  user-select: none;
+}
+
+/* ── 拖拽排序相关样式 ────────────────────────────────────────────── */
+.drag-handle {
+  width: 0.8vw;
+  height: 100%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  color: var(--text-tertiary, #94a3b8);
+  opacity: 0;
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.drag-handle.placeholder {
+  visibility: hidden;
+}
+
+.drag-handle svg {
+  width: 0.6vw;
+  height: 0.75vw;
+}
+
+.page-item:hover .drag-handle {
+  opacity: 1;
+}
+
+.page-item:hover .drag-handle:hover {
+  color: var(--page-primary-color);
+}
+
+/* 正在被拖拽的源项（半透明，产生「已拿起」的视觉反馈） */
+.page-item.dragging {
+  opacity: 0.4;
+  transform: scale(0.98);
+  background: var(--background-light) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* 放置指示线（上/下）—— 使用 2px 绿色渐变线 */
+.page-item.drop-indicator-top::before,
+.page-item.drop-indicator-bottom::after {
+  content: '';
+  position: absolute;
+  left: 0.3vw;
+  right: 0.3vw;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--page-primary-color), var(--page-secondary-color));
+  box-shadow: 0 0 0.3vw rgba(16, 185, 129, 0.4);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.page-item.drop-indicator-top::before {
+  top: -1px;
+}
+
+.page-item.drop-indicator-bottom::after {
+  bottom: -1px;
+}
+
+/* 拖拽悬停时目标项的背景微微亮（叠加在指示线下） */
+.page-item.drop-indicator-top,
+.page-item.drop-indicator-bottom {
+  background: rgba(16, 185, 129, 0.05);
+}
+/* ─────────────────────────────────────────────────────────────────── */
+
+.page-item:hover {
+  background: var(--background-light);
+}
+
+.page-item.active {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.page-item.active .page-item-name {
+  color: var(--page-primary-dark);
+  font-weight: 600;
+}
+
+.page-item-indicator {
+  width: 0.4vw;
+  height: 0.4vw;
+  border-radius: var(--border-radius-full);
+  background: var(--border-color);
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.page-item.active .page-item-indicator {
+  background: var(--page-primary-color);
+  box-shadow: 0 0 0.3vw rgba(16, 185, 129, 0.5);
+}
+
+.page-item-name {
+  flex: 1;
+  font-size: 0.7vw;
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.page-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.2vw;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.page-item:hover .page-item-actions {
+  opacity: 1;
+}
+
+.page-action-btn {
+  width: 1.2vw;
+  height: 1.2vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  padding: 0;
+}
+
+.page-action-btn:hover {
+  background: var(--border-color);
+  color: var(--text-primary);
+}
+
+.page-action-btn.delete:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.page-action-btn svg {
+  width: 0.55vw;
+  height: 0.55vw;
+}
+
+/* 页面名称输入框 */
+.page-name-input {
+  flex: 1;
+  padding: 0.2vw 0.4vw;
+  font-size: 0.7vw;
+  font-family: 'Inter', sans-serif;
+  border: 1px solid var(--page-primary-color);
+  border-radius: var(--border-radius-sm);
+  background: var(--background-white);
+  color: var(--text-primary);
+  outline: none;
+  min-width: 0;
+}
+
+.page-name-input:focus {
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+/* 当前页面指示器徽章 */
+.current-page-badge {
+  position: absolute;
+  top: -0.2vw;
+  right: -0.2vw;
+  background: var(--page-primary-color);
+  color: white;
+  border-radius: var(--border-radius-full);
+  width: 0.55vw;
+  height: 0.55vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.3vw;
+  font-weight: 700;
+  box-shadow: 0 0.1vw 0.2vw rgba(16, 185, 129, 0.3);
+}
+
+/* 滚动条样式 */
+.pages-sidebar-content::-webkit-scrollbar {
+  width: 0.3vw;
+}
+
+.pages-sidebar-content::-webkit-scrollbar-track {
+  background: var(--background-light);
+  border-radius: 8px;
+}
+
+.pages-sidebar-content::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 8px;
+  transition: background var(--transition-fast);
+}
+
+.pages-sidebar-content::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* 动画效果 */
+@keyframes pages-sidebar-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pages-sidebar.expanded .pages-sidebar-header {
+  animation: pages-sidebar-fade-in 400ms ease-out;
+}
+
+.pages-sidebar.expanded .pages-sidebar-content > *:not(.pages-sidebar-header) {
+  animation: pages-sidebar-fade-in 400ms ease-out;
+  animation-delay: 200ms;
+  animation-fill-mode: both;
+}
+
+/* 展开/收起动画 */
+@keyframes pages-slide-in {
+  from {
+    transform: translateX(-100%) translateY(-50%);
+  }
+  to {
+    transform: translateX(0) translateY(-50%);
+  }
+}
+
+@keyframes pages-slide-out {
+  from {
+    transform: translateX(0) translateY(-50%);
+  }
+  to {
+    transform: translateX(-100%) translateY(-50%);
+  }
+}
+
+.pages-sidebar.expanded {
+  animation: pages-slide-in 300ms ease-out;
+}
+
+.pages-sidebar:not(.expanded) {
+  animation: pages-slide-out 300ms ease-in;
+}

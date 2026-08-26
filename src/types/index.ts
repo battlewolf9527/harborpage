@@ -1,3 +1,11 @@
+// 页面类型
+export interface Page {
+  id: string;
+  name: string;
+  websites: Website[];
+  createdAt: number;
+}
+
 // 网站类型
 export interface Website {
   id: string;
@@ -85,7 +93,9 @@ export interface Settings extends VisualSettings {
 // 用户数据类型
 export interface UserData {
   settings?: Settings;
-  websites?: Website[];
+  websites?: Website[]; // 向后兼容：旧数据使用根级 websites 字段
+  pages?: Page[];
+  currentPageId?: string | undefined;
   searchEngines?: SearchEngine[];
   todos?: Todo[];
   todoList?: Todo[]; // 向后兼容：旧数据使用 todoList 字段

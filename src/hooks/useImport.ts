@@ -46,7 +46,7 @@ export const useImport = (): UseImportResult => {
   const setImportMessage = useImportStore((s) => s.setImportMessage);
 
   const checkDuplicate = useCallback((site: Website): DuplicateSite | null => {
-    const currentWebsites = useIconsStore.getState().websites;
+    const currentWebsites = useIconsStore.getState().getWebsites();
     const desktopExists = currentWebsites.some(
       (icon: Website) => !icon.isFolder && icon.name === site.name && icon.url === site.url
     );
@@ -111,7 +111,9 @@ export const useImport = (): UseImportResult => {
       }
 
       setImportMessage('正在创建目录...');
-      const { websites: currentWebsites, createFolderDirectly } = useIconsStore.getState();
+      const iconsState = useIconsStore.getState();
+      const currentWebsites = iconsState.getWebsites();
+      const { createFolderDirectly } = iconsState;
       requiredFolders.forEach(folderName => {
         const exists = currentWebsites.some(
           (icon: Website) => icon.isFolder && icon.name === folderName
@@ -142,7 +144,9 @@ export const useImport = (): UseImportResult => {
           isFolder: false,
         };
 
-        const { websites: latestWebsites, addIcon, addIconToFolder } = useIconsStore.getState();
+        const iconsState2 = useIconsStore.getState();
+        const latestWebsites = iconsState2.getWebsites();
+        const { addIcon, addIconToFolder } = iconsState2;
         if (site.parentFolder && importStructure) {
           addIconToFolder(site.parentFolder, newSite);
         } else {

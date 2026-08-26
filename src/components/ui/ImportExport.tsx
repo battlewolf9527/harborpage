@@ -8,11 +8,14 @@ import {
   downloadFullExportFile,
   readImportFile,
   restoreIsFolder,
+  mergeById,
   type FullExportData,
   type DataSelection,
 } from '../../utils/importExportUtils';
 import { EXPORT_FILE_PREFIX } from '../../constants';
-import type { UserData, Website } from '../../types';
+import type { UserData, Website, Page } from '../../types';
+import { generateId } from '../../utils/idUtils';
+import { DEFAULT_PAGE_NAME } from '../../store/usePagesStore';
 import './ImportExport.css';
 
 // 数据分类配置
@@ -25,7 +28,8 @@ interface CategoryConfig {
 
 const DATA_CATEGORIES: CategoryConfig[] = [
   { key: 'searchEngines', label: '搜索引擎' },
-  { key: 'websites', label: '网站' },
+  { key: 'pages', label: '页面（含网站）' },
+  { key: 'websites', label: '网站（旧格式）' },
   { key: 'todos', label: '待办列表' },
   { key: 'notes', label: '笔记' },
   { key: 'settings', label: '其它设置' },
@@ -33,6 +37,7 @@ const DATA_CATEGORIES: CategoryConfig[] = [
 
 const ALL_SELECTED: DataSelection = {
   searchEngines: true,
+  pages: true,
   websites: true,
   todos: true,
   notes: true,
@@ -69,8 +74,16 @@ const countWebsites = (list: Website[] | undefined): number => {
 
 const buildImportSummary = (data: FullExportData): string => {
   const parts: string[] = [];
-  const siteCount = countWebsites(data.websites);
-  if (siteCount) parts.push(`站点 ${siteCount} 个`);
+  if (data.pages?.length) {
+    let totalSites = 0;
+    for (const page of data.pages) {
+      totalSites += countWebsites(page.websites);
+    }
+    parts.push(`页面 ${data.pages.length} 个（共 ${totalSites} 个站点）`);
+  } else {
+    const siteCount = countWebsites(data.websites);
+    if (siteCount) parts.push(`站点 ${siteCount} 个`);
+  }
   if (data.searchEngines?.length) parts.push(`搜索引擎 ${data.searchEngines.length} 个`);
   if (data.todos?.length) parts.push(`待办 ${data.todos.length} 条`);
   if (data.notes?.length) parts.push(`笔记 ${data.notes.length} 条`);
@@ -129,8 +142,16 @@ const ImportExport: React.FC = () => {
         setToast({ type: 'error', message: '文件格式无效或数据不完整' });
         return;
       }
+      // 统计 pages 中的总站点数
+      let pageSiteCount = 0;
+      if (raw.pages?.length) {
+        for (const page of raw.pages) {
+          pageSiteCount += countWebsites(page.websites);
+        }
+      }
       const available: DataSelection = {
         searchEngines: !!(raw.searchEngines?.length),
+        pages: !!(raw.pages?.length),
         websites: countWebsites(raw.websites) > 0,
         todos: !!(raw.todos?.length),
         notes: !!(raw.notes?.length),
@@ -138,6 +159,7 @@ const ImportExport: React.FC = () => {
       };
       const counts: Record<CategoryKey, number | null> = {
         searchEngines: raw.searchEngines?.length ?? null,
+        pages: raw.pages?.length ? `${raw.pages.length}页/${pageSiteCount}站` as unknown as number : null,
         websites: countWebsites(raw.websites) || null,
         todos: raw.todos?.length ?? null,
         notes: raw.notes?.length ?? null,
@@ -163,11 +185,45 @@ const ImportExport: React.FC = () => {
     const current = dataManager.getData();
     const raw = importPreview.raw;
 
+    // 旧格式迁移：导入文件只有根级 websites 但无 pages 时，把旧网站包装成默认页面
+    // 这样后续链路走 pages 通路，不再依赖 legacyWebsites 分支（pages 非空时会被直接使用）
+    const rawHasLegacyWebsites =
+      importSelection.websites && raw.websites && raw.websites.length > 0;
+    let migratedPagesFromLegacy: Page[] | null = null;
+    if (rawHasLegacyWebsites && (!raw.pages || raw.pages.length === 0)) {
+      const restoredLegacyWebsites = restoreIsFolder(raw.websites!);
+      // upsert 同名默认页：current 里已有叫"默认页面"的页就复用 id 并合并 websites，避免产生两个重名默认页
+      const existingDefaultInCurrent = (current.pages ?? []).find(p => p.name === DEFAULT_PAGE_NAME);
+      if (existingDefaultInCurrent) {
+        migratedPagesFromLegacy = [{
+          ...existingDefaultInCurrent,
+          websites: mergeById(existingDefaultInCurrent.websites, restoredLegacyWebsites),
+        }];
+      } else {
+        migratedPagesFromLegacy = [{
+          id: generateId('page-'),
+          name: DEFAULT_PAGE_NAME,
+          websites: restoredLegacyWebsites,
+          createdAt: Date.now(),
+        }];
+      }
+    }
+
+    // 计算 pages：勾选 pages 时优先 raw.pages，否则若有迁移页用迁移页；未勾选则保留当前
+    const rawPagesRestored = (raw.pages ?? []).map(page => ({
+      ...page,
+      websites: restoreIsFolder(page.websites),
+    }));
+    const resolvedPagesForSelection: Page[] = importSelection.pages
+      ? (rawPagesRestored.length > 0 ? rawPagesRestored : (migratedPagesFromLegacy ?? []))
+      : (current.pages ?? []);
+
     // 构建导入数据：未勾选的分类使用当前数据填充
     const imported: UserData = {
       websites: importSelection.websites
         ? restoreIsFolder(raw.websites ?? [])
         : (current.websites ?? []),
+      pages: resolvedPagesForSelection,
       searchEngines: importSelection.searchEngines
         ? (raw.searchEngines ?? [])
         : (current.searchEngines ?? []),
@@ -178,6 +234,20 @@ const ImportExport: React.FC = () => {
         ? (raw.notes ?? [])
         : (current.notes ?? []),
     };
+    // currentPageId 赋值：
+    // - 如果做了上游旧格式迁移（默认页面已重建/合并网站），强制切到迁移页；
+    // - 否则勾选 pages 时优先用导入文件的 currentPageId，其次用当前的
+    // 条件赋值避免 exactOptionalPropertyTypes 报错
+    if (migratedPagesFromLegacy && migratedPagesFromLegacy.length > 0) {
+      imported.currentPageId = migratedPagesFromLegacy[0].id;
+    } else {
+      const currentPageIdValue = importSelection.pages
+        ? (raw.currentPageId ?? current.currentPageId)
+        : (current.currentPageId);
+      if (currentPageIdValue !== undefined) {
+        imported.currentPageId = currentPageIdValue;
+      }
+    }
     if (importSelection.settings && raw.settings) {
       imported.settings = raw.settings;
     }
@@ -214,8 +284,18 @@ const ImportExport: React.FC = () => {
   // 获取导出数据数量
   const exportCounts = useMemo(() => {
     const data = getServices().dataManager.getData();
+    // 统计 pages
+    let pageCount = 0;
+    let pageSiteCount = 0;
+    if (data.pages?.length) {
+      pageCount = data.pages.length;
+      for (const page of data.pages) {
+        pageSiteCount += countWebsites(page.websites);
+      }
+    }
     return {
       searchEngines: data.searchEngines?.length ?? 0,
+      pages: pageCount > 0 ? (`${pageCount}页/${pageSiteCount}站` as unknown as number) : 0,
       websites: countWebsites(data.websites),
       todos: data.todos?.length ?? 0,
       notes: data.notes?.length ?? 0,

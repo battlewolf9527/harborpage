@@ -7,6 +7,7 @@ import { useWallpaperStore } from './useWallpaperStore';
 import { useSearchStore } from './useSearchStore';
 import { useTodoStore } from './useTodoStore';
 import { useNotesStore } from './useNotesStore';
+import { usePagesStore } from './usePagesStore';
 
 export const useSettingsSelector = () => useSettingsStore(useShallow((s) => ({
   siteTitle: s.siteTitle,
@@ -16,22 +17,49 @@ export const useSettingsSelector = () => useSettingsStore(useShallow((s) => ({
   initializeSettings: s.initialize,
 })));
 
-export const useIconsDataSelector = () => useIconsStore(useShallow((s) => ({
-  websites: s.websites,
-  openFolder: s.openFolder,
-  setWebsiteIcons: s.setWebsiteIcons,
-  setOpenFolder: s.setOpenFolder,
-  setTargetIconId: s.setTargetIconId,
-  addIcon: s.addIcon,
-  updateIcon: s.updateIcon,
-  deleteIcon: s.deleteIcon,
-  dragIconOut: s.dragIconOut,
-  changeFolderName: s.changeFolderName,
-  disbandFolder: s.disbandFolder,
-  deleteFolder: s.deleteFolder,
-  updateFolderIcons: s.updateFolderIcons,
-  createFolder: s.createFolder,
+export const usePagesSelector = () => usePagesStore(useShallow((s) => ({
+  pages: s.pages,
+  currentPageId: s.currentPageId,
+  currentPage: s.pages.find(p => p.id === s.currentPageId),
+  setPages: s.setPages,
+  setCurrentPageId: s.setCurrentPageId,
+  addPage: s.addPage,
+  renamePage: s.renamePage,
+  deletePage: s.deletePage,
+  reorderPages: s.reorderPages,
 })));
+
+export const useIconsDataSelector = () => {
+  // 从 usePagesStore 订阅当前页面的 websites（触发重渲染）
+  const { currentPageId, pages } = usePagesStore(useShallow((s) => ({
+    currentPageId: s.currentPageId,
+    pages: s.pages,
+  })));
+  const currentPage = pages.find(p => p.id === currentPageId);
+  const websites = currentPage?.websites ?? [];
+
+  // 从 useIconsStore 订阅其他 UI 状态和方法
+  const iconsState = useIconsStore(useShallow((s) => ({
+    openFolder: s.openFolder,
+    setWebsiteIcons: s.setWebsiteIcons,
+    setOpenFolder: s.setOpenFolder,
+    setTargetIconId: s.setTargetIconId,
+    addIcon: s.addIcon,
+    updateIcon: s.updateIcon,
+    deleteIcon: s.deleteIcon,
+    dragIconOut: s.dragIconOut,
+    changeFolderName: s.changeFolderName,
+    disbandFolder: s.disbandFolder,
+    deleteFolder: s.deleteFolder,
+    updateFolderIcons: s.updateFolderIcons,
+    createFolder: s.createFolder,
+  })));
+
+  return {
+    websites,
+    ...iconsState,
+  };
+};
 
 export const useIconsUISelector = () => useIconsUIStore(useShallow((s) => ({
   isEditMode: s.isEditMode,
