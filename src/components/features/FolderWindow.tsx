@@ -346,8 +346,17 @@ const FolderWindow: React.FC<FolderWindowProps> = memo(({
     }
   }, [draggedIcon]);
 
-  const handleDragLeave = useCallback(() => {
-    if (draggedIcon) setIsDraggingOut(true);
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    if (!draggedIcon) return;
+    // 检查 relatedTarget：只有当真正离开 folder-overlay 边界时才标记为 dragging-out
+    // 避免子元素间 dragenter/dragleave 冒泡导致的闪烁
+    const leavingTo = e.relatedTarget as Node | null;
+    const overlayEl = overlayRef.current;
+    if (overlayEl && leavingTo && overlayEl.contains(leavingTo)) {
+      // 仍然在 overlay 内部的子元素之间移动，不改变状态
+      return;
+    }
+    setIsDraggingOut(true);
   }, [draggedIcon]);
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
