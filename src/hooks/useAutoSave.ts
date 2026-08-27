@@ -39,6 +39,10 @@ export function useAutoSave({
     countdownRef.current = autoSaveDuration;
     setCountdown(autoSaveDuration);
 
+    // 保持简单稳定：每秒更新一次。
+    // SavePrompt 组件只有在 hasUnsavedChanges=true 且 isVisible=true 时才会渲染倒计时SVG，
+    // 平时（绝大多数闲置时间）SavePrompt 图标本身就是 memo 级别的极小渲染开销。
+    // 过度优化这里的减频逻辑反而容易引入状态边界 bug。
     timerRef.current = window.setInterval(() => {
       countdownRef.current -= 1;
 
@@ -47,6 +51,7 @@ export function useAutoSave({
           clearInterval(timerRef.current);
           timerRef.current = null;
         }
+        setCountdown(0);
         onAutoSaveRef.current();
         countdownRef.current = autoSaveDuration;
       } else {

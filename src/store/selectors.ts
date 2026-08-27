@@ -8,6 +8,12 @@ import { useSearchStore } from './useSearchStore';
 import { useTodoStore } from './useTodoStore';
 import { useNotesStore } from './useNotesStore';
 import { usePagesStore } from './usePagesStore';
+import type { Website } from '../types';
+
+// ⚠️ 关键：模块级稳定引用的空数组，避免每次 selector 返回新对象造成"假变化"
+// Zustand 用 Object.is() 比较 selector 返回值，新引用会被判定为状态变化 → 触发重渲染
+// 如果不使用稳定引用，当 pages 为空/找不到当前页时，每次执行都 return [] → 新对象引用 → 无限重渲染
+const EMPTY_WEBSITES: Website[] = [];
 
 export const useSettingsSelector = () => useSettingsStore(useShallow((s) => ({
   siteTitle: s.siteTitle,
@@ -30,13 +36,13 @@ export const usePagesSelector = () => usePagesStore(useShallow((s) => ({
 })));
 
 export const useIconsDataSelector = () => {
-  // 从 usePagesStore 订阅当前页面的 websites（触发重渲染）
-  const { currentPageId, pages } = usePagesStore(useShallow((s) => ({
-    currentPageId: s.currentPageId,
-    pages: s.pages,
-  })));
-  const currentPage = pages.find(p => p.id === currentPageId);
-  const websites = currentPage?.websites ?? [];
+  // 关键性能优化：只订阅当前页的 websites，不订阅整个 pages 数组
+  // - 空/未找到时返回稳定引用 EMPTY_WEBSITES，避免无限重渲染
+  // - 当前页 websites 数组引用本身不变时（其他页面改动），Zustand 判定未变化 → 不重渲染
+  const websites = usePagesStore((s): Website[] => {
+    const currentPage = s.pages.find(p => p.id === s.currentPageId);
+    return currentPage?.websites ?? EMPTY_WEBSITES;
+  });
 
   // 从 useIconsStore 订阅其他 UI 状态和方法
   const iconsState = useIconsStore(useShallow((s) => ({

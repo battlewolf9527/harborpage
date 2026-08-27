@@ -42,15 +42,28 @@ const Background: React.FC = () => {
     return { background: DEFAULT_GRADIENT };
   }, [wallpaperType, solidColor, wallpaper]);
 
-  const overlayStyle = useMemo<React.CSSProperties>(() => ({
-    background: `rgba(0, 0, 0, ${overlayLevel})`,
-    backdropFilter: `blur(${blurLevel / 5}px)`,
-  }), [overlayLevel, blurLevel]);
+  // 关键优化：只有 blurLevel > 0 时才应用 backdrop-filter，
+  // 因为即便 blur(0px) 也会创建一个 GPU 合成层，消耗资源
+  const hasBlur = blurLevel > 0;
+  const overlayStyle = useMemo<React.CSSProperties>(() => {
+    const style: React.CSSProperties = {
+      background: `rgba(0, 0, 0, ${overlayLevel})`,
+    };
+    if (hasBlur) {
+      // 通过 CSS 变量传递给类样式
+      (style as React.CSSProperties & { ['--blur-value']?: string })['--blur-value'] = `${blurLevel / 5}px`;
+    }
+    return style;
+  }, [overlayLevel, hasBlur, blurLevel]);
+
+  const overlayClassName = useMemo(() => {
+    return hasBlur ? 'background-overlay background-overlay--has-blur' : 'background-overlay';
+  }, [hasBlur]);
 
   return (
     <>
       <div className="background" style={backgroundStyle}></div>
-      <div className="background-overlay" style={overlayStyle}></div>
+      <div className={overlayClassName} style={overlayStyle}></div>
     </>
   );
 };
