@@ -4,10 +4,7 @@ import './Background.css';
 import { useWallpaperStore } from '../../store/useWallpaperStore';
 
 const getWallpaperUrl = (originalUrl: string, type: string): string => {
-  // data: URL（base64）和 local 类型（R2 直链）不需要走代理
-  if (originalUrl.startsWith('data:') || type === 'local') {
-    return originalUrl;
-  }
+  if (originalUrl.startsWith('data:') || type === 'local') return originalUrl;
   return `/api/wallpaper?url=${encodeURIComponent(originalUrl)}`;
 };
 
@@ -25,12 +22,8 @@ const Background: React.FC = () => {
   );
 
   const backgroundStyle = useMemo<React.CSSProperties>(() => {
-    if (wallpaperType === 'solid') {
-      return { background: solidColor };
-    }
-    if (wallpaperType === 'gradient') {
-      return { background: DEFAULT_GRADIENT };
-    }
+    if (wallpaperType === 'solid') return { background: solidColor };
+    if (wallpaperType === 'gradient') return { background: DEFAULT_GRADIENT };
     if (wallpaper && !wallpaper.startsWith('indexeddb://')) {
       return {
         backgroundImage: `url(${getWallpaperUrl(wallpaper, wallpaperType)})`,
@@ -42,29 +35,27 @@ const Background: React.FC = () => {
     return { background: DEFAULT_GRADIENT };
   }, [wallpaperType, solidColor, wallpaper]);
 
-  // 关键优化：只有 blurLevel > 0 时才应用 backdrop-filter，
-  // 因为即便 blur(0px) 也会创建一个 GPU 合成层，消耗资源
-  const hasBlur = blurLevel > 0;
-  const overlayStyle = useMemo<React.CSSProperties>(() => {
-    const style: React.CSSProperties = {
-      background: `rgba(0, 0, 0, ${overlayLevel})`,
-    };
-    if (hasBlur) {
-      // 通过 CSS 变量传递给类样式
-      (style as React.CSSProperties & { ['--blur-value']?: string })['--blur-value'] = `${blurLevel / 5}px`;
-    }
-    return style;
-  }, [overlayLevel, hasBlur, blurLevel]);
+  const blurPx = blurLevel / 5;
+  const scale = 1 + Math.min(blurPx, 30) * 0.008;
 
-  const overlayClassName = useMemo(() => {
-    return hasBlur ? 'background-overlay background-overlay--has-blur' : 'background-overlay';
-  }, [hasBlur]);
+  const filterStyle = useMemo<React.CSSProperties>(() => {
+    if (blurLevel <= 0) return { filter: 'none', WebkitFilter: 'none', transform: 'scale(1)' };
+    return {
+      filter: `blur(${blurPx}px)`,
+      WebkitFilter: `blur(${blurPx}px)`,
+      transform: `scale(${scale.toFixed(3)})`,
+    };
+  }, [blurLevel, blurPx, scale]);
+
+  const overlayStyle = useMemo<React.CSSProperties>(() => ({
+    background: `rgba(0, 0, 0, ${overlayLevel})`,
+  }), [overlayLevel]);
 
   return (
-    <>
-      <div className="background" style={backgroundStyle}></div>
-      <div className={overlayClassName} style={overlayStyle}></div>
-    </>
+    <div className="background-shell">
+      <div className="background" style={{ ...backgroundStyle, ...filterStyle }} />
+      <div className="background-overlay" style={overlayStyle} />
+    </div>
   );
 };
 

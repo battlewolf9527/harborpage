@@ -1,45 +1,48 @@
-/* 背景区域 */
-.background {
+/* 背景层外壳：裁掉壁纸模糊(blur)向外溢出的半透明淡边，
+   同时承担 z-index: -1 的最底层身份。 */
+.background-shell {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  inset: 0;
+  overflow: hidden;
   z-index: -1;
-  transition: background-image 0.8s ease, background 0.8s ease;
-  /* 提示浏览器这是一个静态层，避免不必要的重绘 */
-  will-change: auto;
+  pointer-events: none;
 }
 
-/* 背景装饰：移除无限循环动画，改为静态渐变层（大幅降低GPU消耗） */
+/* 壁纸 / 渐变色 / 纯色层。
+   直接对本层做 filter: blur()（而非 backdrop-filter），
+   模糊只会在壁纸或模糊度变更时光栅化一次，
+   后续上层图标动画不会重复引起重采样。 */
+.background {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  transition:
+    background-image 0.8s ease,
+    background 0.8s ease,
+    filter 0.8s ease,
+    transform 0.8s ease;
+  transform-origin: center center;
+  contain: layout paint;
+}
+
+/* 柔和的径向装饰：静态渐变，不带循环动画。 */
 .background::before {
   content: '';
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle at 50% 50%, rgba(100, 100, 255, 0.07) 0%, transparent 70%);
-  z-index: -1;
+  inset: -50%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(100, 100, 255, 0.07) 0%,
+    transparent 70%
+  );
   pointer-events: none;
 }
 
-/* 遮罩和模糊效果 */
+/* 纯黑色遮罩（与壁纸模糊解耦，独立透明度） */
 .background-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.3);
-  z-index: -1;
-  transition: background-color 0.8s ease, backdrop-filter 0.8s ease;
+  inset: 0;
+  z-index: 0;
   pointer-events: none;
-}
-
-/* 仅当有模糊值时才启用backdrop-filter（blur(0)仍会触发GPU合成开销） */
-.background-overlay--has-blur {
-  backdrop-filter: blur(var(--blur-value, 0px));
-  -webkit-backdrop-filter: blur(var(--blur-value, 0px));
+  transition: background-color 0.8s ease;
 }

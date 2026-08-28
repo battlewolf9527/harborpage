@@ -66,10 +66,22 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
 .icon-item:hover .icon-circle {
   transform: scale(1.1);
+  animation: blinking 2s ease infinite;
+}
+
+@keyframes blinking {
+  0%,
+  100% {
+    box-shadow: 0px 0px  3px 0px rgba(33, 150, 243, 0.72);
+  }
+  50% {
+    box-shadow: 0px 0px 20px 5px rgba(33, 150, 243, 0.72);
+  }
 }
 
 .icon-label {
