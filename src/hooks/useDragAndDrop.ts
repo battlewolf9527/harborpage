@@ -102,6 +102,13 @@ export const useDragAndDrop = ({
 
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    // 进入中心区域之前，先取消外部区域可能存在的高亮定时器，
+    // 避免 outside 的 30ms 回调在中心高亮之后执行、让位置状态被错位覆盖。
+    if (outsideDebounceTimerRef.current) {
+      clearTimeout(outsideDebounceTimerRef.current);
+      outsideDebounceTimerRef.current = null;
     }
 
     debounceTimerRef.current = window.setTimeout(() => {
@@ -115,6 +122,11 @@ export const useDragAndDrop = ({
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = null;
+    }
+    // 对称地清理外部区域定时器，避免中心离开后 outside 残留状态被恢复。
+    if (outsideDebounceTimerRef.current) {
+      clearTimeout(outsideDebounceTimerRef.current);
+      outsideDebounceTimerRef.current = null;
     }
 
     debounceTimerRef.current = window.setTimeout(() => {
@@ -151,6 +163,20 @@ export const useDragAndDrop = ({
   const handleDropOnIcon = useCallback((e: React.DragEvent, targetIconId: string) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // 关键：drop 瞬间必须先清掉所有待执行的防抖回调。
+    // 否则，drop 发生前那一刻刚排进队列的 dragover 30ms 定时器，
+    // 会在 setDragOverIcon(null) 之后重新写入 dragOverIcon/dragOverPosition，
+    // 导致目标文件夹的绿色指示框"偶发"残留。
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    if (outsideDebounceTimerRef.current) {
+      clearTimeout(outsideDebounceTimerRef.current);
+      outsideDebounceTimerRef.current = null;
+    }
+
     setDragOverIcon(null);
     setDragOverPosition(null);
 
