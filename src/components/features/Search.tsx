@@ -116,7 +116,7 @@ const Search: React.FC<SearchProps> = ({ onSearch }) => {
                   position: 'fixed',
                   top: `${dropdownPosition.top}px`,
                   left: `${dropdownPosition.left}px`,
-                  width: '120px',
+                  width: '150px',
                   opacity: showSearchDropdown ? 1 : 0,
                   visibility: showSearchDropdown ? 'visible' : 'hidden',
                   pointerEvents: showSearchDropdown ? 'auto' : 'none',
@@ -133,7 +133,7 @@ const Search: React.FC<SearchProps> = ({ onSearch }) => {
                       className={`search-engine-option ${engine.id === selectedEngineId ? 'selected' : ''}`}
                       onClick={() => handleEngineSelect(engine)}
                     >
-                      {renderSearchEngineIcon(engine, iconUrl, 'search-engine-favicon', 'search-engine-icon')} {engine.name}
+                      {renderSearchEngineIcon(engine, iconUrl, 'search-engine-option-favicon', 'search-engine-icon')} {engine.name}
                     </button>
                   );
                 })}

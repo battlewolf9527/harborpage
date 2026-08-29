@@ -84,9 +84,16 @@
 }
 
 .search-engine-favicon {
-  width: 24px;
-  height: 24px;
+  width: 70%;
+  height: 70%;
   border-radius: 50%;
+  object-fit: contain;
+  object-position: center center;
+  display: block;
+}
+
+.search-engine-option-favicon {
+  height: 100%;
   object-fit: contain;
   object-position: center center;
   display: block;
@@ -111,6 +118,7 @@
 
 .search-engine-option {
   width: 100%;
+  height: 50px;
   padding: 8px 12px;
   background: transparent;
   border: none;
