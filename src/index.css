@@ -11,12 +11,72 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* ========== 统一响应式设计 Token ========== */
+  /* 侧边栏：使用 clamp() 确保小屏最小可用尺寸 */
+  --sidebar-width: clamp(280px, 18vw, 360px);
+  --sidebar-icon-size: clamp(36px, 2.4vw, 48px);
+  --sidebar-toggle-size: clamp(40px, 3vw, 52px);
+
+  /* 通用字体最小尺寸（防止 vw 导致文字不可读） */
+  --font-xs: max(11px, 0.6vw);
+  --font-sm: max(12px, 0.7vw);
+  --font-md: max(14px, 0.8vw);
+  --font-lg: max(16px, 0.95vw);
+  --font-xl: max(18px, 1.1vw);
+  --font-2xl: max(22px, 1.4vw);
+
+  /* 间距最小尺寸 */
+  --space-1: max(4px, 0.2vw);
+  --space-2: max(6px, 0.3vw);
+  --space-3: max(8px, 0.5vw);
+  --space-4: max(12px, 0.7vw);
+  --space-5: max(16px, 0.9vw);
+  --space-6: max(20px, 1.1vw);
+
+  /* 图标尺寸 */
+  --icon-circle-min: 56px;
+  --icon-circle-max: 120px;
+  --icon-label-min: 12px;
+
+  /* 天气组件最小尺寸 */
+  --weather-padding: max(10px, 0.8vw);
+  --weather-time-min: 22px;
+  --weather-temp-min: 18px;
+
+  /* 触控设备点击区域（44px iOS 标准） */
+  --touch-target: 44px;
+
+  /* 断点参考（与媒体查询保持一致） */
+  /* --bp-xs: 375px (超小屏: iPhone SE) */
+  /* --bp-sm: 480px (小屏手机) */
+  /* --bp-md: 768px (平板 / 大屏手机横屏) */
+  /* --bp-lg: 1024px (平板横屏 / 小型笔记本) */
+  /* --bp-xl: 1440px (大屏桌面) */
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+}
+
+/* ========== 超小屏（iPhone SE 等 < 375px）基础缩放 ========== */
+@media (max-width: 375px) {
+  html {
+    /* 不使用 scale，而是通过 CSS 变量确保最小可读尺寸 */
+    -webkit-text-size-adjust: 100%;
+  }
+}
+
+/* ========== 触控设备优化 ========== */
+@media (hover: none) and (pointer: coarse) {
+  /* 触控设备：移除 hover 效果，增加点击区域 */
+  button,
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
 
 /* 共享动画定义 —— 各组件复用，避免重复声明 */

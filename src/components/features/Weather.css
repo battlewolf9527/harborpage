@@ -1,45 +1,55 @@
+/* Weather.css - 使用 clamp() 确保最小可读尺寸，防止 vw 导致内容不可用 */
+
 .weather-info {
   position: absolute;
-  top: 1vw;
-  left: 1vw;
+  top: max(12px, 1vw);
+  left: max(12px, 1vw);
   color: white;
   text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   z-index: 100;
   background: rgba(0, 0, 0, 0.3);
-  padding: 0.8vw;
-  border-radius: 0.6vw;
+  padding: var(--weather-padding);
+  border-radius: max(8px, 0.6vw);
   backdrop-filter: blur(10px);
-  max-width: 35vw;
+  max-width: min(420px, 38vw);
+  min-width: min(180px, 20vw);
 }
 
 .weather-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.6vw;
+  margin-bottom: max(6px, 0.6vw);
+  gap: max(8px, 0.8vw);
 }
 
 .date {
-  font-size: 0.9vw;
+  font-size: var(--font-md);
   font-weight: 500;
   position: relative;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .lunar-info {
   position: absolute;
   background: rgba(0, 0, 0, 0.8);
   color: white;
-  padding: 0.3vw 0.6vw;
-  border-radius: 0.3vw;
-  font-size: 0.8vw;
+  padding: max(4px, 0.3vw) max(8px, 0.6vw);
+  border-radius: max(4px, 0.3vw);
+  font-size: var(--font-sm);
   z-index: 1000;
   pointer-events: none;
+  white-space: nowrap;
 }
 
 .city {
-  font-size: 0.8vw;
+  font-size: var(--font-sm);
   opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
 }
 
 .time-weather-row {
@@ -47,18 +57,20 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  gap: max(8px, 1vw);
 }
 
 .time {
-  font-size: 1.8vw;
+  font-size: var(--font-2xl);
   font-weight: 700;
-  margin-right: 1.5vw;
-  width: 7vw;
+  margin-right: max(12px, 1.5vw);
+  min-width: max(78px, 7vw);
   white-space: nowrap;
   display: flex;
   align-items: center;
   justify-content: flex-start;
   height: 100%;
+  font-variant-numeric: tabular-nums;
 }
 
 .time-text {
@@ -70,17 +82,19 @@
   display: flex;
   align-items: center;
   cursor: pointer;
-  padding: 0.3vw 0;
-  border-radius: 0.3vw;
+  padding: max(4px, 0.3vw) 0;
+  border-radius: max(4px, 0.3vw);
   transition: background 0.2s;
   flex-wrap: nowrap;
   justify-content: flex-end;
-  min-height: 2.5vw;
+  min-height: max(32px, 2.5vw);
   text-align: right;
+  flex: 1;
+  min-width: 0;
 }
 
 .temperature-section {
-  margin-left: 0.8vw;
+  margin-left: max(8px, 0.8vw);
   display: flex;
   align-items: center;
   height: 100%;
@@ -88,48 +102,52 @@
 }
 
 .temperature {
-  font-size: 1.4vw;
+  font-size: var(--font-xl);
   font-weight: 700;
-  margin-left: 0.6vw;
+  margin-left: max(6px, 0.6vw);
   line-height: 1;
+  white-space: nowrap;
 }
 
 .weather-section {
   display: flex;
   align-items: center;
-  margin-left: 0.8vw;
+  margin-left: max(8px, 0.8vw);
   height: 100%;
   line-height: 1;
   justify-content: flex-end;
 }
 
 .weather-icon {
-  font-size: 1.4vw;
-  margin-left: 0.6vw;
-  margin-right: 0.3vw;
+  font-size: var(--font-xl);
+  margin-left: max(6px, 0.6vw);
+  margin-right: max(4px, 0.3vw);
 }
 
 .weather-desc {
-  font-size: 1.1vw;
+  font-size: var(--font-lg);
+  white-space: nowrap;
 }
 
 .details-section {
   display: flex;
-  gap: 1vw;
+  gap: max(8px, 1vw);
   align-items: center;
   justify-content: flex-end;
-  margin-left: 0.8vw;
+  margin-left: max(8px, 0.8vw);
+  flex-wrap: wrap;
 }
 
 .detail-item {
   display: flex;
   align-items: center;
-  font-size: 0.8vw;
+  font-size: var(--font-sm);
+  white-space: nowrap;
 }
 
 .detail-icon {
-  font-size: 0.9vw;
-  margin-right: 0.3vw;
+  font-size: var(--font-md);
+  margin-right: max(4px, 0.3vw);
 }
 
 .detail-value {
@@ -138,14 +156,14 @@
 
 /* 天气API未配置时的紧凑模式：仅显示日期和时间 */
 .weather-info--compact {
-  padding: 0.5vw;
-  max-width: 18vw;
-  min-width: 11vw;
+  padding: max(8px, 0.5vw);
+  max-width: min(220px, 22vw);
+  min-width: min(140px, 15vw);
 }
 
 .weather-info--compact .weather-header {
   justify-content: center;
-  margin-bottom: 0.3vw;
+  margin-bottom: max(4px, 0.3vw);
 }
 
 .weather-info--compact .time-weather-row {
@@ -154,43 +172,177 @@
 
 .weather-info--compact .time {
   margin-right: 0;
-  width: 7.8vw;
-  min-width: 7.8vw;
+  min-width: max(90px, 8vw);
   font-variant-numeric: tabular-nums;
   justify-content: center;
 }
 
 .weather-info--compact .time-text {
   display: inline-block;
-  min-width: 7.8vw;
+  min-width: max(90px, 8vw);
   text-align: center;
 }
 
-/* 响应式设计 */
+/* ========== 响应式：平板 / 大屏手机横屏 ========== */
+@media (max-width: 1024px) {
+  .weather-info {
+    max-width: 40vw;
+  }
+
+  .details-section {
+    display: none;
+  }
+}
+
+/* ========== 响应式：手机竖屏 ========== */
 @media (max-width: 768px) {
   .weather-info {
-    top: 1vw;
-    left: 1vw;
-    max-width: 35vw;
+    top: max(10px, 1vw);
+    left: max(10px, 1vw);
+    max-width: 48vw;
+    padding: max(8px, 0.8vw);
   }
-  
+
   .time-weather-row {
+    flex-direction: row;
+    align-items: center;
+    gap: max(6px, 0.8vw);
+  }
+
+  .time {
+    font-size: var(--font-xl);
+    min-width: max(70px, 6.5vw);
+  }
+
+  .temperature {
+    font-size: var(--font-lg);
+  }
+
+  .weather-icon {
+    font-size: var(--font-lg);
+  }
+
+  .weather-desc {
+    display: none;
+  }
+
+  .city {
+    max-width: 90px;
+  }
+}
+
+/* ========== 响应式：小屏手机 ========== */
+@media (max-width: 480px) {
+  .weather-info {
+    max-width: 55vw;
+    padding: 8px 10px;
+  }
+
+  .weather-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1vw;
+    gap: 4px;
+    margin-bottom: 4px;
   }
-  
+
+  .date {
+    font-size: 12px;
+  }
+
+  .city {
+    font-size: 11px;
+    max-width: none;
+  }
+
+  .time-weather-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+  }
+
   .time {
-    font-size: 1.6vw;
+    font-size: 20px;
+    min-width: 68px;
     margin-right: 0;
-    text-align: center;
   }
-  
+
+  .temperature-section {
+    margin-left: 4px;
+  }
+
   .temperature {
-    font-size: 1.4vw;
+    font-size: 16px;
+    margin-left: 4px;
   }
-  
+
   .weather-icon {
-    font-size: 1.4vw;
+    font-size: 16px;
+    margin-left: 4px;
+    margin-right: 2px;
+  }
+
+  /* 紧凑模式在小屏居中显示 */
+  .weather-info--compact {
+    max-width: 40vw;
+    min-width: 120px;
+    padding: 6px 8px;
+  }
+
+  .weather-info--compact .time {
+    font-size: 18px;
+    min-width: 64px;
+  }
+
+  .weather-info--compact .time-text {
+    min-width: 64px;
+  }
+}
+
+/* ========== 响应式：超小屏手机 (iPhone SE 320px) ========== */
+@media (max-width: 375px) {
+  .weather-info {
+    max-width: 60vw;
+    padding: 6px 8px;
+    top: 8px;
+    left: 8px;
+  }
+
+  .weather-header {
+    margin-bottom: 2px;
+  }
+
+  .date {
+    font-size: 11px;
+  }
+
+  .city {
+    font-size: 10px;
+  }
+
+  .time {
+    font-size: 17px;
+    min-width: 58px;
+  }
+
+  .temperature {
+    font-size: 14px;
+  }
+
+  .weather-icon {
+    font-size: 14px;
+  }
+
+  .weather-info--compact {
+    max-width: 42vw;
+    min-width: 110px;
+  }
+
+  .weather-info--compact .time {
+    font-size: 16px;
+    min-width: 56px;
+  }
+
+  .weather-info--compact .time-text {
+    min-width: 56px;
   }
 }

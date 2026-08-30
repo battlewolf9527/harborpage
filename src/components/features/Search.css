@@ -3,14 +3,14 @@
   margin-bottom: 60px;
   text-align: center;
   animation: fadeInUp 0.8s ease 0.2s both;
-  width: 30%;
+  width: min(560px, 32%);
   transition: width 0.3s ease;
   margin: 0 auto;
   padding-bottom: 20px;
 }
 
 .search-container.focused {
-  width: 40%;
+  width: min(680px, 42%);
 }
 
 @keyframes fadeInUp {
@@ -192,10 +192,30 @@
   transform: scale(0.95);
 }
 
-/* 响应式设计 */
+/* 响应式设计 - 平板 */
+@media (max-width: 1024px) {
+  .search-container {
+    width: min(520px, 48%);
+  }
+
+  .search-container.focused {
+    width: min(560px, 54%);
+  }
+}
+
+/* 响应式设计 - 大屏手机 */
 @media (max-width: 768px) {
+  .search-container {
+    width: 82%;
+    margin-bottom: 40px;
+  }
+
+  .search-container.focused {
+    width: 86%;
+  }
+
   .search-wrapper {
-    width: 90%;
+    width: 100%;
     margin: 0 auto;
   }
   
@@ -209,28 +229,70 @@
   }
 }
 
+/* 响应式设计 - 小屏手机 */
 @media (max-width: 480px) {
   .search-container {
-    margin-bottom: 40px;
+    width: 90%;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+  }
+
+  .search-container.focused {
+    width: 92%;
   }
   
   .search-wrapper {
-    width: 95%;
+    width: 100%;
   }
   
   .search-engine-button {
     width: 48px;
     height: 48px;
+    flex-shrink: 0;
+  }
+
+  .search-engine-favicon {
+    width: 32px;
+    height: 32px;
   }
   
   .search-input {
     height: 48px;
     font-size: 13px;
+    padding: 0 12px;
   }
   
   .search-submit-button {
-    height: 32px;
+    height: 36px;
+    padding: 0 14px;
+    font-size: 12px;
+    margin-right: 6px;
+    flex-shrink: 0;
+  }
+}
+
+/* 响应式设计 - 超小屏手机 (iPhone SE) */
+@media (max-width: 375px) {
+  .search-container {
+    width: 94%;
+    margin-bottom: 28px;
+  }
+
+  .search-engine-button {
+    width: 44px;
+    height: 44px;
+  }
+
+  .search-input {
+    height: 44px;
+    font-size: 13px;
+    padding: 0 10px;
+  }
+
+  .search-submit-button {
+    height: 34px;
     padding: 0 12px;
     font-size: 12px;
+    margin-right: 5px;
   }
 }

@@ -1,38 +1,41 @@
+/* TodoList.css - 响应式重构：使用 CSS 变量 + clamp 保证最小可读/操作尺寸 */
+
 .todo-list {
-  padding: 0.6vw 0;
+  padding: var(--space-4) 0;
   font-family: 'Inter', sans-serif;
   display: flex;
   flex-direction: column;
-  gap: 0.9vw;
+  gap: var(--space-5);
 }
 
 .todo-list h3 {
-  font-size: 0.7vw;
+  font-size: var(--font-sm);
   font-weight: 600;
-  margin: 0 0 0.9vw 0;
+  margin: 0 0 var(--space-5) 0;
   color: var(--text-primary);
   text-align: center;
 }
 
 .add-todo {
   display: flex;
-  gap: 0.5vw;
+  gap: var(--space-3);
   align-items: center;
   position: relative;
 }
 
 .add-todo input {
   flex: 1;
-  padding: 0.55vw 0.7vw;
+  padding: var(--space-3) var(--space-4);
   border: 2px solid var(--border-color);
   border-radius: var(--border-radius-lg);
   background: var(--background-light);
   color: var(--text-primary);
-  font-size: 0.55vw;
+  font-size: var(--font-sm);
   font-family: 'Inter', sans-serif;
   outline: none;
   transition: all var(--transition-fast);
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  min-height: 38px;
 }
 
 .add-todo input:focus {
@@ -48,12 +51,12 @@
 }
 
 .add-todo button {
-  padding: 0.55vw 0.9vw;
+  padding: var(--space-3) var(--space-5);
   border: none;
   border-radius: var(--border-radius-lg);
   background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
   color: white;
-  font-size: 0.55vw;
+  font-size: var(--font-sm);
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -61,6 +64,8 @@
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
   position: relative;
   overflow: hidden;
+  min-height: 38px;
+  min-width: 44px;
 }
 
 .add-todo button::before {
@@ -92,16 +97,16 @@
 .todo-items {
   display: flex;
   flex-direction: column;
-  gap: 0.5vw;
-  max-height: 16vw;
+  gap: var(--space-3);
+  max-height: min(260px, 20vh);
   overflow-y: auto;
-  padding-right: 0.3vw;
+  padding-right: var(--space-2);
   position: relative;
 }
 
 /* 滚动条样式 */
 .todo-items::-webkit-scrollbar {
-  width: 0.3vw;
+  width: 6px;
 }
 
 .todo-items::-webkit-scrollbar-track {
@@ -122,8 +127,8 @@
 .todo-item {
   display: flex;
   align-items: center;
-  gap: 0.55vw;
-  padding: 0.55vw 0.7vw;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
   background: var(--background-white);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-lg);
@@ -132,6 +137,7 @@
   position: relative;
   overflow: hidden;
   cursor: pointer;
+  min-height: 40px;
 }
 
 .todo-item::before {
@@ -159,8 +165,8 @@
 }
 
 .todo-item input[type="checkbox"] {
-  width: 0.7vw;
-  height: 0.7vw;
+  width: clamp(16px, 0.7vw, 20px);
+  height: clamp(16px, 0.7vw, 20px);
   accent-color: var(--primary-color);
   cursor: pointer;
   flex-shrink: 0;
@@ -179,7 +185,7 @@
 .todo-item span {
   flex: 1;
   color: var(--text-primary);
-  font-size: 0.55vw;
+  font-size: var(--font-sm);
   line-height: 1.5;
   transition: all var(--transition-fast);
   font-weight: 500;
@@ -193,14 +199,14 @@
 }
 
 .todo-item .delete-todo {
-  width: 1.3vw;
-  height: 1.3vw;
+  width: clamp(22px, 1.3vw, 26px);
+  height: clamp(22px, 1.3vw, 26px);
   padding: 0;
   border: none;
   border-radius: var(--border-radius-md);
   background: var(--background-light);
   color: var(--text-secondary);
-  font-size: 0.55vw;
+  font-size: var(--font-xs);
   cursor: pointer;
   transition: all var(--transition-fast);
   display: flex;
@@ -238,13 +244,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.55vw 0.7vw;
+  padding: var(--space-3) var(--space-4);
   background: var(--background-white);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
+  min-height: 38px;
 }
 
 .todo-footer::before {
@@ -259,24 +266,25 @@
 
 .todo-footer span {
   color: var(--text-secondary);
-  font-size: 0.5vw;
+  font-size: var(--font-xs);
   font-weight: 600;
   font-family: 'Inter', sans-serif;
 }
 
 .todo-footer button {
-  padding: 0.3vw 0.6vw;
+  padding: var(--space-2) var(--space-4);
   border: none;
   border-radius: var(--border-radius-md);
   background: var(--background-light);
   color: var(--text-secondary);
-  font-size: 0.5vw;
+  font-size: var(--font-xs);
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
   box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
+  min-height: 30px;
 }
 
 .todo-footer button::before {
@@ -306,14 +314,14 @@
   content: '还没有待办事项，点击上方添加吧！';
   display: block;
   text-align: center;
-  padding: 2.2vw 0.7vw;
+  padding: var(--space-6) var(--space-4);
   color: var(--text-secondary);
   font-style: italic;
-  font-size: 0.55vw;
+  font-size: var(--font-sm);
   background: var(--background-light);
   border: 2px dashed var(--border-color);
   border-radius: var(--border-radius-lg);
-  margin-bottom: 0.9vw;
+  margin-bottom: var(--space-5);
   position: relative;
   transition: all var(--transition-normal);
 }
@@ -321,8 +329,8 @@
 .todo-items:empty::after {
   content: '✨';
   display: block;
-  font-size: 1.2vw;
-  margin-bottom: 0.6vw;
+  font-size: clamp(18px, 1.2vw, 22px);
+  margin-bottom: var(--space-4);
   animation: bounce 2s infinite;
 }
 
@@ -369,4 +377,21 @@
 
 .todo-item span.completed {
   animation: todoSlideOut 300ms ease-out;
+}
+
+/* ========== 响应式：超小屏手机 ========== */
+@media (max-width: 480px) {
+  .add-todo {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .add-todo input {
+    width: 100%;
+  }
+
+  .add-todo button {
+    align-self: flex-end;
+    min-width: 60px;
+  }
 }

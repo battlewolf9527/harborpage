@@ -18,7 +18,7 @@ const IconSettings: React.FC<IconSettingsProps> = ({
       <h3>图标设置</h3>
       <div className="option-item">
         <label>
-          列数: {iconColumns}
+          最大列数: {iconColumns}
           <input 
             type="range" 
             min="3" 

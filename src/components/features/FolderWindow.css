@@ -23,8 +23,15 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  min-width: 63vw;
-  max-width: 63vw;
+  /* 旧：min-width/max-width 都是 min(900px,63vw)
+     —— min(X,Y) 会取两者中更小的，所以 ≥1428px 就卡死 900px，4K 下仅占屏宽 23%。
+     新：用 clamp() 给出下/中/上限三层保护：
+     - ≤~1385px：保底 900px（旧行为不回退）
+     - 1920px 1080p：65% × 1920 = 1248px（居中弹窗比主页稍小）
+     - 2560px 2K  ：65% × 2560 = 1664px，被 clamp 到 1600 上限
+     - 3840px 4K  ：封顶 1800px，避免弹窗铺得太空导致内容稀薄 */
+  min-width: clamp(900px, 65%, 1800px);
+  max-width: clamp(900px, 65%, 1800px);
   max-height: 80vh;
   display: flex;
   flex-direction: column;
@@ -50,8 +57,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
+  padding: clamp(14px, 1.8vw, 20px) clamp(18px, 2.2vw, 24px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  gap: clamp(10px, 1vw, 16px);
 }
 
 .folder-name-container {
@@ -234,7 +242,7 @@
 }
 
 .folder-content {
-  padding: 24px;
+  padding: clamp(16px, 2vw, 24px);
   overflow-y: auto;
   /* 必须显式关 x 溢出：每个 .icon-wrapper 左右都有 2 根 50px 宽的 drop-zone
      绝对定位在 wrapper 外面（-5px 边距），行首 / 行尾的 drop-zone 会把
@@ -464,20 +472,170 @@
   }
 }
 
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .folder-window {
-    min-width: 90vw;
-    max-width: 90vw;
-    max-height: 70vh;
-  }
-}
-
 /* 响应式设计 - 平板 */
 @media (min-width: 769px) and (max-width: 1024px) {
   .folder-window {
-    min-width: 63vw;
-    max-width: 63vw;
+    min-width: 75vw;
+    max-width: 75vw;
+  }
+}
+
+/* 响应式设计 - 手机 */
+@media (max-width: 768px) {
+  .folder-window {
+    min-width: 92vw;
+    max-width: 92vw;
+    max-height: 72vh;
+    border-radius: 14px;
+  }
+
+  .folder-title {
+    font-size: clamp(16px, 2.2vw, 20px);
+  }
+
+  .folder-name-input {
+    min-width: 0;
+    font-size: 16px;
+    padding: 8px 12px;
+  }
+
+  .folder-actions {
+    padding: 12px 16px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .folder-action-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+  }
+}
+
+/* 响应式设计 - 超小屏手机 */
+@media (max-width: 375px) {
+  .folder-window {
+    min-width: 94vw;
+    max-width: 94vw;
+    max-height: 74vh;
+    border-radius: 12px;
+  }
+
+  .folder-header {
+    padding: 12px 14px;
+    flex-wrap: wrap;
+  }
+
+  .folder-content {
+    padding: 12px;
+  }
+
+  .folder-actions {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .folder-action-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
+
+/* ============================================================
+   大屏断点 - 文件夹窗口尺寸
+   与 IconsContainer.css 的 1080p/2K/4K 断点配套。
+   注意：FolderWindow 是居中弹窗，所以上限比主页更保守，
+   避免在 4K 上铺成"一大片广场"导致内容稀薄难扫视。
+   ============================================================ */
+
+/* ≥ 1080p (1920px)：clamp 上/下限收紧，窗口 ≈1100-1400px，header/content padding 稍放大 */
+@media (min-width: 1920px) {
+  .folder-window {
+    min-width: clamp(1100px, 65%, 1400px);
+    max-width: clamp(1100px, 65%, 1400px);
+  }
+
+  .folder-header {
+    padding: 20px 26px;
+  }
+
+  .folder-content {
+    padding: 26px;
+  }
+
+  .folder-actions {
+    padding: 18px 26px;
+    gap: 18px;
+  }
+}
+
+/* ≥ 2K / QHD (2560px)：clamp 上限提至 1600px */
+@media (min-width: 2560px) {
+  .folder-window {
+    min-width: clamp(1300px, 65%, 1600px);
+    max-width: clamp(1300px, 65%, 1600px);
+  }
+
+  .folder-header {
+    padding: 22px 28px;
+  }
+
+  .folder-content {
+    padding: 28px;
+  }
+
+  .folder-title {
+    font-size: 24px;
+  }
+
+  .folder-actions {
+    padding: 18px 28px;
+    gap: 20px;
+  }
+
+  .folder-action-btn {
+    padding: 12px 22px;
+    font-size: 15px;
+  }
+}
+
+/* ≥ 4K / UHD (3840px)：clamp 上限到 1800px，比例降到 60%（居中弹窗不应过宽） */
+@media (min-width: 3840px) {
+  .folder-window {
+    min-width: clamp(1600px, 60%, 1800px);
+    max-width: clamp(1600px, 60%, 1800px);
+    border-radius: 20px;
+  }
+
+  .folder-header {
+    padding: 26px 32px;
+  }
+
+  .folder-content {
+    padding: 32px;
+  }
+
+  .folder-title {
+    font-size: 26px;
+  }
+
+  .folder-close-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+
+  .folder-actions {
+    padding: 20px 32px;
+    gap: 22px;
+  }
+
+  .folder-action-btn {
+    padding: 14px 24px;
+    font-size: 16px;
+    border-radius: 10px;
   }
 }
 

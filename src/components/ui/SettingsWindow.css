@@ -12,17 +12,18 @@
   position: fixed;
   top: 0;
   right: 0;
-  width: 400px;
+  width: min(400px, 100vw);
   height: 100%;
   background: rgba(30, 30, 30, 0.95);
   backdrop-filter: blur(20px);
-  padding: 40px;
+  padding: clamp(24px, 4vw, 40px);
   box-shadow: -8px 0 32px rgba(0, 0, 0, 0.4);
   animation: settings-slide-in 0.4s ease;
   border-left: 1px solid rgba(255, 255, 255, 0.08);
   z-index: 1000;
   transition: transform 0.4s ease;
   overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .settings-panel::-webkit-scrollbar {
@@ -69,13 +70,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 40px;
-  padding-bottom: 20px;
+  margin-bottom: clamp(24px, 4vw, 40px);
+  padding-bottom: clamp(16px, 2vw, 20px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .settings-panel h2 {
-  font-size: 24px;
+  font-size: clamp(18px, 2.4vw, 24px);
   font-weight: 700;
   margin: 0;
   font-family: 'Poppins', sans-serif;
@@ -108,10 +109,10 @@
 }
 
 .settings-section {
-  margin-bottom: 32px;
+  margin-bottom: clamp(24px, 3.5vw, 32px);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: clamp(10px, 1.2vw, 12px);
 }
 
 .grid-settings {
@@ -178,9 +179,9 @@
 }
 
 .settings-section h3 {
-  font-size: 18px;
+  font-size: clamp(15px, 1.8vw, 18px);
   font-weight: 600;
-  margin: 0 0 16px 0;
+  margin: 0 0 clamp(12px, 1.6vw, 16px) 0;
   color: white;
   font-family: 'Poppins', sans-serif;
 }
@@ -434,12 +435,12 @@ input:checked + .toggle-slider:before {
 
 /* 保存区域样式 */
 .save-section {
-  margin-top: 40px;
-  padding-top: 32px;
+  margin-top: clamp(28px, 4vw, 40px);
+  padding-top: clamp(20px, 3vw, 32px);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: clamp(12px, 1.5vw, 16px);
 }
 
 .unsaved-indicator {

@@ -1,4 +1,4 @@
-/* PagesSidebar.css - 与 TodoSidebar 对称的左侧页面切换栏 */
+/* PagesSidebar.css - 与 TodoSidebar 对称的左侧页面切换栏（响应式版） */
 :root {
   --page-primary-color: #10b981;
   --page-primary-light: #34d399;
@@ -8,15 +8,15 @@
 
 .pages-sidebar {
   position: fixed;
-  left: -15vw;
+  left: calc(var(--sidebar-width) * -1);
   top: 50%;
   transform: translateY(-50%);
-  height: 60vh;
-  width: 15vw;
+  height: min(600px, 65vh);
+  width: var(--sidebar-width);
   background: var(--background-white);
   backdrop-filter: blur(16px);
   border: 1px solid var(--border-color);
-  border-radius: 0 0.8vw 0.8vw 0;
+  border-radius: 0 14px 14px 0;
   transition: all var(--transition-normal);
   z-index: 1002;
   display: flex;
@@ -34,14 +34,14 @@
   pointer-events: none;
 }
 
-/* 圆形图标按钮 - 左侧 */
+/* 圆形图标按钮 - 左侧（使用与 TodoSidebar 一致的 clamp 尺寸） */
 .pages-sidebar-icon {
   position: fixed;
-  left: -1.1vw;
+  left: calc(var(--sidebar-toggle-size) / 2 * -1 + 2px);
   top: 50%;
   transform: translateY(-50%);
-  width: 2.2vw;
-  height: 2.2vw;
+  width: var(--sidebar-toggle-size);
+  height: var(--sidebar-toggle-size);
   cursor: pointer;
   z-index: 1000;
   transition: all var(--transition-normal);
@@ -77,7 +77,7 @@
   box-shadow: var(--shadow-md);
   position: relative;
   transition: all var(--transition-normal);
-  border: 0.16vw solid var(--background-white);
+  border: clamp(2px, 0.16vw, 3px) solid var(--background-white);
 }
 
 .pages-icon-container:hover {
@@ -87,8 +87,8 @@
 
 .pages-icon-container svg {
   color: white;
-  width: 0.9vw;
-  height: 0.9vw;
+  width: clamp(16px, 0.9vw, 20px);
+  height: clamp(16px, 0.9vw, 20px);
   transition: all var(--transition-fast);
 }
 
@@ -100,9 +100,9 @@
   transform: translateY(-50%);
   background: rgba(30, 41, 59, 0.95);
   color: white;
-  padding: 0.4vw 0.8vw;
+  padding: 6px 12px;
   border-radius: var(--border-radius-md);
-  font-size: 0.65vw;
+  font-size: var(--font-sm);
   font-weight: 500;
   font-family: 'Inter', sans-serif;
   white-space: nowrap;
@@ -111,7 +111,7 @@
   transition: all var(--transition-fast);
   pointer-events: none;
   z-index: 1001;
-  margin-left: 0.6vw;
+  margin-left: 8px;
   box-shadow: var(--shadow-md);
 }
 
@@ -135,15 +135,15 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 1.1vw 0.9vw;
+  padding: clamp(14px, 1.1vw, 20px) clamp(12px, 0.9vw, 16px);
   opacity: 0;
   visibility: hidden;
   transform: translateX(-20px);
   transition: all var(--transition-normal);
   display: flex;
   flex-direction: column;
-  gap: 0.5vw;
-  margin-top: 0.8vw;
+  gap: clamp(8px, 0.5vw, 12px);
+  margin-top: 12px;
   position: relative;
   border-radius: inherit;
 }
@@ -158,13 +158,13 @@
 .pages-sidebar-header {
   display: flex;
   flex-direction: column;
-  gap: 0.3vw;
-  margin-bottom: 0.6vw;
+  gap: clamp(4px, 0.3vw, 6px);
+  margin-bottom: clamp(8px, 0.6vw, 12px);
 }
 
 .pages-sidebar-header h2 {
   margin: 0;
-  font-size: 0.9vw;
+  font-size: var(--font-lg);
   font-weight: 700;
   color: var(--text-primary);
   font-family: 'Inter', sans-serif;
@@ -176,14 +176,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.3vw;
+  gap: clamp(4px, 0.3vw, 6px);
   width: 100%;
-  padding: 0.5vw 0.8vw;
+  padding: clamp(8px, 0.5vw, 12px) clamp(10px, 0.8vw, 14px);
   border: 1px dashed var(--border-color);
   border-radius: var(--border-radius-md);
   background: transparent;
   color: var(--text-secondary);
-  font-size: 0.65vw;
+  font-size: var(--font-sm);
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -197,23 +197,23 @@
 }
 
 .add-page-btn svg {
-  width: 0.7vw;
-  height: 0.7vw;
+  width: clamp(12px, 0.7vw, 14px);
+  height: clamp(12px, 0.7vw, 14px);
 }
 
 /* 页面列表 */
 .pages-list {
   display: flex;
   flex-direction: column;
-  gap: 0.3vw;
+  gap: clamp(6px, 0.3vw, 8px);
   flex: 1;
 }
 
 .page-item {
   display: flex;
   align-items: center;
-  gap: 0.5vw;
-  padding: 0.5vw 0.7vw;
+  gap: clamp(6px, 0.5vw, 10px);
+  padding: clamp(8px, 0.5vw, 12px) clamp(10px, 0.7vw, 14px);
   border-radius: var(--border-radius-md);
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -224,7 +224,7 @@
 
 /* ── 拖拽排序相关样式 ────────────────────────────────────────────── */
 .drag-handle {
-  width: 0.8vw;
+  width: clamp(12px, 0.8vw, 16px);
   height: 100%;
   flex-shrink: 0;
   display: flex;
@@ -245,15 +245,15 @@
 }
 
 .drag-handle svg {
-  width: 0.6vw;
-  height: 0.75vw;
+  width: clamp(10px, 0.6vw, 12px);
+  height: clamp(12px, 0.75vw, 14px);
 }
 
 .page-item:hover .drag-handle {
   opacity: 1;
 }
 
-.page-item:hover .drag-handle:hover {
+.drag-handle:hover {
   color: var(--page-primary-color);
 }
 
@@ -270,12 +270,12 @@
 .page-item.drop-indicator-bottom::after {
   content: '';
   position: absolute;
-  left: 0.3vw;
-  right: 0.3vw;
+  left: clamp(6px, 0.3vw, 10px);
+  right: clamp(6px, 0.3vw, 10px);
   height: 2px;
   border-radius: 2px;
   background: linear-gradient(90deg, var(--page-primary-color), var(--page-secondary-color));
-  box-shadow: 0 0 0.3vw rgba(16, 185, 129, 0.4);
+  box-shadow: 0 0 clamp(4px, 0.3vw, 6px) rgba(16, 185, 129, 0.4);
   z-index: 2;
   pointer-events: none;
 }
@@ -310,8 +310,8 @@
 }
 
 .page-item-indicator {
-  width: 0.4vw;
-  height: 0.4vw;
+  width: clamp(7px, 0.4vw, 9px);
+  height: clamp(7px, 0.4vw, 9px);
   border-radius: var(--border-radius-full);
   background: var(--border-color);
   flex-shrink: 0;
@@ -320,12 +320,12 @@
 
 .page-item.active .page-item-indicator {
   background: var(--page-primary-color);
-  box-shadow: 0 0 0.3vw rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 clamp(4px, 0.3vw, 6px) rgba(16, 185, 129, 0.5);
 }
 
 .page-item-name {
   flex: 1;
-  font-size: 0.7vw;
+  font-size: var(--font-sm);
   color: var(--text-primary);
   font-family: 'Inter', sans-serif;
   white-space: nowrap;
@@ -336,7 +336,7 @@
 .page-item-actions {
   display: flex;
   align-items: center;
-  gap: 0.2vw;
+  gap: clamp(3px, 0.2vw, 5px);
   opacity: 0;
   transition: opacity var(--transition-fast);
 }
@@ -346,8 +346,8 @@
 }
 
 .page-action-btn {
-  width: 1.2vw;
-  height: 1.2vw;
+  width: clamp(20px, 1.2vw, 24px);
+  height: clamp(20px, 1.2vw, 24px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -371,15 +371,15 @@
 }
 
 .page-action-btn svg {
-  width: 0.55vw;
-  height: 0.55vw;
+  width: clamp(10px, 0.55vw, 12px);
+  height: clamp(10px, 0.55vw, 12px);
 }
 
 /* 页面名称输入框 */
 .page-name-input {
   flex: 1;
-  padding: 0.2vw 0.4vw;
-  font-size: 0.7vw;
+  padding: clamp(4px, 0.2vw, 6px) clamp(8px, 0.4vw, 10px);
+  font-size: var(--font-sm);
   font-family: 'Inter', sans-serif;
   border: 1px solid var(--page-primary-color);
   border-radius: var(--border-radius-sm);
@@ -396,24 +396,24 @@
 /* 当前页面指示器徽章 */
 .current-page-badge {
   position: absolute;
-  top: -0.2vw;
-  right: -0.2vw;
+  top: -2px;
+  right: -2px;
   background: var(--page-primary-color);
   color: white;
   border-radius: var(--border-radius-full);
-  width: 0.55vw;
-  height: 0.55vw;
+  width: clamp(10px, 0.55vw, 12px);
+  height: clamp(10px, 0.55vw, 12px);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.3vw;
+  font-size: clamp(6px, 0.3vw, 8px);
   font-weight: 700;
-  box-shadow: 0 0.1vw 0.2vw rgba(16, 185, 129, 0.3);
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.3);
 }
 
 /* 滚动条样式 */
 .pages-sidebar-content::-webkit-scrollbar {
-  width: 0.3vw;
+  width: 6px;
 }
 
 .pages-sidebar-content::-webkit-scrollbar-track {
@@ -478,4 +478,110 @@
 
 .pages-sidebar:not(.expanded) {
   animation: pages-slide-out 300ms ease-in;
+}
+
+/* ========== 响应式：手机端（侧边栏全屏化） ========== */
+@media (max-width: 768px) {
+  .pages-sidebar {
+    left: -100vw;
+    width: 86vw;
+    max-width: 360px;
+    height: 80vh;
+    min-height: 500px;
+    top: 50%;
+    border-radius: 0 16px 16px 0;
+  }
+
+  .pages-sidebar.expanded {
+    left: 0;
+  }
+
+  .pages-sidebar-icon {
+    width: clamp(44px, 7vw, 52px);
+    height: clamp(44px, 7vw, 52px);
+    left: calc(clamp(44px, 7vw, 52px) / 2 * -1 + 3px);
+    opacity: 0.5;
+  }
+
+  .pages-icon-container svg {
+    width: clamp(20px, 3.2vw, 24px);
+    height: clamp(20px, 3.2vw, 24px);
+  }
+
+  .pages-sidebar-content {
+    padding: 18px 16px;
+    gap: 10px;
+  }
+
+  /* 手机端：操作按钮始终显示（不依赖 hover） */
+  .page-item-actions {
+    opacity: 1;
+  }
+
+  .page-item:hover .page-item-actions {
+    opacity: 1;
+  }
+
+  .drag-handle {
+    opacity: 0.3;
+  }
+
+  .page-item:hover .drag-handle {
+    opacity: 0.6;
+  }
+
+  .pages-tooltip {
+    display: none;
+  }
+
+  .page-action-btn {
+    width: 24px;
+    height: 24px;
+  }
+
+  .page-action-btn svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+/* ========== 响应式：超小屏手机 ========== */
+@media (max-width: 375px) {
+  .pages-sidebar {
+    width: 90vw;
+    height: 82vh;
+    min-height: 480px;
+  }
+
+  .pages-sidebar-icon {
+    width: 42px;
+    height: 42px;
+    left: -18px;
+  }
+
+  .pages-icon-container svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .pages-sidebar-content {
+    padding: 16px 14px;
+    gap: 8px;
+  }
+}
+
+/* ========== 触控设备优化 ========== */
+@media (hover: none) and (pointer: coarse) {
+  .pages-sidebar-icon {
+    opacity: 0.6;
+  }
+
+  .pages-sidebar-icon:hover {
+    transform: translateY(-50%);
+    opacity: 0.6;
+  }
+
+  .pages-sidebar.expanded ~ .pages-sidebar-icon:hover {
+    transform: translateY(-50%) rotate(180deg);
+  }
 }

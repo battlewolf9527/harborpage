@@ -1,7 +1,12 @@
 /* 网站图标网格区域 */
 .icons-container {
   margin-bottom: 60px;
-  width: 70%;
+  /* 用 clamp() 同时提供下限/比例/上限：
+     - ≤~1600px 屏：保底 1100px（旧行为）
+     - 1920px 1080p 屏：≈ 68% × 1920 = 1306px（比旧 1100 更舒展）
+     - 2560px 2K 屏  ：≈ 68% × 2560 = 1741px
+     - 3840px 4K 屏  ：封顶 2600px，避免图标铺得太开难以操作 */
+  width: clamp(1100px, 68%, 2600px);
   max-height: 80vh; /* 限制最大高度，留出空间给其他元素 */
   overflow-y: auto; /* 启用垂直滚动 */
   overflow-x: hidden; /* 隐藏水平滚动 */
@@ -61,8 +66,9 @@
 
 .icon-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 24px;
+  /* 基础 minmax 提高到 128px，配合 28px gap，大屏不会显得局促 */
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+  gap: 28px;
   justify-items: center;
 }
 
@@ -73,39 +79,108 @@
   cursor: pointer;
 }
 
-/* 响应式设计 */
+/* 响应式设计 - 平板 */
 @media (max-width: 1024px) {
+  .icons-container {
+    width: min(900px, 82%);
+    padding-right: 28px;
+  }
+
   .icon-grid {
     grid-template-columns: repeat(5, 1fr);
     gap: 20px;
   }
 }
 
+/* 响应式设计 - 大屏手机 / 小平板 */
 @media (max-width: 768px) {
+  .icons-container {
+    width: 88%;
+    padding: 16px 24px 16px 16px;
+    max-height: 68vh;
+    margin-bottom: 36px;
+  }
+
   .icon-grid {
     grid-template-columns: repeat(4, 1fr);
     gap: 16px;
   }
-  
-  .icon-circle {
-    width: 60px;
-    height: 60px;
-    font-size: 24px;
-  }
-  
-  .icons-container {
-    margin-bottom: 40px;
-    max-height: 70vh;
-  }
 }
 
+/* 响应式设计 - 小屏手机 */
 @media (max-width: 480px) {
+  .icons-container {
+    width: 92%;
+    padding: 12px 20px 12px 12px;
+    max-height: 58vh;
+    margin-bottom: 28px;
+  }
+
   .icon-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
   }
-  
+}
+
+/* 响应式设计 - 超小屏手机 (iPhone SE 320px) */
+@media (max-width: 375px) {
   .icons-container {
-    max-height: 60vh;
+    width: 95%;
+    padding: 10px 18px 10px 10px;
+    max-height: 54vh;
+    margin-bottom: 24px;
+  }
+
+  .icon-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+}
+
+/* ============================================================
+   大屏断点 — 解决 1080p / 2K / 4K 下图标"挤成一坨"的问题
+   基础 clamp(1100px, 68%, 2600px) 已经提供了主要扩展；
+   这里进一步精细化每档分辨率的容器宽度与栅格密度。
+   ============================================================ */
+
+/* 1080p 桌面 (1920px 起) — 约 10 列图标，间距 32px */
+@media (min-width: 1920px) {
+  .icons-container {
+    width: clamp(1300px, 70%, 2200px);
+    padding: 24px;
+    padding-right: 36px; /* 24px 基础 + 12px 滚动条空间 */
+  }
+
+  .icon-grid {
+    grid-template-columns: repeat(auto-fit, minmax(136px, 1fr));
+    gap: 32px;
+  }
+}
+
+/* 2K / QHD (2560px 起) — 约 12 列图标，间距 36px */
+@media (min-width: 2560px) {
+  .icons-container {
+    width: clamp(1800px, 70%, 2400px);
+    padding: 28px;
+    padding-right: 40px; /* 28px 基础 + 12px 滚动条空间 */
+  }
+
+  .icon-grid {
+    grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+    gap: 36px;
+  }
+}
+
+/* 4K / UHD (3840px 起) — 约 15-16 列图标，间距 44px，容器最宽可达 2800px */
+@media (min-width: 3840px) {
+  .icons-container {
+    width: clamp(2400px, 65%, 2800px);
+    padding: 32px;
+    padding-right: 44px; /* 32px 基础 + 12px 滚动条空间 */
+  }
+
+  .icon-grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 44px;
   }
 }

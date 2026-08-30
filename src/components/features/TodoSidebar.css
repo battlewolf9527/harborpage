@@ -1,4 +1,4 @@
-/* TodoSidebar.css */
+/* TodoSidebar.css - 响应式重构：使用 CSS 变量 + clamp + 最小像素兜底 */
 :root {
   --primary-color: #6366f1;
   --primary-light: #818cf8;
@@ -23,15 +23,15 @@
 
 .todo-sidebar {
   position: fixed;
-  right: -15vw;
+  right: calc(var(--sidebar-width) * -1);
   top: 50%;
   transform: translateY(-50%);
-  height: 60vh;
-  width: 15vw;
+  height: min(600px, 65vh);
+  width: var(--sidebar-width);
   background: var(--background-white);
   backdrop-filter: blur(16px);
   border: 1px solid var(--border-color);
-  border-radius: 0.8vw 0 0 0.8vw;
+  border-radius: 14px 0 0 14px;
   transition: all var(--transition-normal);
   z-index: 1002;
   display: flex;
@@ -49,14 +49,14 @@
   pointer-events: none;
 }
 
-/* 圆形图标按钮 */
+/* 圆形图标按钮 - 使用固定像素兜底 */
 .sidebar-icon {
   position: fixed;
-  right: -1.1vw;
+  right: calc(var(--sidebar-toggle-size) / 2 * -1 + 2px);
   top: 50%;
   transform: translateY(-50%);
-  width: 2.2vw;
-  height: 2.2vw;
+  width: var(--sidebar-toggle-size);
+  height: var(--sidebar-toggle-size);
   cursor: pointer;
   z-index: 1000;
   transition: all var(--transition-normal);
@@ -92,7 +92,7 @@
   box-shadow: var(--shadow-md);
   position: relative;
   transition: all var(--transition-normal);
-  border: 0.16vw solid var(--background-white);
+  border: clamp(2px, 0.16vw, 3px) solid var(--background-white);
 }
 
 .icon-container:hover {
@@ -102,8 +102,8 @@
 
 .icon-container svg {
   color: white;
-  width: 0.9vw;
-  height: 0.9vw;
+  width: clamp(16px, 0.9vw, 20px);
+  height: clamp(16px, 0.9vw, 20px);
   transition: all var(--transition-fast);
 }
 
@@ -115,9 +115,9 @@
   transform: translateY(-50%);
   background: rgba(30, 41, 59, 0.95);
   color: white;
-  padding: 0.4vw 0.8vw;
+  padding: 6px 12px;
   border-radius: var(--border-radius-md);
-  font-size: 0.65vw;
+  font-size: var(--font-sm);
   font-weight: 500;
   font-family: 'Inter', sans-serif;
   white-space: nowrap;
@@ -126,7 +126,7 @@
   transition: all var(--transition-fast);
   pointer-events: none;
   z-index: 1001;
-  margin-right: 0.6vw;
+  margin-right: 8px;
   box-shadow: var(--shadow-md);
 }
 
@@ -148,20 +148,20 @@
 /* 提醒徽章 */
 .badge {
   position: absolute;
-  top: -0.2vw;
-  left: -0.2vw;
+  top: -2px;
+  left: -2px;
   background: var(--secondary-color);
   color: white;
   border-radius: var(--border-radius-full);
-  width: 0.9vw;
-  height: 0.9vw;
+  width: clamp(14px, 0.9vw, 18px);
+  height: clamp(14px, 0.9vw, 18px);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.45vw;
+  font-size: clamp(9px, 0.45vw, 11px);
   font-weight: 700;
   font-family: 'Inter', sans-serif;
-  box-shadow: 0 0.12vw 0.25vw rgba(236, 72, 153, 0.3);
+  box-shadow: 0 2px 4px rgba(236, 72, 153, 0.3);
   animation: pulse 2s infinite;
   z-index: 1002;
 }
@@ -183,15 +183,15 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 1.1vw 0.9vw;
+  padding: clamp(14px, 1.1vw, 20px) clamp(12px, 0.9vw, 16px);
   opacity: 0;
   visibility: hidden;
   transform: translateX(20px);
   transition: all var(--transition-normal);
   display: flex;
   flex-direction: column;
-  gap: 0.9vw;
-  margin-top: 0.8vw;
+  gap: clamp(12px, 0.9vw, 18px);
+  margin-top: 12px;
   position: relative;
   border-radius: inherit;
 }
@@ -206,13 +206,13 @@
 .sidebar-header {
   display: flex;
   flex-direction: column;
-  gap: 0.3vw;
-  margin-bottom: 0.6vw;
+  gap: clamp(4px, 0.3vw, 6px);
+  margin-bottom: clamp(8px, 0.6vw, 12px);
 }
 
 .sidebar-header h2 {
   margin: 0;
-  font-size: 0.9vw;
+  font-size: var(--font-lg);
   font-weight: 700;
   color: var(--text-primary);
   font-family: 'Inter', sans-serif;
@@ -222,25 +222,25 @@
 .todo-count {
   display: flex;
   align-items: baseline;
-  gap: 0.15vw;
+  gap: 2px;
 }
 
 .count-number {
-  font-size: 0.7vw;
+  font-size: var(--font-md);
   font-weight: 700;
   color: var(--primary-color);
   font-family: 'Inter', sans-serif;
 }
 
 .count-label {
-  font-size: 0.55vw;
+  font-size: var(--font-xs);
   color: var(--text-secondary);
   font-family: 'Inter', sans-serif;
 }
 
 /* 滚动条样式 */
 .sidebar-content::-webkit-scrollbar {
-  width: 0.3vw;
+  width: 6px;
 }
 
 .sidebar-content::-webkit-scrollbar-track {
@@ -305,4 +305,92 @@
 
 .todo-sidebar:not(.expanded) {
   animation: todo-slide-out 300ms ease-in;
+}
+
+/* ========== 响应式：手机端（侧边栏全屏化） ========== */
+@media (max-width: 768px) {
+  .todo-sidebar {
+    right: -100vw;
+    width: 86vw;
+    max-width: 360px;
+    height: 80vh;
+    min-height: 500px;
+    top: 50%;
+    border-radius: 16px 0 0 16px;
+  }
+
+  .todo-sidebar.expanded {
+    right: 0;
+  }
+
+  .sidebar-icon {
+    width: clamp(44px, 7vw, 52px);
+    height: clamp(44px, 7vw, 52px);
+    right: calc(clamp(44px, 7vw, 52px) / 2 * -1 + 3px);
+    opacity: 0.5;
+  }
+
+  .icon-container svg {
+    width: clamp(20px, 3.2vw, 24px);
+    height: clamp(20px, 3.2vw, 24px);
+  }
+
+  .sidebar-content {
+    padding: 18px 16px;
+    gap: 14px;
+  }
+
+  /* 手机端隐藏 tooltip（长按无意义） */
+  .tooltip {
+    display: none;
+  }
+
+  .badge {
+    width: 18px;
+    height: 18px;
+    font-size: 11px;
+    top: -3px;
+    left: -3px;
+  }
+}
+
+/* ========== 响应式：超小屏手机 ========== */
+@media (max-width: 375px) {
+  .todo-sidebar {
+    width: 90vw;
+    height: 82vh;
+    min-height: 480px;
+  }
+
+  .sidebar-icon {
+    width: 42px;
+    height: 42px;
+    right: -18px;
+  }
+
+  .icon-container svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .sidebar-content {
+    padding: 16px 14px;
+    gap: 12px;
+  }
+}
+
+/* ========== 触控设备优化 ========== */
+@media (hover: none) and (pointer: coarse) {
+  .sidebar-icon {
+    opacity: 0.6;
+  }
+
+  .sidebar-icon:hover {
+    transform: translateY(-50%);
+    opacity: 0.6;
+  }
+
+  .todo-sidebar.expanded ~ .sidebar-icon:hover {
+    transform: translateY(-50%) rotate(180deg);
+  }
 }
