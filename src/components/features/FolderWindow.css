@@ -236,6 +236,14 @@
 .folder-content {
   padding: 24px;
   overflow-y: auto;
+  /* 必须显式关 x 溢出：每个 .icon-wrapper 左右都有 2 根 50px 宽的 drop-zone
+     绝对定位在 wrapper 外面（-5px 边距），行首 / 行尾的 drop-zone 会把
+     folder-content 的水平可滚动区域硬生生撑大 55px。
+     如果这里只写 overflow-y:auto、不写 overflow-x:hidden，CSS 规范会把
+     x 侧的 visible 强制转成 auto（因为 y 侧创建了滚动容器），于是一行
+     最后一个图标的 after drop-zone 会触发水平滚动条 —— 视觉就是
+     "把图标拖到行尾最后一个左侧，下方忽然出现滚动条，文件夹窗口变宽"。 */
+  overflow-x: hidden;
   max-height: calc(80vh - 80px);
 }
 
