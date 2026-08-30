@@ -28,13 +28,19 @@ const cleanIconUrl = (icon: string | undefined, r2Domain: string): string | unde
 };
 
 // 清理单个网站的 R2 图标 URL（递归处理文件夹）
-const cleanWebsiteR2Urls = (website: Website, r2Domain: string): Website => {
+const cleanWebsiteR2Urls = (website: Website, r2Domain: string, visited: Set<string> = new Set()): Website => {
+  if (visited.has(website.id)) {
+    // 遇到环：直接返回不带 children 的副本，终止递归
+    const { children: _omit, ...rest } = website as Website & { children?: Website[] };
+    return { ...rest };
+  }
+  visited.add(website.id);
   const cleanedIcon = cleanIconUrl(website.icon, r2Domain);
   const cleaned: Website = cleanedIcon === undefined
     ? { ...website }
     : { ...website, icon: cleanedIcon };
   if (cleaned.isFolder && cleaned.children) {
-    cleaned.children = cleaned.children.map(child => cleanWebsiteR2Urls(child, r2Domain));
+    cleaned.children = cleaned.children.map(child => cleanWebsiteR2Urls(child, r2Domain, visited));
   }
   return cleaned;
 };
@@ -99,22 +105,34 @@ export const downloadExportFile = (data: ExportData): void => {
 };
 
 // 验证单个网站对象
+// 注意：对外调用签名保持单参 (item: unknown)，避免与 Array.prototype.every 的
+// predicate 第二/三参数 (index/array) 冲突。visited 通过内部递归包装传递。
 const validateWebsite = (item: unknown): item is Website => {
-  if (typeof item !== 'object' || item === null) return false;
-
-  const website = item as Website;
-  if (!website.id || typeof website.id !== 'string') return false;
-  if (!website.name || typeof website.name !== 'string') return false;
-
-  // 有 children 即为文件夹，递归验证子项（文件夹不需要 url）
-  if (website.children !== undefined) {
-    if (!Array.isArray(website.children)) return false;
-    return website.children.every(validateWebsite);
-  }
-
-  // 网站项必须有非空 url
-  if (!website.url || typeof website.url !== 'string') return false;
-  return true;
+  const visit = (node: unknown, visited: Set<string>): boolean => {
+    if (typeof node !== 'object' || node === null) return false;
+    const website = node as Website;
+    if (!website.id || typeof website.id !== 'string') return false;
+    if (visited.has(website.id)) {
+      // 遇到环：不再递归检查 children，要求 children 必须是数组格式即可
+      if (website.children !== undefined && !Array.isArray(website.children)) return false;
+      if (!website.name || typeof website.name !== 'string') return false;
+      if (website.children === undefined) {
+        if (!website.url || typeof website.url !== 'string') return false;
+      }
+      return true;
+    }
+    visited.add(website.id);
+    if (!website.name || typeof website.name !== 'string') return false;
+    // 有 children 即为文件夹，递归验证子项（文件夹不需要 url）
+    if (website.children !== undefined) {
+      if (!Array.isArray(website.children)) return false;
+      return website.children.every(child => visit(child, visited));
+    }
+    // 网站项必须有非空 url
+    if (!website.url || typeof website.url !== 'string') return false;
+    return true;
+  };
+  return visit(item, new Set());
 };
 
 // 验证导入数据
@@ -135,14 +153,21 @@ export const validateWebsiteArray = (data: unknown): data is Website[] => {
 };
 
 // 为导入的网站生成新ID，避免冲突
-export const regenerateIds = (websites: Website[]): Website[] => {
+export const regenerateIds = (websites: Website[], visited: Set<string> = new Set()): Website[] => {
   return websites.map(website => {
+    if (visited.has(website.id)) {
+      // 遇到环：去掉 children 终止递归
+      const { children: _omit, ...rest } = website as Website & { children?: Website[] };
+      const newId = generateId(rest.isFolder ? 'folder' : 'site');
+      return { ...rest, id: newId } as Website;
+    }
+    visited.add(website.id);
     const newId = generateId(website.isFolder ? 'folder' : 'site');
     const updated: Website = { ...website, id: newId };
     
     // 递归更新子项ID
     if (updated.isFolder && updated.children) {
-      updated.children = regenerateIds(updated.children);
+      updated.children = regenerateIds(updated.children, visited);
     }
     
     return updated;
@@ -174,11 +199,14 @@ export const collectSelectedItems = (
   items: Website[],
   selectedIds: Set<string>,
   preserveStructure: boolean,
-  parentFolder?: string
+  parentFolder?: string,
+  visited: Set<string> = new Set(),
 ): ImportableWebsite[] => {
   const sites: ImportableWebsite[] = [];
 
   items.forEach(item => {
+    if (visited.has(item.id)) return;
+    visited.add(item.id);
     const isSelected = selectedIds.has(item.id);
 
     if (isSelected && !item.isFolder) {
@@ -188,7 +216,7 @@ export const collectSelectedItems = (
 
     if (item.isFolder && item.children) {
       const nextParent = isSelected && preserveStructure ? item.name : parentFolder;
-      sites.push(...collectSelectedItems(item.children, selectedIds, preserveStructure, nextParent));
+      sites.push(...collectSelectedItems(item.children, selectedIds, preserveStructure, nextParent, visited));
     }
   });
 
@@ -225,8 +253,17 @@ export interface DataSelection {
 
 // 导出时清理网站：剥离冗余的 isFolder（文件夹与否由 children 决定），
 // 文件夹不输出 url，省略空的 icon 字段，使导出格式一致
-const cleanWebsitesForExport = (websites: Website[]): Website[] => {
+const cleanWebsitesForExport = (websites: Website[], visited: Set<string> = new Set()): Website[] => {
   return websites.map(website => {
+    if (visited.has(website.id)) {
+      // 遇到环：剥离 children 终止递归，保持最小对象
+      const { children: _omit, isFolder: _omitIsFolder, icon, ...rest } = website;
+      const cleaned: Website = rest;
+      if (icon) cleaned.icon = icon;
+      delete (cleaned as { url?: string }).url;
+      return cleaned;
+    }
+    visited.add(website.id);
     const { isFolder: _omitIsFolder, icon, ...rest } = website;
     const cleaned: Website = rest;
     // 仅当 icon 有实际值时保留，空字符串视为无图标
@@ -236,21 +273,27 @@ const cleanWebsitesForExport = (websites: Website[]): Website[] => {
     if (cleaned.children) {
       // 文件夹不需要 url
       delete (cleaned as { url?: string }).url;
-      cleaned.children = cleanWebsitesForExport(cleaned.children);
+      cleaned.children = cleanWebsitesForExport(cleaned.children, visited);
     }
     return cleaned;
   });
 };
 
 // 导入时还原 isFolder：有 children 即为文件夹，url 统一置空（忽略文件中可能存在的 url）
-export const restoreIsFolder = (websites: Website[]): Website[] => {
+export const restoreIsFolder = (websites: Website[], visited: Set<string> = new Set()): Website[] => {
   return websites.map(website => {
+    if (visited.has(website.id)) {
+      // 遇到环：去掉 children 终止递归
+      const { children: _omit, ...rest } = website as Website & { children?: Website[] };
+      return rest as Website;
+    }
+    visited.add(website.id);
     if (Array.isArray(website.children)) {
       return {
         ...website,
         isFolder: true,
         url: '',
-        children: restoreIsFolder(website.children),
+        children: restoreIsFolder(website.children, visited),
       };
     }
     return website;

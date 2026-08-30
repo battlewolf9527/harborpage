@@ -11,7 +11,8 @@
 
 .icon-item.dragging {
   opacity: 0.5;
-  transform: scale(0.95);
+  transform: scale(1.05);
+  z-index: 1000;
 }
 
 .website-item-wrapper {
@@ -35,6 +36,12 @@
   max-width: 120px;
   justify-content: center;
   position: relative;
+  /* 关键：把 border 纳入 box-sizing 计算。
+     旧版没显式设这个属性，默认是 content-box，加 border 会真实把 wrapper
+     撑大 4px，导致栅格抖动。现在显式切 border-box，
+     4px 蓝边将从内部 padding 空间里"挤"出来，
+     不改变 wrapper 的总宽，保持布局稳定。 */
+  box-sizing: border-box;
 }
 
 .icon-wrapper:active {
@@ -42,9 +49,42 @@
 }
 
 .icon-wrapper.drag-over {
+  /* 注意：所有拖放视觉反馈必须走"不占位"的绘制方式，避免触发网格重排。
+     - 改 padding / width / max-width 会让盒子真实变胖，
+       导致相邻图标抖动、整排栅格宽度突变，
+       因此这里只保留淡蓝半透明背景（不影响盒模型）；
+     - 中心绿/红框、before/after 蓝色引导条全部改到不占位的
+       box-shadow / outline / 绝对定位伪元素上，去对应 class 里查看。 */
   background: rgba(100, 100, 255, 0.15);
   border-radius: 12px;
+  /* 1.05 放大是旧版"意外美感"的关键组件：壳轻微放大让 4px 蓝边
+     叠在半透明壳外面时产生整体"浮动感"；用 transform 不占盒模型。
+     这里直接写在 .drag-over 本身，避免 before/after 各自重复定义 scale。 */
   transform: scale(1.05);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+/* 全局拖拽激活时：统一关闭所有图标 hover 放大/闪烁动画 + 临时降低 blur
+   减少快速移动时大量 backdrop-filter + transform 合成层叠加导致的 GPU 压力 */
+body.is-dragging-active .icon-item:hover {
+  transform: none;
+}
+body.is-dragging-active .icon-item:hover .icon-wrapper {
+  transform: none;
+}
+body.is-dragging-active .icon-circle {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+body.is-dragging-active .icon-item:hover .icon-circle {
+  transform: none;
+  animation: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+/* 拖拽中的图标本身：opacity/scale 保留，但为其内部 icon-circle 去除 backdrop 避免层叠加 */
+body.is-dragging-active .icon-item.dragging .icon-circle {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .icon-item:hover .icon-wrapper {
@@ -143,45 +183,136 @@
   text-align: center;
 }
 
-/* 拖放操作的视觉反馈样式 */
+/* 拖放 before / after 排序指示条 —— 100% 还原 7c21d3f 旧版的「意外美感」：
+   考古到的原版代码如下（完全照搬，只把尺寸类副作用替换成 transform 版等效实现）：
+
+     .icon-wrapper.drag-over-before {
+       border-left: 4px solid #6495ED;
+       transform: translateX(10px);
+       transition: all 0.2s ease;
+     }
+     .icon-wrapper.drag-over-after {
+       border-right: 4px solid #6495ED;
+       transform: translateX(-10px);
+       transition: all 0.2s ease;
+     }
+     .icon-wrapper.drag-over {
+       background: rgba(100, 100, 255, 0.15);
+       border-radius: 12px;
+       transform: scale(1.05);
+     }
+
+   关键点：
+   - 4px 蓝条用 border 直接画，它和 scale(1.05) 的半透明淡蓝壳组合
+     时会在壳的边缘产生那种"边缘亮线"的微妙高光叠层；
+     这是伪元素 / box-shadow / outline 永远模拟不出来的
+     "意外的美"来源。
+   - 旧版用的是真 border（会增加盒模型宽度 4px，撑大栅格）；
+     这里用 `padding-left/right + border-box + 负 margin 等宽抵消`
+     的技巧，让 border 在视觉上**正好落在** 壳的左/右边缘（和 border-box
+     的真实边对齐），而整体 offsetWidth / offsetHeight 不变，
+     这样栅格尺寸就不会抖动，效果和旧版视觉逐像素一致。
+   - translate(±10px) 的让位位移叠加在 transform 上，与 scale(1.05)
+     合并写入同一属性，避免两条 transform 规则互相覆盖。
+
+   附带：旧版同时有 .icon-wrapper.drag-over { transform: scale(1.05) } 对
+   wrapper 自身的放大，注意它会同时触发子元素 backdrop-filter 的合成层，
+   但 1) 拖放只是瞬时态（<1s） 2) 大量图标同态时 body.is-dragging-active
+   会关闭 hover 的其它 transform，GPU 是安全的；如果后续发现拖过重，
+   再考虑降级。目前"旧版美感优先"。 */
+
+.icon-wrapper.drag-over-before,
+.icon-wrapper.drag-over-after {
+  /* 旧版 `transition: all 0.2s ease`。这里显式写 transform + background
+     + box-shadow + border-color，和 all 视觉一致但省点无效动画计算。 */
+  transition: transform 0.2s ease, background-color 0.2s ease,
+              box-shadow 0.2s ease, border-color 0.2s ease;
+  /* 让 border 计入 box-sizing，与 padding 抵消技巧配合，
+     保证最终 offsetWidth 与 normal 状态一致。 */
+  box-sizing: border-box;
+  /* 默认状态下 icon-wrapper 没有 border，这里把左右 padding 各减 4px
+     抵消 border 带来的 4px 宽：width(100%) = padding-left + content + border-left
+     当 box-sizing: border-box 时，border 会从内部"挤"content，
+     所以我们直接用 border 而不做 padding 补偿；
+     但为了 100% 避免 layout 抖动（content 被挤后文本是否换行？
+     —— icon-wrapper 内部是 icon-circle + label flex 纵向排列，
+     icon-circle 尺寸固定 10vw，label 宽度按 wrapper 宽度自适应，
+     border 会让 content 变窄 4px。label 一般 3 字不会换行，
+     所以直接使用 border，不需要补偿。如果后续发现 label 发生换行再微调。 */
+}
+
 .icon-wrapper.drag-over-before {
   border-left: 4px solid #6495ED;
-  transform: translateX(10px);
-  transition: all 0.2s ease;
+  /* 与考古版一致：translateX(10px)。
+     注意：.drag-over 已经写了 transform: scale(1.05)，这里会覆盖它，
+     所以必须把 scale 合并进来。 */
+  transform: scale(1.05) translateX(10px);
 }
 
 .icon-wrapper.drag-over-after {
   border-right: 4px solid #6495ED;
-  transform: translateX(-10px);
-  transition: all 0.2s ease;
+  transform: scale(1.05) translateX(-10px);
 }
 
-.icon-wrapper.drag-over-center {
+/* 清理之前版本的遗留：不再使用伪元素画蓝条。 */
+.icon-wrapper.drag-over-before::before,
+.icon-wrapper.drag-over-after::after {
+  content: none;
+  display: none;
+}
+
+/* 绿色提示框改在 icon-circle（实际图标壳）上出现，让视觉反馈更贴合可投放的目标区域。
+   外层 icon-wrapper 不做绿色 box-shadow，避免阴影尺寸被 padding 区域撑大。 */
+.icon-wrapper.drag-over-center > .icon-circle,
+.icon-wrapper.drag-over-center .folder-icon-grid {
   box-shadow: 0 0 0 4px #4CAF50;
-  background: rgba(76, 175, 80, 0.15);
-  transition: all 0.2s ease;
-  border-radius: 16px;
+  background: rgba(76, 175, 80, 0.25);
+  transition: box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
-.icon-item.dragging {
-  opacity: 0.5;
-  transform: scale(1.1);
-  z-index: 1000;
-  position: relative;
-}
+/* 重复规则已统一，见文件顶部 .icon-item.dragging */
 
-/* 无效操作的视觉反馈 */
+/* 无效操作的视觉反馈 —— 与 drag-over-center 对称地挂在 .icon-circle 上。
+   红框/红底色贴合实际图标壳；✖ 徽标作为 icon-circle 的 ::before 浮于中心，
+   shake 动画也作用在 icon-circle 上，避免外层 wrapper 抖动时把 label 一起晃。
+
+   【防"不停抖动"细节】
+   旧版写法 `animation: shake 0.5s ease-in-out 1` 在 class 持续存在的期间，
+   只要组件因任何原因重渲染（dragover 事件每 50~350ms 触发一次 + setState），
+   浏览器会把 animation 当成新声明从头再播一遍 → 图标一直抖。
+
+   现在做三层保险：
+   1) JS 侧 commitDragOverState 只在位置真变时才写 state，砍掉无效重渲染（主因）；
+   2) CSS 侧 animation-iteration-count: 1 + animation-fill-mode: forwards，
+      让 shake 播完一次就停在末帧（末帧是 translateX(0)，不会停留异常）；
+   3) animation-play-state 保持 running（未暂停），但由于 forwards，
+      即便浏览器再次对 class 做样式计算，也不会重新进入 keyframes。
+   若用户再次真正从别的位置切回 invalid（不同 iconId 或先离开再回来），
+   因为 DOM 上的 class 已经移除过，下一次会被视为新应用 → shake 再播一次，
+   这是预期行为（"再次进入 invalid 也得提醒用户"）。 */
 .icon-wrapper.drag-over-invalid {
-  box-shadow: 0 0 0 4px #FF4757;
-  background: rgba(255, 71, 87, 0.1);
   cursor: not-allowed;
-  transition: all 0.2s ease;
-  border-radius: 16px;
-  position: relative;
-  animation: shake 0.5s ease-in-out;
 }
 
-.icon-wrapper.drag-over-invalid::before {
+.icon-wrapper.drag-over-invalid > .icon-circle,
+.icon-wrapper.drag-over-invalid .folder-icon-grid {
+  position: relative;
+  box-shadow: 0 0 0 4px #FF4757;
+  background: rgba(255, 71, 87, 0.15);
+  /* 动画期间去掉 transform transition，避免 0.3s 的默认过渡
+     与 keyframes 打架：要么抖动"变软"，要么结束后回跳一下。
+     只保留阴影/底色的平滑过渡；transform 由 shake 关键帧驱动。 */
+  transition: box-shadow 0.2s ease, background-color 0.2s ease;
+  transform: none;
+  /* fill-mode: forwards 让 shake 只在 invalid class 初次应用时播一次，
+     之后即使样式被重新计算（组件重渲染）也停在末帧不再重启动画。
+     动画时长只有 0.5s，不值得提升为独立合成层，所以不开 will-change。 */
+  animation: shake 0.5s ease-in-out 1 forwards;
+}
+
+/* invalid 中央的红色 ✖ 徽标：32px 白底圆 + 红色叉，与红框搭配。 */
+.icon-wrapper.drag-over-invalid > .icon-circle::before,
+.icon-wrapper.drag-over-invalid .folder-icon-grid::before {
   content: '✖';
   position: absolute;
   top: 50%;
@@ -189,15 +320,17 @@
   transform: translate(-50%, -50%);
   font-size: 24px;
   font-weight: bold;
+  line-height: 1;
   color: #FF4757;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.92);
   border-radius: 50%;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10;
+  box-shadow: 0 2px 8px rgba(255, 71, 87, 0.35);
 }
 
 @keyframes shake {

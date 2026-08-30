@@ -128,13 +128,16 @@ export const useIconsStore = create<IconsState>((set, get) => ({
 
     let iconToDelete: Website | null = null;
 
-    const findIcon = (icons: Website[]): Website | null => {
+    // 递归查图标：使用 visited 防止数据环导致的栈溢出崩溃
+    const findIcon = (icons: Website[], visited: Set<string> = new Set()): Website | null => {
       for (const icon of icons) {
+        if (visited.has(icon.id)) continue;
+        visited.add(icon.id);
         if (icon.id === iconId) {
           return icon;
         }
         if (icon.isFolder && icon.children) {
-          const found = findIcon(icon.children);
+          const found = findIcon(icon.children, visited);
           if (found) return found;
         }
       }
@@ -176,7 +179,11 @@ export const useIconsStore = create<IconsState>((set, get) => ({
     if (!openFolder) return;
 
     const updatedFolderWebsites = openFolder.websites.filter(i => i.id !== icon.id);
-    const iconToAdd: Website = { ...icon, isFolder: false };
+    // 防御性清理：从文件夹拖出的一定是普通网站，显式移除 children/isFolder 残留，
+    // 避免之前因嵌套 folder、导入脏数据或 double-drop 产生的 children 属性污染根级数组，
+    // 进而在后续递归遍历（findIcon/collectItems/导出）中产生意外路径。
+    const { children: _omitChildren, isFolder: _omitIsFolder, ...rest } = icon;
+    const iconToAdd: Website = { ...rest, isFolder: false };
     const folderIndex = websites.findIndex(item => item.isFolder && item.id === openFolder.id);
 
     if (folderIndex === -1) return;
@@ -218,10 +225,11 @@ export const useIconsStore = create<IconsState>((set, get) => ({
     const folderIndex = websites.findIndex(item => item.isFolder && item.id === openFolder.id);
     if (folderIndex === -1) return;
 
-    const iconsToRelease = openFolder.websites.map((website): Website => ({
-      ...website,
-      isFolder: false,
-    }));
+    const iconsToRelease = openFolder.websites.map((website): Website => {
+      // 解散时所有子项变为普通网站：显式去掉 children 防止嵌套脏数据泄漏到根级
+      const { children: _omitChildren, ...rest } = website;
+      return { ...rest, isFolder: false };
+    });
 
     const newIcons = [
       ...websites.filter((_, index) => index !== folderIndex),
@@ -352,13 +360,16 @@ export const useIconsStore = create<IconsState>((set, get) => ({
 
     // 收集所有站点（含文件夹内子项）中有 URL 的项，用于 R2 图标清理
     const newItems: PendingDeleteItem[] = [];
-    const collectItems = (icons: Website[]) => {
+    // 使用 visited 防止数据环导致的栈溢出崩溃
+    const collectItems = (icons: Website[], visited: Set<string> = new Set()) => {
       for (const icon of icons) {
+        if (visited.has(icon.id)) continue;
+        visited.add(icon.id);
         if (icon.url) {
           newItems.push({ id: icon.id, url: icon.url });
         }
         if (icon.isFolder && icon.children) {
-          collectItems(icon.children);
+          collectItems(icon.children, visited);
         }
       }
     };

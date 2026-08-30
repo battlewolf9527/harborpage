@@ -15,7 +15,7 @@ interface IconGridProps {
   onDragStart: (e: React.DragEvent, icon: Website) => void;
   onDragEnd: () => void;
   onDragOverIcon: (e: React.DragEvent, iconId: string) => void;
-  onDragLeaveIcon: () => void;
+  onDragLeaveIcon: (e: React.DragEvent) => void;
   onDropOnIcon: (e: React.DragEvent, iconId: string) => void;
   onDragOverOutside: (iconId: string, position: 'before' | 'after') => void;
   isDragging: (iconId: string) => boolean;

@@ -54,6 +54,14 @@ const DraggableIconWrapper: React.FC<DraggableIconWrapperProps> = ({
     onDragOverOutside?.(position);
   };
 
+  // drop zone 的 onDrop 必须阻止冒泡，否则事件会向上冒泡到父级 .icon-wrapper 的 onDrop，
+  // 导致同一次 drop 触发两次 handleDropOnIcon，潜在的状态竞争/级联崩溃风险
+  const handleDropOnZone = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onDrop?.(e);
+  };
+
   return (
     <div className={`icon-item ${isDragging ? 'dragging' : ''}`}>
       <div
@@ -81,7 +89,7 @@ const DraggableIconWrapper: React.FC<DraggableIconWrapperProps> = ({
           data-icon-id={icon.id}
           onDragOver={handleDragOverOutside('before')}
           onDragLeave={onDragLeave}
-          onDrop={onDrop}
+          onDrop={handleDropOnZone}
         />
         {children}
         {/* 右侧外部拖放区域：放在 wrapper 内部，确保始终紧贴 wrapper 右侧 */}
@@ -90,7 +98,7 @@ const DraggableIconWrapper: React.FC<DraggableIconWrapperProps> = ({
           data-icon-id={icon.id}
           onDragOver={handleDragOverOutside('after')}
           onDragLeave={onDragLeave}
-          onDrop={onDrop}
+          onDrop={handleDropOnZone}
         />
       </div>
 

@@ -472,3 +472,23 @@
     max-width: 63vw;
   }
 }
+
+/* 拖拽全局激活时（body.is-dragging-active）降低 FolderWindow 的模糊半径，
+   减少与其他 backdrop-filter 元素（icon-circle、search bar、confirm dialog）叠加后
+   导致的多层层化 + 每帧重采样 GPU 开销，避免极端情况下 GPU OOM 崩溃。 */
+body.is-dragging-active .folder-overlay {
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+body.is-dragging-active .folder-window {
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+body.is-dragging-active .confirm-dialog-overlay {
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+body.is-dragging-active .confirm-dialog {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}

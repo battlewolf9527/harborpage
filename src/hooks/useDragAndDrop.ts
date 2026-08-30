@@ -37,8 +37,33 @@ export const useDragAndDrop = ({
   const outsideDebounceTimerRef = useRef<number | null>(null);
   // 存储最后一次实际拖放位置（不受异步 state 影响，确保 drop 时能读到正确值）
   const lastPositionRef = useRef<{ iconId: string; position: DragPosition } | null>(null);
+  // 记录最后一次 setState 的 {iconId, position}。
+  // 浏览器的 dragover 事件哪怕鼠标没动，也会每隔 50~350ms 自动重抛一次；
+  // 之前我们每 30ms 都无脑 setState 一次，导致组件重渲染 → React 把 className 重新写入，
+  // .icon-circle 上的 `animation:shake` 被当作"新样式"重新计算，
+  // shake 就会从头播放 → 这就是"鼠标停住图标一直抖"的根因。
+  // 这里先做一次值比较，只有真的变化时才写 state，彻底砍掉无效重渲染。
+  const lastSetStateRef = useRef<{ iconId: string | null; position: DragPosition | null }>({
+    iconId: null,
+    position: null,
+  });
 
-  // 组件卸载时清理所有防抖定时器，避免泄露
+  /** 安全写 dragOver state：仅当 {iconId, position} 真的变化时才写入，
+   *  避免 dragover 高频重抛导致的无效重渲染 / CSS 动画重触发。 */
+  const commitDragOverState = useCallback(
+    (nextIconId: string | null, nextPosition: DragPosition | null) => {
+      const prev = lastSetStateRef.current;
+      if (prev.iconId === nextIconId && prev.position === nextPosition) {
+        return;
+      }
+      lastSetStateRef.current = { iconId: nextIconId, position: nextPosition };
+      setDragOverIcon(nextIconId);
+      setDragOverPosition(nextPosition);
+    },
+    [],
+  );
+
+  // 组件卸载时清理所有防抖定时器，避免泄露；并确保 body class 被移除
   useEffect(() => {
     return () => {
       if (debounceTimerRef.current) {
@@ -49,6 +74,9 @@ export const useDragAndDrop = ({
         clearTimeout(outsideDebounceTimerRef.current);
         outsideDebounceTimerRef.current = null;
       }
+      if (typeof document !== 'undefined' && document.body.classList.contains('is-dragging-active')) {
+        document.body.classList.remove('is-dragging-active');
+      }
     };
   }, []);
 
@@ -57,6 +85,11 @@ export const useDragAndDrop = ({
     lastPositionRef.current = null;
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', icon.id);
+    // 标记 body 进入全局拖拽状态：用于 CSS 降低所有 backdrop-filter 强度
+    // 并关闭图标 hover 放大/闪烁动画，避免大量合成层叠加导致的 GPU OOM
+    if (typeof document !== 'undefined') {
+      document.body.classList.add('is-dragging-active');
+    }
   }, [setDraggedIcon]);
 
   const handleDragEnd = useCallback(() => {
@@ -70,9 +103,11 @@ export const useDragAndDrop = ({
     }
     lastPositionRef.current = null;
     setDraggedIcon(null);
-    setDragOverIcon(null);
-    setDragOverPosition(null);
-  }, [setDraggedIcon]);
+    commitDragOverState(null, null);
+    if (typeof document !== 'undefined') {
+      document.body.classList.remove('is-dragging-active');
+    }
+  }, [setDraggedIcon, commitDragOverState]);
 
   const handleDragOverIcon = useCallback((e: React.DragEvent, iconId: string) => {
     e.preventDefault();
@@ -84,17 +119,35 @@ export const useDragAndDrop = ({
 
     const targetIcon = icons.find(icon => icon.id === iconId);
     const isTargetFolder = targetIcon?.isFolder || false;
+    const isDraggedFolder = draggedIcon.isFolder || false;
+
+    // 判断"中心投放"语义是否合法：
+    //  ✅ website  → folder           : 合法，塞进文件夹（center 绿框）
+    //  ✅ website  → website + 允许建文件夹 : 合法，新建文件夹（center 绿框）
+    //  ❌ folder   → folder           : 不支持嵌套文件夹（invalid 红框）
+    //  ❌ folder   → website          : 不支持把文件夹塞进站点/新建文件夹（invalid 红框）
+    //  ❌ website  → website + 禁止建文件夹 : 中心操作不成立（invalid 红框）
+    const canCenterDrop =
+      (isTargetFolder && !isDraggedFolder) ||
+      (!isTargetFolder && allowFolderCreation && !isDraggedFolder);
+
+    // 用左右各 25%、中间 50% 作为 before / after / center(或 invalid) 的分界。
+    // 保留两侧排序区，只有落在中间 50% 时才区分 center / invalid，操作手感更直观。
+    const target = e.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const leftThreshold = rect.width * 0.25;
+    const rightThreshold = rect.width * 0.75;
 
     let position: DragPosition;
-    if ((isTargetFolder && !draggedIcon.isFolder) ||
-        (!isTargetFolder && allowFolderCreation && !draggedIcon.isFolder)) {
+    if (x < leftThreshold) {
+      position = 'before';
+    } else if (x >= rightThreshold) {
+      position = 'after';
+    } else if (canCenterDrop) {
       position = 'center';
     } else {
-      const target = e.currentTarget as HTMLElement;
-      const rect = target.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const centerX = rect.width * 0.5;
-      position = x < centerX ? 'before' : 'after';
+      position = 'invalid';
     }
 
     // 立即写入 ref，确保 drop 时可读到最新位置
@@ -112,13 +165,26 @@ export const useDragAndDrop = ({
     }
 
     debounceTimerRef.current = window.setTimeout(() => {
-      setDragOverIcon(iconId);
-      setDragOverPosition(position);
+      commitDragOverState(iconId, position);
       debounceTimerRef.current = null;
     }, 30);
-  }, [draggedIcon, icons, allowFolderCreation]);
+  }, [draggedIcon, icons, allowFolderCreation, commitDragOverState]);
 
-  const handleDragLeaveIcon = useCallback(() => {
+  const handleDragLeaveIcon = useCallback((e: React.DragEvent) => {
+    // 关键：dragleave 会在"离开到外层"以及"在内部子节点之间穿越"两种情况下都触发。
+    // FolderItem 的 icon-circle 内部有 4 张 folder-preview-image，
+    // 鼠标静止在上面时，浏览器每 ~50ms 的 dragover 重抛会伴随
+    // 多次"穿越某张预览图边界"造成的 leave 假事件；如果我们都当真去
+    // commit(null,null)，下一次 30ms over 又把 position 设回 invalid，
+    // 就会形成 "null ↔ invalid" 的类切换，让 shake 动画每秒重播多次。
+    // 这里用 relatedTarget 判断：如果下一个即将被悬停的节点仍然在
+    // 本次 leave 目标（wrapper）的 DOM 内部，就忽略这次 leave。
+    const wrapper = e.currentTarget as HTMLElement | null;
+    const next = e.relatedTarget as Node | null;
+    if (wrapper && next && wrapper.contains(next)) {
+      return;
+    }
+
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = null;
@@ -130,11 +196,10 @@ export const useDragAndDrop = ({
     }
 
     debounceTimerRef.current = window.setTimeout(() => {
-      setDragOverIcon(null);
-      setDragOverPosition(null);
+      commitDragOverState(null, null);
       debounceTimerRef.current = null;
     }, 50);
-  }, []);
+  }, [commitDragOverState]);
 
   const handleDragOverOutside = useCallback((iconId: string, position: 'before' | 'after') => {
     if (!draggedIcon || draggedIcon.id === iconId) {
@@ -154,11 +219,10 @@ export const useDragAndDrop = ({
     lastPositionRef.current = { iconId, position };
 
     outsideDebounceTimerRef.current = window.setTimeout(() => {
-      setDragOverIcon(iconId);
-      setDragOverPosition(position);
+      commitDragOverState(iconId, position);
       outsideDebounceTimerRef.current = null;
     }, 30);
-  }, [draggedIcon]);
+  }, [draggedIcon, commitDragOverState]);
 
   const handleDropOnIcon = useCallback((e: React.DragEvent, targetIconId: string) => {
     e.preventDefault();
@@ -177,8 +241,7 @@ export const useDragAndDrop = ({
       outsideDebounceTimerRef.current = null;
     }
 
-    setDragOverIcon(null);
-    setDragOverPosition(null);
+    commitDragOverState(null, null);
 
     if (!draggedIcon || draggedIcon.id === targetIconId) {
       lastPositionRef.current = null;
@@ -200,23 +263,39 @@ export const useDragAndDrop = ({
     }
     lastPositionRef.current = null;
 
-    // 如果 ref 中没有，则根据当前事件位置计算
+    // 如果 ref 中没有，则根据当前事件位置重新计算（与 handleDragOverIcon 保持一致的分区规则）
     if (!calculatedPosition) {
       const isTargetFolder = targetIconObj.isFolder || false;
-      if ((isTargetFolder && !draggedIconObj.isFolder) ||
-          (!isTargetFolder && allowFolderCreation && !draggedIconObj.isFolder)) {
+      const isDraggedFolder = draggedIconObj.isFolder || false;
+      const canCenterDrop =
+        (isTargetFolder && !isDraggedFolder) ||
+        (!isTargetFolder && allowFolderCreation && !isDraggedFolder);
+
+      const target = e.currentTarget as HTMLElement;
+      const wrapper = target.closest('.icon-wrapper, .icon-item');
+      const rect = (wrapper ?? target).getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const leftThreshold = rect.width * 0.25;
+      const rightThreshold = rect.width * 0.75;
+
+      if (x < leftThreshold) {
+        calculatedPosition = 'before';
+      } else if (x >= rightThreshold) {
+        calculatedPosition = 'after';
+      } else if (canCenterDrop) {
         calculatedPosition = 'center';
       } else {
-        const target = e.currentTarget as HTMLElement;
-        const wrapper = target.closest('.icon-wrapper, .icon-item');
-        const rect = (wrapper ?? target).getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const centerX = rect.width * 0.5;
-        calculatedPosition = x < centerX ? 'before' : 'after';
+        calculatedPosition = 'invalid';
       }
     }
 
-    // 首先尝试交给外部处理器（放入文件夹 / 创建文件夹）
+    // invalid 中心投放：不交给外部处理器，也不做排序；直接结束拖拽。
+    if (calculatedPosition === 'invalid') {
+      setDraggedIcon(null);
+      return;
+    }
+
+    // 首先尝试交给外部处理器（放入文件夹 / 创建文件夹），仅 center 能被外部处理。
     if (onHandleDrop) {
       const handled = onHandleDrop(e, targetIconId, draggedIconObj, targetIconObj, calculatedPosition);
       if (handled) {
