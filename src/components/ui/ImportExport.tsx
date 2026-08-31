@@ -380,15 +380,15 @@ const ImportExport: React.FC = () => {
               </p>
             </div>
             <div className="ie-dialog-footer">
-              <button className="ie-btn ie-btn-secondary" onClick={handleCancelExport}>
-                取消
-              </button>
               <button
                 className="ie-btn ie-btn-primary"
                 onClick={handleConfirmExport}
                 disabled={!hasExportSelection}
               >
                 导出
+              </button>
+              <button className="ie-btn ie-btn-secondary" onClick={handleCancelExport}>
+                取消
               </button>
             </div>
           </div>

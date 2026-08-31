@@ -63,15 +63,21 @@ const TodoList: React.FC = memo(() => {
 
   return (
     <div className="todo-list">
-      {todos.length > 0 && (
-        <div className="todo-footer">
-          <span>{todos.filter(todo => !todo.completed).length} 项待完成</span>
-          {todos.some(todo => todo.completed) && (
-            <button onClick={handleClearCompleted}>清空已完成</button>
-          )}
-        </div>
-      )}
+      {/* 添加待办：始终放在最顶部，用户打开侧边栏第一眼就能看到，
+          永远不被长列表挤出视口（CSS flex-shrink:0 保护）。 */}
+      <div className="add-todo">
+        <input
+          type="text"
+          placeholder="添加待办事项..."
+          value={newTodo}
+          onChange={(e) => setNewTodo(e.target.value)}
+          onKeyDown={handleKeyDown}
+        />
+        <button onClick={handleAddTodo}>添加</button>
+      </div>
 
+      {/* 待办列表：放在中间，滚动只在这里发生（CSS flex:1 + min-height:0），
+          长列表不会顶飞顶部添加栏或底部操作栏。 */}
       <div className="todo-items">
         {todos.map((todo) => (
           <div key={todo.id} className="todo-item">
@@ -91,16 +97,15 @@ const TodoList: React.FC = memo(() => {
         ))}
       </div>
 
-      <div className="add-todo">
-        <input
-          type="text"
-          placeholder="添加待办事项..."
-          value={newTodo}
-          onChange={(e) => setNewTodo(e.target.value)}
-          onKeyDown={handleKeyDown}
-        />
-        <button onClick={handleAddTodo}>添加</button>
-      </div>
+      {/* 底部统计 + 清空操作：仅当有待办时显示；flex-shrink:0 固定在底部。 */}
+      {todos.length > 0 && (
+        <div className="todo-footer">
+          <span>{todos.filter(todo => !todo.completed).length} 项待完成</span>
+          {todos.some(todo => todo.completed) && (
+            <button onClick={handleClearCompleted}>清空已完成</button>
+          )}
+        </div>
+      )}
 
       <ConfirmDialog
         isOpen={showConfirmDialog}

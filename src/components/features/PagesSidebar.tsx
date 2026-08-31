@@ -362,25 +362,6 @@ const PagesSidebar: React.FC = () => {
               </p>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5vw' }}>
                 <button
-                  onClick={handleCancelDelete}
-                  style={{
-                    padding: '0.4vw 1vw',
-                    fontSize: '0.65vw',
-                    borderRadius: '0.4vw',
-                    border: '1px solid var(--border-color)',
-                    background: 'transparent',
-                    color: 'var(--text-secondary)',
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                    fontWeight: 500,
-                    transition: 'all var(--transition-fast)',
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--background-light)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                >
-                  取消
-                </button>
-                <button
                   onClick={handleConfirmDelete}
                   style={{
                     padding: '0.4vw 1vw',
@@ -398,6 +379,25 @@ const PagesSidebar: React.FC = () => {
                   onMouseLeave={(e) => { e.currentTarget.style.background = '#ef4444'; }}
                 >
                   删除
+                </button>
+                <button
+                  onClick={handleCancelDelete}
+                  style={{
+                    padding: '0.4vw 1vw',
+                    fontSize: '0.65vw',
+                    borderRadius: '0.4vw',
+                    border: '1px solid var(--border-color)',
+                    background: 'transparent',
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    fontWeight: 500,
+                    transition: 'all var(--transition-fast)',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--background-light)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                >
+                  取消
                 </button>
               </div>
             </div>

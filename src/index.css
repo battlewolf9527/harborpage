@@ -18,29 +18,31 @@
   --sidebar-icon-size: clamp(36px, 2.4vw, 48px);
   --sidebar-toggle-size: clamp(40px, 3vw, 52px);
 
-  /* 通用字体最小尺寸（防止 vw 导致文字不可读） */
-  --font-xs: max(11px, 0.6vw);
-  --font-sm: max(12px, 0.7vw);
-  --font-md: max(14px, 0.8vw);
-  --font-lg: max(16px, 0.95vw);
-  --font-xl: max(18px, 1.1vw);
-  --font-2xl: max(22px, 1.4vw);
+  /* 通用字体：clamp(最小, 自适应vw, 最大) — 防止 4K/2K 下 vw 无上限膨胀。
+     上限取 1080p~2K 桌面的合理值，大屏（≥1440 CSS 宽）使用之前 session 加的 min-width 断点按需放大。 */
+  --font-xs: clamp(11px, 0.6vw, 14px);
+  --font-sm: clamp(12px, 0.7vw, 16px);
+  --font-md: clamp(14px, 0.8vw, 18px);
+  --font-lg: clamp(16px, 0.95vw, 22px);
+  --font-xl: clamp(18px, 1.1vw, 24px);
+  --font-2xl: clamp(22px, 1.4vw, 30px);
 
-  /* 间距最小尺寸 */
-  --space-1: max(4px, 0.2vw);
-  --space-2: max(6px, 0.3vw);
-  --space-3: max(8px, 0.5vw);
-  --space-4: max(12px, 0.7vw);
-  --space-5: max(16px, 0.9vw);
-  --space-6: max(20px, 1.1vw);
+  /* 间距：clamp(最小, 自适应vw, 最大) — 原理同上；
+     4K 下 space-5 旧值 max(16,0.9vw)=34.56px → 新值 clamp 到 24px，减少总高度占用 ~30% */
+  --space-1: clamp(4px, 0.2vw, 6px);
+  --space-2: clamp(6px, 0.3vw, 9px);
+  --space-3: clamp(8px, 0.5vw, 14px);
+  --space-4: clamp(12px, 0.7vw, 18px);
+  --space-5: clamp(16px, 0.9vw, 24px);
+  --space-6: clamp(20px, 1.1vw, 28px);
 
   /* 图标尺寸 */
   --icon-circle-min: 56px;
   --icon-circle-max: 120px;
   --icon-label-min: 12px;
 
-  /* 天气组件最小尺寸 */
-  --weather-padding: max(10px, 0.8vw);
+  /* 天气组件：同样加上限，避免 4K 下天气区域把页面顶出视口 */
+  --weather-padding: clamp(10px, 0.8vw, 18px);
   --weather-time-min: 22px;
   --weather-temp-min: 18px;
 

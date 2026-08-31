@@ -26,7 +26,14 @@
   right: calc(var(--sidebar-width) * -1);
   top: 50%;
   transform: translateY(-50%);
+  /* 双层高度保险：
+     height: min(600px, 65vh)  — 基础高度，4K 下 65vh=1404 被 min 限到 600
+     max-height: 85vh         — 终极兜底，任何 DPI/分辨率下 sidebar 高度绝不超过视口 85%，
+                                配合 top:50% + translateY(-50%)，上下各留 7.5vh 空白，
+                                保证永远完整在视口内（4K 200%DPI=1080视口 时 85vh=918，
+                                也完全在 1080 内；手机 600px 高时 85vh=510，也在视口内） */
   height: min(600px, 65vh);
+  max-height: 85vh;
   width: var(--sidebar-width);
   background: var(--background-white);
   backdrop-filter: blur(16px);
@@ -37,7 +44,11 @@
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-lg);
-  overflow: visible;
+  /* overflow: visible → hidden：防止内部 flex 链万一断裂（min-height:0 失效）时，
+     内容从 600px 盒子底部"画到外面去"。
+     注意：sidebar-content 自己有 overflow-y:auto，所以外层 hidden 不影响内部滚动，
+     只是把绘制范围裁剪到 todo-sidebar 的盒子边界内，这是正确的行为。 */
+  overflow: hidden;
 }
 
 .todo-sidebar.expanded {
@@ -181,6 +192,11 @@
 /* 侧边栏内容 */
 .sidebar-content {
   flex: 1;
+  /* min-height:0 是多级 flex 嵌套中"让内部子元素能按剩余高度分配并产生滚动"的关键：
+     flex 规范默认子元素 min-height = min-content，会把父 flex 容器撑开，
+     导致 .todo-sidebar 的 max-height/height 被忽略，整个 sidebar 超出视口底部，
+     然后 add-todo 按钮就"跑出浏览器了"。 */
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   padding: clamp(14px, 1.1vw, 20px) clamp(12px, 0.9vw, 16px);
@@ -314,7 +330,10 @@
     width: 86vw;
     max-width: 360px;
     height: 80vh;
-    min-height: 500px;
+    /* 旧：min-height: 500px — 当视口高度 < 500px（例如手机横屏），sidebar 高度会超过视口，
+       配合 top:50% + translateY(-50%) 垂直居中后，底部会跑出浏览器外。
+       新：min(500px, 80vh) — 高度绝不超过 80vh，保证任何矮视口下完整可见。 */
+    min-height: min(500px, 80vh);
     top: 50%;
     border-radius: 16px 0 0 16px;
   }
@@ -359,7 +378,8 @@
   .todo-sidebar {
     width: 90vw;
     height: 82vh;
-    min-height: 480px;
+    /* 同 768 断点：480px 硬值在超矮视口下会溢出，改为 min(480, 82vh) */
+    min-height: min(480px, 82vh);
   }
 
   .sidebar-icon {

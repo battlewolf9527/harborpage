@@ -1,11 +1,17 @@
 /* TodoList.css - 响应式重构：使用 CSS 变量 + clamp 保证最小可读/操作尺寸 */
 
+/* todo-list 是 .sidebar-content 的直接 flex 子元素：
+   flex:1 让它吃掉 sidebar-header 之后剩下的所有高度；
+   min-height:0 解除"flex 子元素 min-height 默认为内容高度"的陷阱，
+   确保 .todo-items 的 flex:1 + overflow-y 能正确收敛而不是无限撑高外溢。 */
 .todo-list {
   padding: var(--space-4) 0;
   font-family: 'Inter', sans-serif;
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
+  flex: 1;
+  min-height: 0;
 }
 
 .todo-list h3 {
@@ -16,15 +22,28 @@
   text-align: center;
 }
 
+/* add-todo 放在最顶部：flex-shrink:0 保证在任何可用高度下都不被压缩，
+   长列表不会把输入框挤出可视区。
+   额外保险：width:100% + box-sizing:border-box + min-width:0，
+   避免因多级 flex + 未设置宽度导致水平方向 min-content 膨胀把 button 挤出右侧边界。 */
 .add-todo {
   display: flex;
   gap: var(--space-3);
   align-items: center;
   position: relative;
+  flex-shrink: 0;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .add-todo input {
   flex: 1;
+  /* 经典 flex 陷阱：input 默认 min-width: min-content (~170px placeholder 宽)，
+     当 sidebar 非常窄时，input 拒绝收缩，会把右侧"添加"按钮挤出 sidebar 右边界
+     （sidebar expanded 右边缘 = 视口右边界 → 按钮就"跑出浏览器"了）。
+     设置 min-width:0 让 input 能按 flex:1 正常收缩。 */
+  min-width: 0;
   padding: var(--space-3) var(--space-4);
   border: 2px solid var(--border-color);
   border-radius: var(--border-radius-lg);
@@ -36,6 +55,7 @@
   transition: all var(--transition-fast);
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
   min-height: 38px;
+  box-sizing: border-box;
 }
 
 .add-todo input:focus {
@@ -65,7 +85,9 @@
   position: relative;
   overflow: hidden;
   min-height: 38px;
+  /* 触控目标 44px。注意：不要加 min-width:0，要保持 44px 点击面积。 */
   min-width: 44px;
+  box-sizing: border-box;
 }
 
 .add-todo button::before {
@@ -94,11 +116,18 @@
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
 
+/* todo-items：中间列表区，唯一会发生滚动的区域。
+   旧：max-height: min(260px, 20vh) — 4K 下只有 260px 浪费大量空间，
+       且在手机端把底部 add-todo 顶出视口；
+   新：flex:1 自动占满 todo-list 中 add-todo + todo-footer 之间的剩余高度，
+       min-height:0 强制允许它收缩（flex 默认 min-height:min-content 会导致无法滚动），
+       overflow-y:auto 仅在此处滚动。 */
 .todo-items {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  max-height: min(260px, 20vh);
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding-right: var(--space-2);
   position: relative;
@@ -240,6 +269,8 @@
   box-shadow: 0 4px 8px rgba(236, 72, 153, 0.2);
 }
 
+/* todo-footer：最底部统计和清空操作栏。flex-shrink:0 保证任何高度下
+   都不被压缩裁剪，始终贴在待办列表下方。 */
 .todo-footer {
   display: flex;
   justify-content: space-between;
@@ -252,6 +283,7 @@
   position: relative;
   overflow: hidden;
   min-height: 38px;
+  flex-shrink: 0;
 }
 
 .todo-footer::before {
@@ -309,9 +341,9 @@
   box-shadow: 0 4px 8px rgba(236, 72, 153, 0.2);
 }
 
-/* 空状态样式 */
+/* 空状态样式：当待办列表为空时居中显示引导提示 */
 .todo-items:empty::before {
-  content: '还没有待办事项，点击上方添加吧！';
+  content: '还没有待办事项，使用上方添加栏输入吧！';
   display: block;
   text-align: center;
   padding: var(--space-6) var(--space-4);
@@ -321,7 +353,6 @@
   background: var(--background-light);
   border: 2px dashed var(--border-color);
   border-radius: var(--border-radius-lg);
-  margin-bottom: var(--space-5);
   position: relative;
   transition: all var(--transition-normal);
 }

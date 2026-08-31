@@ -96,7 +96,6 @@ const ImportPresetDialog: React.FC<ImportPresetDialogProps> = ({ isOpen, onClose
           </div>
 
           <div className="action-buttons">
-            <button className="cancel-btn" onClick={onClose}>取消</button>
             <button
               className="import-btn"
               onClick={handleImport}
@@ -104,6 +103,7 @@ const ImportPresetDialog: React.FC<ImportPresetDialogProps> = ({ isOpen, onClose
             >
               导入 ({selectedItems.size})
             </button>
+            <button className="cancel-btn" onClick={onClose}>取消</button>
           </div>
         </div>
       </div>
@@ -151,16 +151,16 @@ const ImportPresetDialog: React.FC<ImportPresetDialogProps> = ({ isOpen, onClose
             </div>
             <div className="duplicate-dialog-footer">
               <button
-                className="cancel-btn"
-                onClick={() => setShowDuplicateDialog(false)}
-              >
-                取消
-              </button>
-              <button
                 className="confirm-btn"
                 onClick={handleDuplicateConfirm}
               >
                 确认导入
+              </button>
+              <button
+                className="cancel-btn"
+                onClick={() => setShowDuplicateDialog(false)}
+              >
+                取消
               </button>
             </div>
           </div>

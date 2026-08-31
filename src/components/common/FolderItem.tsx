@@ -145,6 +145,10 @@ const FolderItem: React.FC<FolderItemProps> = ({
                       referrerPolicy="no-referrer"
                       style={imgStyle}
                       onError={(e) => handleIconLoadError(e, child)}
+                      /* 与 IconItem 里的 icon-image 同样修复：
+                         <img> 原生 draggable=true 会抢占外层 FolderItem wrapper 的 draggable，
+                         导致文件夹整体拖不动。draggable={false} 强制用 wrapper 作为 drag source。 */
+                      draggable={false}
                     />
                   </div>
                 );
