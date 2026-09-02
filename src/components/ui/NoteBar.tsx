@@ -338,11 +338,14 @@ const NoteBar: React.FC = () => {
   // activeBallId 切到 __tip_edit__，但 note 缩略预览本体仍要保留在 DOM 里——
   // 否则「✏️ 编辑」按钮 (tip-btn-wrap 锚点) 会随父缩略预览 unmount → resolveAnchor 拿不到锚。
   const [lastActiveNoteId, setLastActiveNoteId] = useState<string | null>(null);
-  useEffect(() => {
-    if (activeBallId?.startsWith('note:')) {
-      setLastActiveNoteId(activeBallId.slice(5));
+  // activeBallId 仍是 note:xxx 时同步记录本次 hover 的 note id。
+  // 采用「渲染期间条件更新」（值不变时不重复 set），避免在 effect 里 setState 触发级联渲染。
+  if (activeBallId?.startsWith('note:')) {
+    const nextNoteId = activeBallId.slice(5);
+    if (nextNoteId !== lastActiveNoteId) {
+      setLastActiveNoteId(nextNoteId);
     }
-  }, [activeBallId]);
+  }
   const activeThumbNoteId: string | null = (() => {
     if (activeBallId?.startsWith('note:')) return activeBallId.slice(5);
     if (activeBallId === '__tip_edit__') return lastActiveNoteId;

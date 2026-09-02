@@ -44,13 +44,13 @@ const SettingsWindow = forwardRef<SettingsWindowRef, SettingsWindowProps>(({
   }, []);
 
   /* ── 外部命令式关（齿轮按钮 toggle、父 isOpen 变 false 等）
-        父传 isClosing=true → 同步到本地 → 挂上 settings-panel-closing 类
-        → @keyframes settingsSlideOut 从第一帧开始播。 */
-  useEffect(() => {
-    if (isClosing && !localIsClosing) {
-      setLocalIsClosing(true);
-    }
-  }, [isClosing, localIsClosing]);
+        父传 isClosing=true → 本地状态直接跟随（挂上 settings-panel-closing 类
+        → @keyframes settingsSlideOut 从第一帧开始播）。
+        用「渲染期间条件更新」同步（值未变化时不重复 set），
+        避免在 effect 里 setState 触发级联渲染。 */
+  if (isClosing && !localIsClosing) {
+    setLocalIsClosing(true);
+  }
 
   /* ── 关闭完成通知（单例：只触发一次）
         必须在滑出动画最后一帧播完后调用，保证视觉过渡完整 → 父卸载。

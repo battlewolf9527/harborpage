@@ -43,16 +43,16 @@ const PagesSidebar: React.FC = () => {
   }, []);
 
   // 编辑时自动聚焦输入框（仅在进入/切换编辑目标时聚焦+全选，避免每次改字都全选）
+  const editingPageId = editing?.pageId ?? null;
   useEffect(() => {
-    const currentPageId = editing?.pageId ?? null;
-    if (currentPageId !== lastFocusedPageIdRef.current) {
-      if (editing && inputRef.current) {
+    if (editingPageId !== lastFocusedPageIdRef.current) {
+      if (editingPageId !== null && inputRef.current) {
         inputRef.current.focus();
         inputRef.current.select();
       }
-      lastFocusedPageIdRef.current = currentPageId;
+      lastFocusedPageIdRef.current = editingPageId;
     }
-  }, [editing?.pageId]);
+  }, [editingPageId]);
 
   const startAnimationTimeout = useCallback(() => {
     if (timerRef.current) {

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import './NoteEditorDialog.css';
 import { useNotesStore } from '../../store/useNotesStore';
@@ -89,6 +89,8 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
 
   // 删除确认
   const [confirmDelete, setConfirmDelete] = useState(false);
+  // 未保存更改确认（ESC / ✕ / 取消 的统一防误操作入口）
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
 
   const titleInputRef = useRef<HTMLInputElement>(null);
   const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -119,18 +121,44 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
     }, 260);
   }, [onClose]);
 
-  // ESC 关闭
+  // 是否存在未保存更改：
+  //   · 新建模式：只要输入过标题或内容就算有内容；
+  //   · 编辑模式：标题/内容/颜色任一与已存笔记不一致（按保存时的裁剪规则比较）。
+  // 有未保存更改时，ESC / ✕ / 取消 先弹确认框，防止误操作丢失内容。
+  const hasUnsavedChanges = useMemo(() => {
+    if (!activeId) {
+      return draft.title.trim().length > 0 || draft.content.trim().length > 0;
+    }
+    const target = notes.find((n) => n.id === activeId);
+    if (!target) return true;
+    const titleChanged = (draft.title.trim() || '无标题') !== (target.title ?? '');
+    const contentChanged = draft.content.trim() !== (target.content ?? '');
+    const colorChanged = color !== (target.color ?? 'yellow');
+    return titleChanged || contentChanged || colorChanged;
+  }, [activeId, draft, color, notes]);
+
+  // 统一关闭入口：有未保存更改 → 弹确认框（可返回继续编辑）；无 → 直接关闭。
+  // 供 ESC / 头部 ✕ / 底部 取消 使用，避免误触导致内容丢失。
+  const requestClose = useCallback(() => {
+    if (hasUnsavedChanges) {
+      setConfirmDiscard(true);
+    } else {
+      runClosing();
+    }
+  }, [hasUnsavedChanges, runClosing]);
+
+  // ESC 关闭（有未保存更改时先确认）
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        runClosing();
+        requestClose();
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [isOpen, runClosing]);
+  }, [isOpen, requestClose]);
 
   // ── 保存 ──────────────────────────────────────────────────────────────
   const handleSave = useCallback(() => {
@@ -197,7 +225,8 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
     <>
       {/* 遮罩层仅作视觉背景，不再绑定外部点击关闭：编辑器存在未保存的标题/内容/颜色，
           误点外部（例如拖拽选词松开在框外、手抖碰到遮罩）会导致工作丢失。
-          合法关闭入口只保留：header ✕ / footer 取消 / footer 删除 / Esc 键（后者触发 runClosing）。 */}
+          合法关闭入口只保留：header ✕ / footer 取消 / footer 删除 / Esc 键；
+          前三者（删除有独立二次确认）统一走 requestClose —— 有未保存更改时先弹确认框。 */}
       <div
         className={`note-editor-overlay ${isClosing ? 'closing' : ''}`}
       />
@@ -214,7 +243,7 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
             <button
               type="button"
               className="note-editor-close"
-              onClick={runClosing}
+              onClick={requestClose}
               aria-label="关闭"
               title="关闭 (Esc)"
             >
@@ -301,7 +330,7 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
             <button
               type="button"
               className="note-editor-btn ghost"
-              onClick={runClosing}
+              onClick={requestClose}
             >
               取消
             </button>
@@ -315,6 +344,21 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
         message="确定要删除这篇笔记吗？删除后不可恢复。"
         onConfirm={handleConfirmDelete}
         onCancel={() => setConfirmDelete(false)}
+      />
+
+      {/* 未保存更改确认：确认 = 放弃更改并关闭；取消 = 回到编辑器继续编辑。
+          确认框自身监听 ESC → onCancel（留在编辑器），阻断冒泡到本编辑器 ESC 逻辑。 */}
+      <ConfirmDialog
+        isOpen={confirmDiscard}
+        title="放弃未保存的更改？"
+        message="当前编辑尚未保存，关闭后将丢失输入的标题与内容。"
+        confirmText="放弃更改"
+        confirmType="danger"
+        onConfirm={() => {
+          setConfirmDiscard(false);
+          runClosing();
+        }}
+        onCancel={() => setConfirmDiscard(false)}
       />
     </>
   );

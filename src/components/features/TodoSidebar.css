@@ -264,14 +264,8 @@
   font-weight: 700;
   font-family: inherit;
   box-shadow: 0 2px 8px color-mix(in srgb, var(--todo-secondary) 40%, transparent);
-  animation: badgePulse 2.4s infinite;
+  /* 原 badgePulse 无限脉冲动画已移除：box-shadow 扩散每帧触发重绘，持续耗 CPU/GPU */
   z-index: 1002;
-}
-
-@keyframes badgePulse {
-  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--todo-secondary) 60%, transparent); }
-  70%  { box-shadow: 0 0 0 8px color-mix(in srgb, var(--todo-secondary) 0%, transparent); }
-  100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--todo-secondary) 0%, transparent); }
 }
 
 /* ===================== 侧边栏内容 ===================== */

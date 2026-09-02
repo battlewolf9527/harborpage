@@ -50,6 +50,19 @@ interface ImportPreview {
   counts: Record<CategoryKey, number | null> & { pageSiteCount: number };
 }
 
+/** 导出对话框中各分类的现有数据量（settings 无数量概念，固定 null） */
+type ExportCounts = Record<CategoryKey, number | null> & { pageSiteCount: number };
+
+const EMPTY_EXPORT_COUNTS: ExportCounts = {
+  searchEngines: 0,
+  pages: 0,
+  pageSiteCount: 0,
+  websites: 0,
+  todos: 0,
+  notes: 0,
+  settings: null,
+};
+
 interface ToastState {
   type: 'success' | 'error' | 'info';
   message: string;
@@ -70,6 +83,29 @@ const countWebsites = (list: Website[] | undefined): number => {
     }
   }
   return count;
+};
+
+// 统计导出对话框中各分类的现有数据量
+const computeExportCounts = (): ExportCounts => {
+  const data = getServices().dataManager.getData();
+  // 统计 pages 与其站点总数
+  let pageCount = 0;
+  let pageSiteCount = 0;
+  if (data.pages?.length) {
+    pageCount = data.pages.length;
+    for (const page of data.pages) {
+      pageSiteCount += countWebsites(page.websites);
+    }
+  }
+  return {
+    searchEngines: data.searchEngines?.length ?? 0,
+    pages: pageCount,
+    pageSiteCount,
+    websites: countWebsites(data.websites),
+    todos: data.todos?.length ?? 0,
+    notes: data.notes?.length ?? 0,
+    settings: null,
+  };
 };
 
 const buildImportSummary = (data: FullExportData): string => {
@@ -99,6 +135,9 @@ const ImportExport: React.FC = () => {
   const [importPreview, setImportPreview] = useState<ImportPreview | null>(null);
   const [importSelection, setImportSelection] = useState<DataSelection>(ALL_SELECTED);
   const [toast, setToast] = useState<ToastState | null>(null);
+  // 导出对话框打开时按当前数据实时统计（数据来自外部 DataManager，非响应式，
+  // 所以在打开事件里计算一次，避免依赖渲染推导）
+  const [exportCounts, setExportCounts] = useState<ExportCounts>(EMPTY_EXPORT_COUNTS);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const startImport = useImportStore((s) => s.startImport);
@@ -106,6 +145,7 @@ const ImportExport: React.FC = () => {
   const handleExportClick = useCallback(() => {
     setFilename(buildDefaultFilename());
     setExportSelection(ALL_SELECTED);
+    setExportCounts(computeExportCounts());
     setShowExportDialog(true);
   }, []);
 
@@ -281,29 +321,6 @@ const ImportExport: React.FC = () => {
   const toggleImportItem = (key: CategoryKey) => {
     setImportSelection(prev => ({ ...prev, [key]: !prev[key] }));
   };
-
-  // 获取导出数据数量
-  const exportCounts = useMemo(() => {
-    const data = getServices().dataManager.getData();
-    // 统计 pages
-    let pageCount = 0;
-    let pageSiteCount = 0;
-    if (data.pages?.length) {
-      pageCount = data.pages.length;
-      for (const page of data.pages) {
-        pageSiteCount += countWebsites(page.websites);
-      }
-    }
-    return {
-      searchEngines: data.searchEngines?.length ?? 0,
-      pages: pageCount,
-      pageSiteCount,
-      websites: countWebsites(data.websites),
-      todos: data.todos?.length ?? 0,
-      notes: data.notes?.length ?? 0,
-      settings: null as number | null,
-    };
-  }, [showExportDialog]);
 
   return (
     <>
