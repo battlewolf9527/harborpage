@@ -386,15 +386,28 @@ const validateTodo = (item: unknown): item is Todo => {
   );
 };
 
-// 校验笔记对象
+// 合法的 NoteColor 值集合（运行时枚举校验）—— 与 types/NoteColor 字面量严格一致 16 色
+const VALID_NOTE_COLORS = new Set<string>([
+  'yellow', 'amber', 'orange', 'coral',
+  'pink', 'rose', 'red',
+  'green', 'lime', 'emerald', 'teal', 'cyan',
+  'blue', 'sky',
+  'purple', 'indigo',
+]);
+
+// 校验笔记对象（向后兼容：旧数据只有 id/title/content；updatedAt/pinned/color 可选）
 const validateNote = (item: unknown): item is Note => {
   if (typeof item !== 'object' || item === null) return false;
   const note = item as Note;
-  return (
-    typeof note.id === 'string' &&
-    typeof note.title === 'string' &&
-    typeof note.content === 'string'
-  );
+  if (typeof note.id !== 'string') return false;
+  if (typeof note.title !== 'string') return false;
+  if (typeof note.content !== 'string') return false;
+  // createdAt 在最早版本里就是必须的 ISO 字符串；这里保持宽松（允许缺失以兼容极端历史数据）
+  if (note.createdAt !== undefined && typeof note.createdAt !== 'string') return false;
+  if (note.updatedAt !== undefined && typeof note.updatedAt !== 'string') return false;
+  if (note.pinned !== undefined && typeof note.pinned !== 'boolean') return false;
+  if (note.color !== undefined && !VALID_NOTE_COLORS.has(note.color)) return false;
+  return true;
 };
 
 // 校验 Page 对象

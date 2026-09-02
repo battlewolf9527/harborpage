@@ -1,8 +1,12 @@
-/* Favicon Settings Component */
+/* FaviconSettings.css - Aurora Dark Glass 统一版
+   Favicon 设置面板（SettingsWindow 内部的子面板 + 添加对话框）。 */
+
 .favicon-settings {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  font-family: inherit;
+  color: var(--text-primary);
 }
 
 .favicon-settings-header {
@@ -10,11 +14,21 @@
   justify-content: space-between;
   align-items: center;
 }
-
 .favicon-settings-title {
-  font-size: 15px;
+  font-size: var(--font-lg);
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-primary);
+  position: relative;
+  padding-left: 12px;
+}
+.favicon-settings-title::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 0.95em;
+  background: var(--aurora-gradient);
+  border-radius: 2px;
 }
 
 .favicon-settings-actions {
@@ -23,71 +37,61 @@
 }
 
 .favicon-settings-hint {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: var(--font-sm); /* 原 12px → sm token */
+  color: var(--text-tertiary);
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.6;
 }
-
 .favicon-settings-hint code {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 1px 5px;
-  border-radius: 3px;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.8);
+  background: var(--glass-surface-300);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: var(--font-xs); /* 原 11px → xs token 11-14px */
+  color: var(--text-secondary);
+  border: var(--glass-border-subtle);
 }
 
+/* 列表 */
 .favicon-sources-list {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
-
 .favicon-source-item {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  background: var(--glass-surface-500);
+  border: var(--glass-border-subtle);
+  border-radius: var(--radius-sm);
+  transition: all var(--motion-fast);
   cursor: grab;
+  box-shadow: var(--glass-inner-hl);
 }
-
 .favicon-source-item:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: var(--glass-surface-hover);
+  border-color: var(--glass-border-strong);
 }
-
-.favicon-source-item.dragging {
-  opacity: 0.5;
-  cursor: grabbing;
-}
-
-.favicon-source-item.disabled {
-  opacity: 0.5;
-}
+.favicon-source-item.dragging { opacity: 0.5; cursor: grabbing; }
+.favicon-source-item.disabled { opacity: 0.5; }
 
 .favicon-source-drag {
-  color: rgba(255, 255, 255, 0.3);
-  font-size: 14px;
+  color: var(--text-quaternary);
+  font-size: var(--font-md);
   cursor: grab;
   user-select: none;
   line-height: 1;
 }
-
-.favicon-source-item.dragging .favicon-source-drag {
-  cursor: grabbing;
-}
+.favicon-source-item.dragging .favicon-source-drag { cursor: grabbing; }
 
 .favicon-source-priority {
-  width: 22px;
-  height: 22px;
+  width: 22px; height: 22px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 11px;
+  background: var(--glass-surface-300);
+  border: var(--glass-border-subtle);
+  color: var(--text-secondary);
+  font-size: var(--font-sm); /* 原 11px → sm token 12-16px，序号大一圈好认 */
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -100,28 +104,26 @@
   min-width: 0;
   overflow: hidden;
 }
-
 .favicon-source-name {
-  font-size: 13px;
+  font-size: var(--font-md); /* 原 13px → md=14px，项名称是主体必须清晰 */
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 6px;
 }
-
 .favicon-builtin-badge {
-  font-size: 10px;
-  padding: 1px 6px;
+  font-size: var(--font-xs); /* 原 10px → xs=11-14px，最低可读不再 10px */
+  padding: 1px 7px;
   border-radius: 4px;
-  background: rgba(100, 100, 255, 0.15);
-  color: rgba(150, 150, 255, 0.9);
-  font-weight: 400;
+  background: color-mix(in srgb, var(--aurora-1) 16%, transparent);
+  color: color-mix(in srgb, var(--aurora-1) 95%, #fff);
+  font-weight: 500;
+  border: 1px solid color-mix(in srgb, var(--aurora-1) 25%, transparent);
 }
-
 .favicon-source-url {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.4);
+  font-size: var(--font-xs); /* 原 11px → xs token */
+  color: var(--text-quaternary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -136,240 +138,259 @@
 }
 
 .favicon-icon-btn {
-  width: 24px;
-  height: 24px;
+  width: 24px; height: 24px;
   padding: 0;
   border: none;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 12px;
+  border-radius: var(--radius-xs);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-tertiary);
+  font-size: var(--font-sm); /* 原 12px → sm token */
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all var(--motion-fast);
 }
-
 .favicon-icon-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
+  background: var(--glass-surface-300);
+  color: var(--text-primary);
 }
-
 .favicon-icon-btn:disabled {
   opacity: 0.25;
   cursor: not-allowed;
 }
-
 .favicon-icon-btn-delete:hover {
-  background: rgba(239, 68, 68, 0.2) !important;
-  color: #ef4444 !important;
+  background: color-mix(in srgb, var(--semantic-danger) 18%, transparent) !important;
+  color: #fff !important;
+  border-radius: var(--radius-xs) !important;
 }
 
+/* Toggle：全站统一版 */
 .favicon-toggle {
   position: relative;
   display: inline-block;
-  width: 36px;
-  height: 18px;
+  width: 38px;
+  height: 20px;
   flex-shrink: 0;
 }
-
 .favicon-toggle input {
-  opacity: 0;
-  width: 0;
-  height: 0;
+  opacity: 0; width: 0; height: 0;
 }
-
 .favicon-toggle-slider {
   position: absolute;
   cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.15);
-  transition: 0.3s;
-  border-radius: 18px;
+  inset: 0;
+  background: var(--glass-surface-300);
+  border: var(--glass-border);
+  transition: var(--motion-normal);
+  border-radius: 20px;
 }
-
 .favicon-toggle-slider:before {
   position: absolute;
   content: "";
-  height: 14px;
-  width: 14px;
-  left: 2px;
-  bottom: 2px;
-  background-color: rgba(255, 255, 255, 0.8);
-  transition: 0.3s;
+  height: 14px; width: 14px;
+  left: 2px; bottom: 2px;
+  background-color: rgba(255, 255, 255, 0.9);
+  transition: var(--motion-normal);
   border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
-
 .favicon-toggle input:checked + .favicon-toggle-slider {
-  background-color: rgba(59, 130, 246, 0.7);
+  background: var(--aurora-gradient);
+  border-color: transparent;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.05) inset,
+              0 2px 8px color-mix(in srgb, var(--aurora-2) 30%, transparent);
 }
-
 .favicon-toggle input:checked + .favicon-toggle-slider:before {
   transform: translateX(18px);
 }
 
-/* Buttons */
+/* 通用按钮 */
 .favicon-btn {
-  padding: 6px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 12px;
-  font-weight: 500;
+  padding: 0 var(--btn-pad-x);
+  min-height: var(--btn-h);
+  border: var(--glass-border);
+  border-radius: var(--btn-radius);
+  background: var(--glass-surface-300);
+  color: var(--text-secondary);
+  font-size: var(--font-md);
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--motion-fast);
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
-
 .favicon-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--glass-surface-hover);
+  border-color: var(--glass-border-strong);
+  color: var(--text-primary);
 }
-
 .favicon-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
-
 .favicon-btn-add {
-  background: rgba(6, 182, 212, 0.15);
-  border-color: rgba(6, 182, 212, 0.4);
-  color: #06b6d4;
+  background: color-mix(in srgb, var(--semantic-info) 18%, transparent);
+  border-color: color-mix(in srgb, var(--semantic-info) 40%, transparent);
+  color: color-mix(in srgb, var(--semantic-info) 95%, #fff);
 }
-
 .favicon-btn-add:hover {
-  background: rgba(6, 182, 212, 0.25) !important;
+  background: color-mix(in srgb, var(--semantic-info) 28%, transparent) !important;
 }
-
 .favicon-btn-reset {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255,255,255,0.03);
 }
-
 .favicon-btn-save {
-  background: rgba(59, 130, 246, 0.2);
-  border-color: rgba(59, 130, 246, 0.5);
-  color: #60a5fa;
+  background: color-mix(in srgb, var(--aurora-1) 20%, transparent);
+  border-color: color-mix(in srgb, var(--aurora-1) 50%, transparent);
+  color: var(--aurora-1);
 }
-
 .favicon-btn-save:hover:not(:disabled) {
-  background: rgba(59, 130, 246, 0.35) !important;
+  background: color-mix(in srgb, var(--aurora-1) 32%, transparent) !important;
+  color: color-mix(in srgb, var(--aurora-1) 100%, #fff);
 }
+.favicon-btn-cancel { background: rgba(255,255,255,0.03); }
 
-.favicon-btn-cancel {
-  background: rgba(255, 255, 255, 0.03);
-}
-
-/* Add Dialog */
+/* 添加对话框 */
 .favicon-add-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  inset: 0;
+  background: var(--overlay-bg);
+  backdrop-filter: var(--overlay-blur);
+  -webkit-backdrop-filter: var(--overlay-blur);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  animation: favicon-fade-in 0.2s ease;
+  animation: fadeIn var(--motion-normal);
 }
-
 .favicon-add-dialog {
-  background: rgba(30, 30, 30, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 24px;
-  width: 380px;
-  max-width: 90%;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  animation: favicon-dialog-in 0.25s ease;
+  background: var(--glass-surface-700);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  box-shadow: var(--shadow-glass-lg), var(--glass-inner-hl);
+  border-radius: var(--radius-lg);
+  padding: 0;
+  width: min(380px, 90%);
+  animation: glass-modal-scale var(--motion-spring);
+  color: var(--text-primary);
+  font-family: inherit;
+  position: relative;
+  overflow: hidden;
+}
+.favicon-add-dialog::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--aurora-gradient);
+  z-index: 2;
 }
 
 .favicon-add-dialog h4 {
-  margin: 0 0 16px 0;
-  font-size: 16px;
+  margin: 0;
+  padding: 24px 24px 0;
+  font-size: var(--font-lg);
   font-weight: 600;
-  color: white;
+  color: var(--text-primary);
+  position: relative;
+  padding-left: 38px;
+}
+.favicon-add-dialog h4::before {
+  content: '';
+  position: absolute;
+  left: 24px; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 0.95em;
+  background: var(--aurora-gradient);
+  border-radius: 2px;
 }
 
 .favicon-add-form {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  padding: 20px 24px 0;
 }
-
 .favicon-add-field {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-
 .favicon-add-field label {
-  font-size: 12px;
+  font-size: var(--font-md); /* 原 12px → md=14px，表单 label 要清晰看见不费力 */
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-secondary);
 }
-
-.favicon-required {
-  color: #ef4444;
-}
-
+.favicon-required { color: var(--semantic-danger); }
 .favicon-field-hint {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.4);
+  font-size: var(--font-xs); /* 原 11px → xs token 11-14px */
+  color: var(--text-quaternary);
+  line-height: 1.45;
 }
-
 .favicon-field-hint code {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--glass-surface-300);
   padding: 1px 5px;
   border-radius: 3px;
-  font-size: 10px;
+  font-size: var(--font-xs); /* 原 10px → xs token (最低 11)，绝对不允许 < 11px */
+  border: var(--glass-border-subtle);
+  color: var(--text-secondary);
 }
+.favicon-add-field input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--input-radius);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: var(--font-md);
+  outline: none;
+  transition: all var(--motion-fast);
+  font-family: inherit;
+  box-shadow: var(--glass-inner-hl);
+}
+.favicon-add-field input:focus {
+  border-color: var(--input-focus-border);
+  background: color-mix(in srgb, var(--input-bg) 80%, #fff);
+  box-shadow: var(--input-focus-ring), var(--glass-inner-hl);
+}
+.favicon-add-field input::placeholder { color: var(--text-quaternary); }
 
 .favicon-add-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 8px;
-  margin-top: 16px;
+  padding: 16px 24px 24px;
 }
+.favicon-add-actions .favicon-btn-cancel { margin-left: auto; } /* 取消最右 */
 
 .favicon-confirm-text {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.8);
-  line-height: 1.6;
+  font-size: var(--font-md); /* 原 13px → md=14px，确认框正文标准大小 */
+  color: var(--text-secondary);
+  line-height: 1.7;
   margin: 0 0 20px 0;
+  padding: 20px 24px 0;
 }
-
-.favicon-confirm-text strong {
-  color: rgba(255, 255, 255, 1);
-}
+.favicon-confirm-text strong { color: var(--text-primary); }
 
 .favicon-btn-delete-confirm {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: rgba(239, 68, 68, 0.5);
-  color: #ef4444;
+  background: color-mix(in srgb, var(--semantic-danger) 20%, transparent);
+  border-color: color-mix(in srgb, var(--semantic-danger) 50%, transparent);
+  color: #fff;
 }
-
 .favicon-btn-delete-confirm:hover {
-  background: rgba(239, 68, 68, 0.35) !important;
+  background: color-mix(in srgb, var(--semantic-danger) 35%, transparent) !important;
+  border-color: color-mix(in srgb, var(--semantic-danger) 65%, transparent) !important;
+  color: #fff !important;
 }
 
-@keyframes favicon-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
+@keyframes favicon-fade-in  { from { opacity: 0; } to { opacity: 1; } }
 @keyframes favicon-dialog-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(12px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }

@@ -1,236 +1,265 @@
+/* SearchManager.css - Aurora Dark Glass 统一版
+   该组件是 SettingsWindow 的"搜索引擎"子页面（没有独立 overlay）。
+   包含：列表 + 添加/编辑对话框 engine-dialog。 */
+
 .search-manager {
   padding: 20px;
-  color: white;
+  color: var(--text-primary);
+  font-family: inherit;
 }
 
 .search-manager h3 {
   margin-bottom: 20px;
-  font-size: 18px;
+  font-size: var(--font-xl);
   font-weight: 600;
+  color: var(--text-primary);
+  position: relative;
+  padding-left: 14px;
+}
+.search-manager h3::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 0.95em;
+  background: var(--aurora-gradient);
+  border-radius: 2px;
 }
 
-.add-engine {
-  margin-bottom: 30px;
-}
+.add-engine { margin-bottom: 30px; }
 
+/* 按钮：通用 glass 幽灵样式 */
 .action-button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  font-size: 14px;
+  padding: 0 var(--btn-pad-x);
+  min-height: var(--btn-h);
+  border: var(--glass-border);
+  border-radius: var(--btn-radius);
+  background: var(--glass-surface-300);
+  color: var(--text-primary);
+  font-size: var(--font-md);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--motion-fast);
   margin-bottom: 0;
+  font-family: inherit;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
-
 .action-button:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--glass-surface-hover);
+  border-color: var(--glass-border-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-glass-sm);
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   引擎添加 / 编辑对话框
+   ═══════════════════════════════════════════════════════════════ */
 .engine-dialog-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  inset: 0;
+  background: var(--overlay-bg);
+  backdrop-filter: var(--overlay-blur);
+  -webkit-backdrop-filter: var(--overlay-blur);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  animation: engine-fadeIn 0.2s ease;
-}
-
-@keyframes engine-fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  animation: fadeIn var(--motion-normal);
 }
 
 .engine-dialog {
-  background: rgba(30, 30, 40, 0.98);
-  border-radius: 12px;
-  padding: 28px;
-  width: 420px;
-  max-width: 90%;
+  background: var(--glass-surface-700);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  box-shadow: var(--shadow-glass-lg), var(--glass-inner-hl);
+  border-radius: var(--radius-lg);
+  padding: 0;
+  width: min(420px, 90%);
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  animation: engine-slideIn 0.25s ease;
+  overflow-x: hidden;
+  animation: glass-modal-scale var(--motion-spring);
+  color: var(--text-primary);
+  font-family: inherit;
+  position: relative;
+}
+.engine-dialog::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--aurora-gradient);
+  z-index: 2;
 }
 
-@keyframes engine-slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.engine-dialog h4 {
-  margin: 0 0 20px 0;
-  font-size: 17px;
+.engine-dialog > h4 {
+  margin: 0;
+  padding: 24px 28px 0;
+  font-size: var(--font-lg);
   font-weight: 600;
-  color: white;
+  color: var(--text-primary);
+  position: relative;
+  padding-left: 42px; /* 14px(h3 padding-left) + 28px(内容 padding) */
+}
+.engine-dialog > h4::before {
+  content: '';
+  position: absolute;
+  left: 28px; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 0.95em;
+  background: var(--aurora-gradient);
+  border-radius: 2px;
 }
 
 .engine-dialog-form {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding: 20px 28px 0;
 }
-
 .engine-dialog-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
-
 .engine-dialog-field label {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.75);
+  font-size: var(--font-md);
+  color: var(--text-secondary);
   font-weight: 500;
 }
-
 .engine-dialog-field input {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  color: white;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.15s ease;
   box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--input-radius);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: var(--font-md);
+  outline: none;
+  transition: all var(--motion-fast);
+  font-family: inherit;
+  box-shadow: var(--glass-inner-hl);
 }
-
 .engine-dialog-field input:focus {
-  border-color: rgba(102, 126, 234, 0.6);
-  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--input-focus-border);
+  background: color-mix(in srgb, var(--input-bg) 80%, #fff);
+  box-shadow: var(--input-focus-ring), var(--glass-inner-hl);
 }
-
 .engine-dialog-field input::placeholder {
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-quaternary);
 }
-
 .engine-field-hint {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.4);
+  font-size: var(--font-xs);
+  color: var(--text-quaternary);
 }
-
 .engine-required {
-  color: #ef4444;
-  font-size: 13px;
+  color: var(--semantic-danger);
+  font-size: var(--font-md);
 }
 
+/* 对话框底部按钮：功能左/取消最右 */
 .engine-dialog-actions {
   display: flex;
   gap: 10px;
-  justify-content: flex-end;
-  margin-top: 24px;
+  justify-content: flex-start;
+  align-items: center;
+  margin: 20px 28px 28px;
 }
+.engine-dialog-actions .engine-btn-cancel { margin-left: auto; } /* 取消最右 */
 
 .engine-btn {
-  padding: 8px 18px;
+  padding: 0 var(--btn-pad-x);
+  min-height: var(--btn-h);
   border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
+  border-radius: var(--btn-radius);
+  font-size: var(--font-md);
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--motion-fast);
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
-
 .engine-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
 }
-
 .engine-btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--aurora-gradient);
+  color: var(--text-on-accent);
+  box-shadow: var(--aurora-glow);
 }
-
 .engine-btn-primary:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  transform: translateY(-1.2px);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--aurora-2) 42%, transparent);
 }
-
 .engine-btn-cancel {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.7);
+  background: var(--glass-surface-300);
+  color: var(--text-secondary);
+  border: var(--glass-border);
 }
-
 .engine-btn-cancel:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: white;
+  background: var(--glass-surface-hover);
+  color: var(--text-primary);
+  border-color: var(--glass-border-strong);
 }
 
-.engine-list {
-  margin-top: 30px;
-}
-
+/* 引擎列表 */
+.engine-list { margin-top: 30px; }
 .engine-list h4 {
   margin-bottom: 15px;
-  font-size: 16px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.8);
+  font-size: var(--font-lg);
+  font-weight: 600;
+  color: var(--text-secondary);
 }
-
 .engine-items {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-
 .engine-item {
   display: flex;
   align-items: center;
   padding: 10px 12px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  transition: all 0.15s ease;
+  border-radius: var(--radius-sm);
+  background: var(--glass-surface-500);
+  border: var(--glass-border-subtle);
+  transition: all var(--motion-fast);
   gap: 12px;
+  box-shadow: var(--glass-inner-hl);
 }
-
 .engine-item:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: var(--glass-surface-hover);
+  border-color: var(--glass-border-strong);
+  transform: translateY(-0.5px);
 }
-
-.engine-item.dragging {
-  opacity: 0.4;
-}
+.engine-item.dragging { opacity: 0.4; }
 
 .engine-drag-handle {
-  width: 20px;
-  height: 24px;
+  width: 20px; height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.2);
-  font-size: 12px;
+  color: var(--text-quaternary);
+  font-size: var(--font-sm);
   cursor: grab;
   flex-shrink: 0;
   user-select: none;
   border-radius: 4px;
-  transition: color 0.15s ease;
+  transition: color var(--motion-fast), background var(--motion-fast);
 }
-
 .engine-drag-handle:hover {
-  color: rgba(255, 255, 255, 0.45);
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  background: var(--glass-surface-300);
 }
-
-.engine-drag-handle:active {
-  cursor: grabbing;
-}
+.engine-drag-handle:active { cursor: grabbing; }
 
 .engine-info {
   display: flex;
@@ -239,39 +268,37 @@
   flex: 1;
   min-width: 0;
 }
-
 .engine-favicon {
-  width: 18px;
-  height: 18px;
+  width: 18px; height: 18px;
   border-radius: 3px;
   object-fit: contain;
   object-position: center center;
   display: block;
   flex-shrink: 0;
 }
-
 .engine-icon {
-  font-size: 18px;
+  font-size: var(--font-lg);
   line-height: 1;
 }
-
 .engine-name {
   font-weight: 500;
-  font-size: 14px;
+  font-size: var(--font-md);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--text-primary);
 }
 
 .default-badge {
-  font-size: 10px;
-  padding: 2px 7px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  font-size: var(--font-xs);  /* 原 10px → xs (≥11) 绝对禁止 <11px */
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: var(--aurora-gradient);
+  color: var(--text-on-accent);
   font-weight: 500;
   flex-shrink: 0;
   white-space: nowrap;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--aurora-2) 35%, transparent);
 }
 
 .engine-actions {
@@ -280,46 +307,38 @@
   gap: 2px;
   flex-shrink: 0;
 }
-
 .engine-action-btn {
-  width: 28px;
-  height: 28px;
+  width: 28px; height: 28px;
   padding: 0;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   background: transparent;
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 13px;
+  color: var(--text-quaternary);
+  font-size: var(--font-sm);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s ease;
+  transition: all var(--motion-fast);
 }
-
 .engine-action-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.85);
+  background: var(--glass-surface-300);
+  color: var(--text-secondary);
 }
-
 .engine-action-btn:disabled {
   opacity: 0.2;
   cursor: not-allowed;
 }
-
-.engine-action-default {
-  font-size: 12px;
-}
-
+.engine-action-default { font-size: var(--font-xs); }
 .engine-action-default.active {
-  color: rgba(150, 160, 255, 0.9);
+  color: color-mix(in srgb, var(--aurora-1) 95%, #fff);
+  background: color-mix(in srgb, var(--aurora-1) 16%, transparent);
 }
-
 .engine-action-edit:hover:not(:disabled) {
-  color: rgba(160, 170, 255, 1);
+  color: color-mix(in srgb, var(--aurora-1) 95%, #fff);
+  background: color-mix(in srgb, var(--aurora-1) 14%, transparent);
 }
-
 .engine-action-delete:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.15);
-  color: rgba(255, 130, 130, 1);
+  background: color-mix(in srgb, var(--semantic-danger) 18%, transparent);
+  color: #fff;
 }

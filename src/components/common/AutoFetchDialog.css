@@ -1,234 +1,255 @@
+/* AutoFetchDialog.css - Aurora Dark Glass 统一版
+   （AutoFetch 的 z-index = 9999，是最高层临时模态之一） */
+
 .auto-fetch-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  inset: 0;
+  background: var(--overlay-bg);
+  backdrop-filter: var(--overlay-blur);
+  -webkit-backdrop-filter: var(--overlay-blur);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  backdrop-filter: blur(4px);
+  animation: fadeIn var(--motion-normal);
 }
 
 .auto-fetch-dialog {
-  background: #1a1a2e;
-  border-radius: 16px;
-  width: 560px;
+  background: var(--glass-surface-700);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  box-shadow: var(--shadow-glass-lg), var(--glass-inner-hl);
+  border-radius: var(--radius-lg);
+  width: min(560px, 92vw);
   max-height: 80vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
   overflow: hidden;
-  animation: autoFetchSlideIn 0.25s ease;
+  animation: glass-modal-scale var(--motion-spring);
+  position: relative;
+  color: var(--text-primary);
+  font-family: inherit;
 }
 
-@keyframes autoFetchSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+/* Aurora 3px 顶条 */
+.auto-fetch-dialog::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--aurora-gradient);
+  z-index: 2;
 }
 
+/* ── Header ── */
 .auto-fetch-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: var(--glass-border-subtle);
 }
-
 .auto-fetch-header h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: var(--font-lg); /* 原 18px → 16-22px 统一 token */
   font-weight: 600;
-  color: white;
+  color: var(--text-primary);
+  position: relative;
+  padding-left: 14px;
+}
+.auto-fetch-header h3::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 0.95em;
+  background: var(--aurora-gradient);
+  border-radius: 2px;
 }
 
+/* ── 关闭按钮：全站统一 32×32 / 10px / hover 红 ── */
 .auto-fetch-close {
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 18px;
+  background: var(--glass-surface-300);
+  border: var(--glass-border-subtle);
+  color: var(--text-secondary);
+  font-size: var(--font-lg); /* 原 18px → lg token */
   cursor: pointer;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: var(--btn-close-size);
+  height: var(--btn-close-size);
+  border-radius: var(--btn-close-radius);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all var(--motion-fast);
+  font-family: inherit;
+  line-height: 1;
 }
-
 .auto-fetch-close:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: color-mix(in srgb, var(--semantic-danger) 22%, transparent);
+  border-color: color-mix(in srgb, var(--semantic-danger) 50%, transparent);
+  color: #fff;
 }
 
+/* ── Content ── */
 .auto-fetch-content {
   flex: 1;
   overflow-y: auto;
   padding: 20px 24px;
 }
+.auto-fetch-content::-webkit-scrollbar { width: 6px; }
+.auto-fetch-content::-webkit-scrollbar-track { background: transparent; }
+.auto-fetch-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 3px;
+}
+.auto-fetch-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
 
 .auto-fetch-info {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
+  background: var(--glass-surface-500);
+  border: var(--glass-border-subtle);
+  border-radius: var(--radius-sm);
   padding: 10px 14px;
   margin-bottom: 16px;
-  font-size: 13px;
+  font-size: var(--font-md); /* 原 13px → 正文至少 md=14px */
+  line-height: 1.55;
+  box-shadow: var(--glass-inner-hl);
 }
+.auto-fetch-info-label { color: var(--text-tertiary); margin-right: 6px; }
+.auto-fetch-info-url   { color: var(--text-primary); word-break: break-all; }
 
-.auto-fetch-info-label {
-  color: rgba(255, 255, 255, 0.5);
-  margin-right: 6px;
-}
-
-.auto-fetch-info-url {
-  color: rgba(255, 255, 255, 0.9);
-  word-break: break-all;
-}
-
-/* Loading state */
+/* Loading */
 .auto-fetch-loading {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-secondary);
 }
-
 .auto-fetch-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(255, 255, 255, 0.2);
-  border-top-color: #667eea;
+  width: 40px; height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: var(--aurora-2);
   border-radius: 50%;
-  animation: autoFetchSpin 0.8s linear infinite;
+  animation: spin 0.8s linear infinite;
   margin-bottom: 16px;
 }
-
-@keyframes autoFetchSpin {
-  to { transform: rotate(360deg); }
-}
-
 .auto-fetch-loading-hint {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: var(--font-sm); /* 原 12px → sm token 12-16px，比写死有弹性 */
+  color: var(--text-quaternary);
   margin-top: 8px;
 }
 
-/* Progress bar */
+/* Progress */
 .auto-fetch-progress {
   width: 100%;
   max-width: 320px;
   margin-top: 16px;
 }
-
 .auto-fetch-progress-bar {
   width: 100%;
   height: 6px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 3px;
   overflow: hidden;
 }
-
 .auto-fetch-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #667eea, #764ba2);
+  background: var(--aurora-gradient);
   border-radius: 3px;
-  transition: width 0.3s ease;
+  transition: width var(--motion-normal);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--aurora-2) 50%, transparent);
 }
-
 .auto-fetch-progress-text {
   margin-top: 8px;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: var(--font-sm); /* 原 12px → sm token */
+  color: var(--text-secondary);
   text-align: center;
 }
-
 .auto-fetch-progress-percent {
-  color: #667eea;
+  color: var(--aurora-1);
   font-weight: 600;
+  background: var(--aurora-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-/* Error state */
+/* Error */
 .auto-fetch-error {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-secondary);
   text-align: center;
 }
-
-.auto-fetch-error-icon {
-  font-size: 40px;
-  margin-bottom: 12px;
-}
-
+.auto-fetch-error-icon { font-size: 40px; margin-bottom: 12px; }
 .auto-fetch-error p {
   margin: 0 0 16px;
-  font-size: 14px;
-  color: rgba(255, 200, 200, 0.9);
+  font-size: var(--font-md); /* 原 14px → md token */
+  color: color-mix(in srgb, var(--semantic-danger) 90%, #fff);
+  line-height: 1.55;
 }
-
+/* retry 按钮：小、居中（用户偏好） */
 .auto-fetch-retry {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--aurora-gradient);
   color: white;
   border: none;
-  padding: 8px 20px;
-  border-radius: 8px;
-  font-size: 13px;
+  padding: 0 18px; /* 垂直由 min-height 居中 */
+  border-radius: var(--btn-radius);
+  font-size: var(--font-md); /* 原 13px → md=14px，按钮最低可读标准 */
+  font-weight: 500;
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: all var(--motion-fast);
+  font-family: inherit;
+  box-shadow: var(--aurora-glow);
+  min-height: var(--btn-h); /* 统一 38px 高 */
+  height: unset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
-
 .auto-fetch-retry:hover {
   transform: translateY(-1px);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--aurora-2) 48%, transparent);
 }
 
-/* Empty state */
+/* Empty */
 .auto-fetch-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-secondary);
   text-align: center;
 }
-
-.auto-fetch-empty-icon {
-  font-size: 40px;
-  margin-bottom: 12px;
-}
-
-.auto-fetch-empty p {
-  margin: 4px 0;
-}
-
+.auto-fetch-empty-icon { font-size: 40px; margin-bottom: 12px; }
+.auto-fetch-empty p { margin: 4px 0; }
 .auto-fetch-empty-hint {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: var(--font-sm); /* 原 12px → sm token 12-16px */
+  color: var(--text-quaternary);
+  line-height: 1.5;
 }
 
-/* Results grid */
+/* Results */
 .auto-fetch-results-info {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: var(--font-md); /* 原 13px → md=14px，结果计数信息属于正文应≥14 */
+  color: var(--text-secondary);
   margin-bottom: 12px;
+  line-height: 1.4;
 }
-
 .auto-fetch-results-info strong {
-  color: #667eea;
+  background: var(--aurora-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .auto-fetch-grid {
@@ -236,177 +257,161 @@
   grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   gap: 12px;
 }
-
 .auto-fetch-item {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--glass-surface-500);
   border: 2px solid transparent;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   padding: 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--motion-fast);
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-shadow: var(--glass-inner-hl);
 }
-
 .auto-fetch-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--glass-surface-hover);
+  border-color: var(--glass-border-strong);
+  transform: translateY(-1px);
 }
-
 .auto-fetch-item.selected {
-  background: rgba(102, 126, 234, 0.15);
-  border-color: #667eea;
+  background: color-mix(in srgb, var(--aurora-1) 16%, transparent);
+  border-color: var(--aurora-1);
+  box-shadow: 0 0 0 1px var(--aurora-1) inset,
+              0 8px 22px color-mix(in srgb, var(--aurora-1) 26%, transparent);
 }
-
 .auto-fetch-item-img {
-  width: 48px;
-  height: 48px;
+  width: 48px; height: 48px;
   object-fit: contain;
   margin-bottom: 8px;
   display: block;
 }
-
 .auto-fetch-item-meta {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
 }
-
 .auto-fetch-item-source {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: var(--font-sm); /* 原 11px → sm=12-16px，图标来源可读 */
+  color: var(--text-secondary);
+  font-weight: 500;
 }
-
 .auto-fetch-item-size {
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.4);
+  font-size: var(--font-xs); /* 原 10px → xs=11-14px，最低标准不再 10px 看不清 */
+  color: var(--text-quaternary);
 }
-
 .auto-fetch-selected-badge {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 20px;
-  height: 20px;
-  background: #667eea;
+  top: 6px; right: 6px;
+  width: 20px; height: 20px;
+  background: var(--aurora-gradient);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 12px;
-  font-weight: bold;
+  font-size: var(--font-sm); /* 原 12px → sm token */
+  font-weight: 700;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--aurora-2) 50%, transparent);
 }
 
 /* Footer */
 .auto-fetch-footer {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-end; /* 取消按钮在最右；功能按钮在左 → 用 margin-right:auto 分开 */
   gap: 10px;
   padding: 16px 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.2);
+  border-top: var(--glass-border-subtle);
+  background: rgba(0, 0, 0, 0.18);
 }
+.auto-fetch-footer .auto-fetch-btn-secondary { margin-left: auto; } /* 取消推到最右 */
 
 .auto-fetch-btn {
-  padding: 10px 20px;
+  padding: 0 var(--btn-pad-x); /* 垂直由 btn-h 38px 控制 */
   border: none;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 500;
+  border-radius: var(--btn-radius);
+  font-size: var(--font-md); /* 原 14px → md token 统一按钮字号 */
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--motion-fast);
+  font-family: inherit;
+  min-height: var(--btn-h);
+  height: var(--btn-h);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1;
 }
-
 .auto-fetch-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
   transform: none !important;
+  box-shadow: none !important;
+  background: var(--glass-surface-300) !important;
+  color: var(--text-quaternary) !important;
+  border-color: var(--glass-border-subtle) !important;
 }
-
 .auto-fetch-btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--aurora-gradient);
+  color: var(--text-on-accent);
+  box-shadow: var(--aurora-glow);
 }
-
 .auto-fetch-btn-primary:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  transform: translateY(-1.5px);
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--aurora-2) 46%, transparent);
 }
-
 .auto-fetch-btn-secondary {
-  background: rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--glass-surface-300);
+  color: var(--text-secondary);
+  border: var(--glass-border);
 }
-
 .auto-fetch-btn-secondary:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--glass-surface-hover);
+  color: var(--text-primary);
+  border-color: var(--glass-border-strong);
 }
 
-/* Scrollbar */
-.auto-fetch-content::-webkit-scrollbar {
-  width: 6px;
-}
-
-.auto-fetch-content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.auto-fetch-content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
-}
-
-.auto-fetch-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-/* 调试信息 */
+/* Debug */
 .auto-fetch-debug {
   margin-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: var(--glass-border-subtle);
   padding-top: 12px;
 }
-
 .auto-fetch-debug-toggle {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.6);
+  border: var(--glass-border);
+  color: var(--text-tertiary);
   padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-sm); /* 原 12px → sm token */
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--motion-fast);
+  font-family: inherit;
+  min-height: 30px;
 }
-
 .auto-fetch-debug-toggle:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
+  background: var(--glass-surface-300);
+  color: var(--text-primary);
 }
-
 .auto-fetch-debug-content {
   margin-top: 10px;
-  background: rgba(0, 0, 0, 0.4);
-  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.38);
+  border-radius: var(--radius-sm);
   padding: 10px 12px;
   max-height: 200px;
   overflow-y: auto;
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  font-size: 11px;
-  line-height: 1.5;
+  font-size: var(--font-xs); /* 原 11px → xs token 11-14px */
+  line-height: 1.55;
+  border: var(--glass-border-subtle);
 }
-
 .auto-fetch-debug-line {
-  color: rgba(200, 255, 200, 0.8);
+  color: color-mix(in srgb, var(--semantic-ok) 80%, #fff);
   word-break: break-all;
   border-bottom: 1px solid rgba(255, 255, 255, 0.03);
   padding: 1px 0;
 }
-
-.auto-fetch-debug-line:last-child {
-  border-bottom: none;
-}
+.auto-fetch-debug-line:last-child { border-bottom: none; }

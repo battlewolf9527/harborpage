@@ -305,12 +305,22 @@ const ImportExport: React.FC = () => {
 
   return (
     <>
-      <button className="import-export-btn" onClick={handleExportClick}>
-        导出数据
-      </button>
-      <button className="import-export-btn" onClick={handleImportClick}>
-        导入数据
-      </button>
+      <div className="ie-triggers">
+        <button
+          className="ie-trigger-btn ie-trigger-btn--primary"
+          onClick={handleExportClick}
+        >
+          <span className="ie-trigger-icon">⇪</span>
+          <span>导出数据</span>
+        </button>
+        <button
+          className="ie-trigger-btn ie-trigger-btn--secondary"
+          onClick={handleImportClick}
+        >
+          <span className="ie-trigger-icon">⇩</span>
+          <span>导入数据</span>
+        </button>
+      </div>
 
       <input
         ref={fileInputRef}

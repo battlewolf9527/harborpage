@@ -316,7 +316,7 @@
   }
 
   .city {
-    font-size: 10px;
+    font-size: var(--font-xs);
   }
 
   .time {

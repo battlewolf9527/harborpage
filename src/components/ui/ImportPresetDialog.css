@@ -1,289 +1,389 @@
-/* ImportPresetDialog.css */
+/* ImportPresetDialog.css - Aurora Dark Glass 统一版
+   包含：外层导入对话框 + 全屏进度卡片 + 重复确认子对话框 */
 
+/* ═══════════════════════════════════════════════════════════════
+   1. 外层对话框
+   ═══════════════════════════════════════════════════════════════ */
 .import-dialog-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
+  inset: 0;
+  background: var(--overlay-bg);
+  backdrop-filter: var(--overlay-blur);
+  -webkit-backdrop-filter: var(--overlay-blur);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  animation: fadeIn 0.2s ease;
+  animation: fadeIn var(--motion-normal);
 }
 
 .import-dialog {
-  width: 90%;
-  max-width: 600px;
+  width: min(600px, 92vw);
   max-height: 80vh;
-  background: rgba(30, 30, 30, 0.95);
-  border-radius: 16px;
-  backdrop-filter: blur(20px);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--glass-surface-700);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  box-shadow: var(--shadow-glass-lg), var(--glass-inner-hl);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  animation: glass-modal-scale var(--motion-spring);
+  position: relative;
+  color: var(--text-primary);
+  font-family: inherit;
+}
+.import-dialog::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--aurora-gradient);
+  z-index: 2;
 }
 
+/* Header */
 .import-dialog-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: var(--glass-border-subtle);
 }
-
 .import-dialog-header h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: var(--font-xl);
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--text-primary);
+  padding-left: 14px;
+  position: relative;
+}
+.import-dialog-header h2::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 0.95em;
+  background: var(--aurora-gradient);
+  border-radius: 2px;
 }
 
+/* 关闭按钮：统一 32×32 / 10px / hover 红 */
 .close-btn {
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 20px;
+  width: var(--btn-close-size);
+  height: var(--btn-close-size);
+  border: var(--glass-border-subtle);
+  border-radius: var(--btn-close-radius);
+  background: var(--glass-surface-300);
+  color: var(--text-secondary);
+  font-size: var(--font-lg);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--motion-fast);
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: inherit;
+  line-height: 1;
 }
-
 .close-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 1);
+  background: color-mix(in srgb, var(--semantic-danger) 22%, transparent);
+  border-color: color-mix(in srgb, var(--semantic-danger) 50%, transparent);
+  color: #fff;
 }
 
+/* Body */
 .import-dialog-body {
   flex: 1;
   overflow-y: auto;
   padding: 20px 24px;
 }
+.import-dialog-body::-webkit-scrollbar { width: 6px; }
+.import-dialog-body::-webkit-scrollbar-track { background: transparent; }
+.import-dialog-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 3px;
+}
 
+/* Select all row */
 .select-all-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: var(--glass-border-subtle);
 }
-
 .select-all-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 8px;
-  background: rgba(6, 182, 212, 0.2);
-  color: rgba(6, 182, 212, 0.9);
-  font-size: 14px;
-  font-weight: 500;
+  padding: 0 16px;
+  border: var(--glass-border);
+  border-radius: var(--btn-radius);
+  background: var(--aurora-gradient-soft);
+  color: var(--text-primary);
+  font-size: var(--font-md);
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--motion-fast);
+  font-family: inherit;
+  min-height: var(--btn-h);
+  display: inline-flex;
+  align-items: center;
 }
-
 .select-all-btn:hover {
-  background: rgba(6, 182, 212, 0.3);
-  color: rgba(6, 182, 212, 1);
+  background: color-mix(in srgb, var(--aurora-gradient-soft) 80%, var(--aurora-gradient) 20%);
+  transform: translateY(-0.5px);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--aurora-2) 20%, transparent);
 }
-
 .selected-count {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: var(--font-md); /* 原 13px → md=14px，结果计数清晰可读 */
+  color: var(--text-tertiary);
 }
 
+/* Tree */
 .tree-container {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
-
 .tree-item {
   display: flex;
   flex-direction: column;
 }
-
 .tree-row {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--motion-fast);
 }
-
 .tree-row:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--glass-surface-hover);
 }
+.tree-row.folder { font-weight: 500; }
 
-.tree-row.folder {
-  font-weight: 500;
-}
-
-.checkbox-wrapper {
-  flex-shrink: 0;
-}
-
+.checkbox-wrapper { flex-shrink: 0; }
 .checkbox {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  border-radius: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all var(--motion-fast);
+  background: var(--glass-surface-300);
 }
-
 .checkbox.checked {
-  background: rgba(6, 182, 212, 0.9);
-  border-color: rgba(6, 182, 212, 0.9);
+  background: var(--aurora-gradient);
+  border-color: transparent;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--aurora-2) 40%, transparent);
 }
-
 .checkbox.partial {
-  background: rgba(6, 182, 212, 0.4);
-  border-color: rgba(6, 182, 212, 0.6);
+  background: color-mix(in srgb, var(--aurora-2) 40%, transparent);
+  border-color: color-mix(in srgb, var(--aurora-2) 60%, #fff);
 }
-
 .checkmark {
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: white;
-  font-weight: 600;
+  font-weight: 700;
+  line-height: 1;
 }
 
-.item-icon {
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
+.item-icon { font-size: var(--font-md); flex-shrink: 0; }
 .item-name {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: var(--font-md);
+  color: var(--text-primary);
 }
-
 .tree-children {
   display: flex;
   flex-direction: column;
+  padding-left: 24px;
+  margin-left: 8px;
+  border-left: 1px solid var(--glass-border-subtle);
 }
 
+/* Footer */
 .import-dialog-footer {
-  padding: 16px 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 16px 24px 20px;
+  border-top: var(--glass-border-subtle);
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
+.footer-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: var(--font-md);
+}
+.checkbox-label input[type="checkbox"] {
+  width: 18px; height: 18px;
+  accent-color: var(--aurora-2);
+  cursor: pointer;
+}
+.label-text {
+  font-size: var(--font-md);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
 
-/* 全屏进度遮罩 */
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-start; /* 功能按钮左 */
+  align-items: center;
+}
+.action-buttons .cancel-btn { margin-left: auto; } /* 取消最右 */
+
+.import-btn {
+  padding: 0 24px;
+  border: none;
+  border-radius: var(--btn-radius);
+  background: var(--aurora-gradient);
+  color: var(--text-on-accent);
+  font-size: var(--font-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--motion-fast);
+  font-family: inherit;
+  min-height: var(--btn-h);
+  display: inline-flex;
+  align-items: center;
+  box-shadow: var(--aurora-glow);
+}
+.import-btn:hover:not(:disabled) {
+  transform: translateY(-1.5px);
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--aurora-2) 48%, transparent);
+}
+.import-btn:disabled {
+  background: var(--glass-surface-300);
+  box-shadow: none;
+  color: var(--text-quaternary);
+  cursor: not-allowed;
+}
+
+.action-buttons .cancel-btn {
+  /* 重写为取消按钮样式（幽灵玻璃） */
+  width: auto;
+  min-height: var(--btn-h);
+  font-size: var(--font-md);
+  padding: 0 20px;
+  background: var(--glass-surface-300);
+  color: var(--text-secondary);
+  border: var(--glass-border);
+  border-radius: var(--btn-radius);
+  line-height: var(--btn-h);
+}
+.action-buttons .cancel-btn:hover {
+  background: var(--glass-surface-hover);
+  color: var(--text-primary);
+  border-color: var(--glass-border-strong);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   2. 全屏进度卡片（唯一 z-index: 2000）
+   ═══════════════════════════════════════════════════════════════ */
 .fullscreen-progress-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(8px);
+  inset: 0;
+  background: rgba(3, 5, 14, 0.86);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  animation: fadeIn 0.2s ease;
+  animation: fadeIn var(--motion-normal);
 }
-
-/* 主容器 - 玻璃卡片 */
 .progress-container {
-  background: linear-gradient(145deg, rgba(30, 30, 40, 0.9), rgba(20, 20, 30, 0.95));
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 24px;
+  background: var(--glass-surface-700);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: 26px;
   padding: 48px 56px;
-  min-width: 420px;
-  max-width: 480px;
-  box-shadow: 
-      0 25px 50px -12px rgba(0, 0, 0, 0.5),
-      0 0 0 1px rgba(255, 255, 255, 0.05) inset,
-      0 1px 0 rgba(255, 255, 255, 0.1) inset;
+  min-width: min(420px, 86vw);
+  max-width: min(480px, 90vw);
+  box-sizing: border-box;
+  box-shadow: var(--shadow-glass-lg), var(--glass-inner-strong-hl);
   text-align: center;
-  animation: slideUp 0.4s ease-out;
+  animation: glass-modal-scale var(--motion-spring);
+  color: var(--text-primary);
+  font-family: inherit;
+  position: relative;
+}
+/* 卡片顶条 */
+.progress-container::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 15%; right: 15%;
+  height: 3px;
+  background: var(--aurora-gradient);
+  border-radius: 0 0 2px 2px;
 }
 
-/* 动态图标 */
 .progress-icon {
-  width: 72px;
-  height: 72px;
+  width: 72px; height: 72px;
   margin: 0 auto 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--aurora-gradient);
   border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
+  font-size: var(--font-2xl);
   position: relative;
-  box-shadow: 
-      0 10px 30px -5px rgba(102, 126, 234, 0.4),
-      0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-  animation: iconPulse 2s ease-in-out infinite;
+  box-shadow: var(--aurora-glow), var(--glass-inner-hl);
+  animation: iconPulse 2.2s ease-in-out infinite;
 }
-
 .progress-icon::before {
   content: '';
   position: absolute;
-  inset: -2px;
-  border-radius: 22px;
-  background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+  inset: -3px;
+  border-radius: 23px;
+  background: var(--aurora-gradient);
   z-index: -1;
-  opacity: 0.5;
-  filter: blur(8px);
-  animation: glowPulse 2s ease-in-out infinite;
+  opacity: 0.45;
+  filter: blur(10px);
+  animation: glowPulse 2.2s ease-in-out infinite;
 }
-
 @keyframes iconPulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  50%      { transform: scale(1.04); }
 }
-
 @keyframes glowPulse {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.1); }
+  0%, 100% { opacity: 0.4;  transform: scale(1);    }
+  50%      { opacity: 0.75; transform: scale(1.08); }
 }
 
-/* 标题 */
 .progress-title {
-  margin: 0;
-  font-size: 24px;
+  margin: 0 0 12px;
+  font-size: var(--font-2xl);
   font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 12px;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
 }
-
-/* 当前导入项 - 渐变色文字 */
 .progress-message {
-  margin: 0;
-  font-size: 15px;
-  color: #a0a0b0;
-  margin-bottom: 32px;
+  margin: 0 0 32px;
+  font-size: var(--font-md);
+  color: var(--text-tertiary);
   font-weight: 500;
 }
-
 .progress-message strong {
-  background: linear-gradient(90deg, #667eea, #f093fb);
+  background: var(--aurora-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   font-weight: 600;
 }
 
-/* 导入进度条容器 */
 .import-progress-bar-container {
   display: flex;
   align-items: center;
@@ -291,8 +391,6 @@
   margin-bottom: 20px;
   width: 100%;
 }
-
-/* 导入进度条轨道 */
 .import-progress-bar-large {
   flex: 1;
   height: 8px;
@@ -302,223 +400,137 @@
   position: relative;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
 }
-
-/* 导入进度条填充 - 渐变 + 光泽动画 */
 .import-progress-fill-large {
   height: 100%;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  background: var(--aurora-gradient);
   border-radius: 100px;
   position: relative;
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--aurora-2) 50%, transparent);
 }
-
-/* 光泽扫过效果 */
 .import-progress-fill-large::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.3),
-    transparent
-  );
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
   animation: shimmerProgress 2s infinite;
 }
-
 @keyframes shimmerProgress {
-  0% { left: -100%; }
-  100% { left: 100%; }
+  0%   { left: -100%; }
+  100% { left: 100%;  }
 }
-
-/* 导入百分比文字 */
 .import-progress-percentage {
-  font-size: 18px;
+  font-size: var(--font-lg);
   font-weight: 700;
-  color: #667eea;
   min-width: 48px;
   text-align: right;
   font-variant-numeric: tabular-nums;
-  text-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+  background: var(--aurora-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
 }
 
-/* 底部提示 */
 .progress-hint {
   margin: 0;
-  font-size: 13px;
-  color: #606070;
+  font-size: var(--font-md); /* 原 13px → md=14px，进度提示不压抑 */
+  color: var(--text-quaternary);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
 }
-
 .progress-hint::before {
   content: '•';
-  color: #667eea;
-  font-size: 20px;
+  color: var(--aurora-2);
+  font-size: var(--font-xl);
   line-height: 0;
   animation: blinkProgress 2s infinite;
 }
-
 @keyframes blinkProgress {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  0%, 100% { opacity: 1;   }
+  50%      { opacity: 0.3; }
 }
 
-.footer-options {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-}
-
-.checkbox-label input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  accent-color: rgba(6, 182, 212, 0.9);
-}
-
-.label-text {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
-  white-space: nowrap;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-}
-
-.cancel-btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.cancel-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.import-btn {
-  padding: 10px 24px;
-  border: none;
-  border-radius: 8px;
-  background: rgba(6, 182, 212, 0.9);
-  color: white;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.import-btn:hover:not(:disabled) {
-  background: rgba(6, 182, 212, 1);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
-}
-
-.import-btn:disabled {
-  background: rgba(255, 255, 255, 0.2);
-  cursor: not-allowed;
-}
-
-/* 重复确认对话框样式 */
+/* ═══════════════════════════════════════════════════════════════
+   3. 重复确认子对话框（绝对定位 overlay 内）
+   ═══════════════════════════════════════════════════════════════ */
 .duplicate-dialog-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: fadeIn 0.2s ease;
+  animation: fadeIn var(--motion-normal);
+  border-radius: inherit;
 }
-
 .duplicate-dialog {
-  width: 90%;
-  max-width: 480px;
-  background: rgba(35, 35, 35, 0.98);
-  border-radius: 12px;
-  backdrop-filter: blur(20px);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: min(480px, 90%);
+  background: var(--glass-surface-700);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-glass-lg), var(--glass-inner-hl);
   overflow: hidden;
+  animation: glass-modal-scale var(--motion-spring);
+  color: var(--text-primary);
+  font-family: inherit;
 }
-
 .duplicate-dialog-header {
   padding: 16px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: var(--glass-border-subtle);
 }
-
 .duplicate-dialog-header h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: var(--font-lg);
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--text-primary);
 }
-
 .duplicate-dialog-body {
   padding: 20px;
 }
-
 .duplicate-dialog-body p {
-  margin: 0 0 16px 0;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 16px;
+  font-size: var(--font-md);
+  color: var(--text-secondary);
+  line-height: 1.6;
 }
-
 .duplicate-list {
-  margin: 0 0 20px 0;
+  margin: 0 0 20px;
   padding: 0;
   list-style: none;
   max-height: 150px;
   overflow-y: auto;
 }
-
+.duplicate-list::-webkit-scrollbar { width: 6px; }
+.duplicate-list::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.16); border-radius: 3px;
+}
 .duplicate-list li {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
+  background: var(--glass-surface-500);
+  border-radius: var(--radius-sm);
   margin-bottom: 8px;
+  border: var(--glass-border-subtle);
 }
-
-.duplicate-list li:last-child {
-  margin-bottom: 0;
-}
-
+.duplicate-list li:last-child { margin-bottom: 0; }
 .site-name {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: var(--font-md);
+  color: var(--text-primary);
   font-weight: 500;
 }
-
 .site-location {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: var(--font-sm); /* 原 12px → sm token 12-16px，副信息不再蚂蚁字号 */
+  color: var(--text-tertiary);
 }
 
 .action-radio-group {
@@ -526,54 +538,67 @@
   flex-direction: column;
   gap: 10px;
 }
-
 .radio-label {
   display: flex;
   align-items: center;
   gap: 10px;
   cursor: pointer;
   padding: 10px 12px;
-  border-radius: 8px;
-  transition: background 0.2s ease;
+  border-radius: var(--radius-sm);
+  transition: background var(--motion-fast);
+  color: var(--text-secondary);
+  font-size: var(--font-md);
 }
-
-.radio-label:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-
+.radio-label:hover { background: var(--glass-surface-hover); }
 .radio-label input[type="radio"] {
-  width: 18px;
-  height: 18px;
-  accent-color: rgba(6, 182, 212, 0.9);
-}
-
-.radio-label span {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
+  width: 18px; height: 18px;
+  accent-color: var(--aurora-2);
+  cursor: pointer;
 }
 
 .duplicate-dialog-footer {
   padding: 16px 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: var(--glass-border-subtle);
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 12px;
 }
+.duplicate-dialog-footer .cancel-btn { margin-left: auto; }
 
-.confirm-btn {
-  padding: 10px 24px;
+.duplicate-dialog-footer .confirm-btn {
+  padding: 0 24px;
   border: none;
-  border-radius: 8px;
-  background: rgba(6, 182, 212, 0.9);
-  color: white;
-  font-size: 14px;
-  font-weight: 500;
+  border-radius: var(--btn-radius);
+  background: var(--aurora-gradient);
+  color: var(--text-on-accent);
+  font-size: var(--font-md);
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--motion-fast);
+  font-family: inherit;
+  min-height: var(--btn-h);
+  box-shadow: var(--aurora-glow);
 }
-
-.confirm-btn:hover {
-  background: rgba(6, 182, 212, 1);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+.duplicate-dialog-footer .confirm-btn:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--aurora-2) 48%, transparent);
+}
+.duplicate-dialog-footer .cancel-btn {
+  width: auto;
+  min-height: var(--btn-h);
+  padding: 0 20px;
+  font-size: var(--font-md);
+  background: var(--glass-surface-300);
+  color: var(--text-secondary);
+  border: var(--glass-border);
+  border-radius: var(--btn-radius);
+  line-height: var(--btn-h);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.duplicate-dialog-footer .cancel-btn:hover {
+  background: var(--glass-surface-hover);
+  color: var(--text-primary);
+  border-color: var(--glass-border-strong);
 }

@@ -1,31 +1,60 @@
-/* TodoList.css - 响应式重构：使用 CSS 变量 + clamp 保证最小可读/操作尺寸 */
+/* ============================================================
+   TodoList.css — Aurora Dark Glass 统一视觉
+   组件身份：Todo 侧边栏内的待办列表（子模块）
+   继承自 TodoSidebar 本地作用域声明的身份色：--todo-primary: #6366f1 / --todo-secondary: #ec4899
+   改动点：
+     a) .add-todo input → 全局 input token + 4px aurora focus ring
+     b) "添加"按钮 → 极光主按钮 + glow（不再是 Todo 自造靛蓝渐变）
+     c) .todo-item 卡片 → surface-500 玻璃 + border + inner-hl（非白底）
+     d) .delete-todo 按钮 → danger 语义色 hover（不再是 #ffe6f0 白底）
+     e) 完成待办 → 仅保留 line-through，删除 italic（用户偏好：disabled元素
+        不能用删除线/italic，但"已完成todo"是用户状态≠disabled，删除线保留即可）
+     f) 复选框 → accent-color = aurora-2（与全站统一）
+     g) todo-footer → surface-500 玻璃 + 顶部 2px aurora 渐变条
+   ============================================================ */
 
-/* todo-list 是 .sidebar-content 的直接 flex 子元素：
-   flex:1 让它吃掉 sidebar-header 之后剩下的所有高度；
-   min-height:0 解除"flex 子元素 min-height 默认为内容高度"的陷阱，
-   确保 .todo-items 的 flex:1 + overflow-y 能正确收敛而不是无限撑高外溢。 */
 .todo-list {
   padding: var(--space-4) 0;
-  font-family: 'Inter', sans-serif;
+  font-family: inherit;
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
   flex: 1;
   min-height: 0;
+  color: var(--text-primary);
 }
 
-.todo-list h3 {
+/* 列表标题：加 aurora 左竖条（子面板规格） */
+.todo-list > h3 {
+  position: relative;
+  margin: 0 0 var(--space-5) 0;
+  padding: 2px 0 2px 12px;
   font-size: var(--font-sm);
   font-weight: 600;
-  margin: 0 0 var(--space-5) 0;
   color: var(--text-primary);
-  text-align: center;
+  text-align: left;
+  letter-spacing: 0.01em;
+}
+.todo-list > h3::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 68%;
+  border-radius: 2px;
+  background: linear-gradient(
+    to bottom,
+    var(--todo-primary, #6366f1),
+    var(--todo-secondary, #ec4899)
+  );
+  box-shadow: 0 0 8px color-mix(in srgb, var(--todo-primary, #6366f1) 50%, transparent);
 }
 
-/* add-todo 放在最顶部：flex-shrink:0 保证在任何可用高度下都不被压缩，
-   长列表不会把输入框挤出可视区。
-   额外保险：width:100% + box-sizing:border-box + min-width:0，
-   避免因多级 flex + 未设置宽度导致水平方向 min-content 膨胀把 button 挤出右侧边界。 */
+/* ============================================================
+   Add Todo 区：放最顶部（满足用户偏好"添加功能置于文字描述上方"）
+   ============================================================ */
 .add-todo {
   display: flex;
   gap: var(--space-3);
@@ -37,59 +66,61 @@
   box-sizing: border-box;
 }
 
+/* 输入框：全局 input-token（10px 圆角 + 4px aurora 焦点环） */
 .add-todo input {
   flex: 1;
-  /* 经典 flex 陷阱：input 默认 min-width: min-content (~170px placeholder 宽)，
-     当 sidebar 非常窄时，input 拒绝收缩，会把右侧"添加"按钮挤出 sidebar 右边界
-     （sidebar expanded 右边缘 = 视口右边界 → 按钮就"跑出浏览器"了）。
-     设置 min-width:0 让 input 能按 flex:1 正常收缩。 */
   min-width: 0;
   padding: var(--space-3) var(--space-4);
-  border: 2px solid var(--border-color);
-  border-radius: var(--border-radius-lg);
-  background: var(--background-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xs);
+  background: var(--glass-surface-500);
   color: var(--text-primary);
   font-size: var(--font-sm);
-  font-family: 'Inter', sans-serif;
+  font-family: inherit;
   outline: none;
-  transition: all var(--transition-fast);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition:
+    border-color var(--motion-fast),
+    background-color var(--motion-fast),
+    box-shadow var(--motion-fast),
+    transform var(--motion-fast);
+  box-shadow: var(--glass-inner-hl);
   min-height: 38px;
   box-sizing: border-box;
 }
-
 .add-todo input:focus {
-  border-color: var(--primary-color);
-  background: var(--background-white);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.05);
-  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--aurora-2) 50%, var(--glass-border));
+  background: var(--glass-surface-500);
+  box-shadow:
+    var(--glass-inner-hl),
+    0 0 0 4px color-mix(in srgb, var(--aurora-2) 18%, transparent);
+  transform: translateY(-0.5px);
 }
-
 .add-todo input::placeholder {
-  color: var(--text-secondary);
-  font-style: italic;
+  color: var(--text-tertiary);
+  font-style: italic; /* placeholder 非 disabled */
 }
 
+/* "添加"按钮：极光主按钮 + glow（全站主按钮统一 token） */
 .add-todo button {
   padding: var(--space-3) var(--space-5);
   border: none;
-  border-radius: var(--border-radius-lg);
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  border-radius: var(--radius-xs);
+  background: var(--aurora-gradient);
   color: white;
   font-size: var(--font-sm);
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all var(--motion-fast);
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--aurora-2) 30%, transparent),
+    0 4px 12px color-mix(in srgb, var(--aurora-2) 40%, transparent);
   position: relative;
   overflow: hidden;
   min-height: 38px;
-  /* 触控目标 44px。注意：不要加 min-width:0，要保持 44px 点击面积。 */
   min-width: 44px;
   box-sizing: border-box;
 }
-
 .add-todo button::before {
   content: '';
   position: absolute;
@@ -97,31 +128,26 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left var(--transition-normal);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
+  transition: left var(--motion-normal);
 }
-
-.add-todo button:hover::before {
-  left: 100%;
-}
-
+.add-todo button:hover::before { left: 100%; }
 .add-todo button:hover {
-  background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+  transform: translateY(-1.5px);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--aurora-2) 45%, transparent),
+    0 8px 20px color-mix(in srgb, var(--aurora-2) 52%, transparent);
 }
-
 .add-todo button:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--aurora-2) 35%, transparent),
+    0 2px 8px color-mix(in srgb, var(--aurora-2) 40%, transparent);
 }
 
-/* todo-items：中间列表区，唯一会发生滚动的区域。
-   旧：max-height: min(260px, 20vh) — 4K 下只有 260px 浪费大量空间，
-       且在手机端把底部 add-todo 顶出视口；
-   新：flex:1 自动占满 todo-list 中 add-todo + todo-footer 之间的剩余高度，
-       min-height:0 强制允许它收缩（flex 默认 min-height:min-content 会导致无法滚动），
-       overflow-y:auto 仅在此处滚动。 */
+/* ============================================================
+   Todo Items 列表区
+   ============================================================ */
 .todo-items {
   display: flex;
   flex-direction: column;
@@ -133,42 +159,39 @@
   position: relative;
 }
 
-/* 滚动条样式 */
-.todo-items::-webkit-scrollbar {
-  width: 6px;
-}
-
+/* 滚动条 6px：aurora 色 thumb */
+.todo-items::-webkit-scrollbar { width: 6px; }
 .todo-items::-webkit-scrollbar-track {
-  background: var(--background-light);
-  border-radius: 8px;
+  background: color-mix(in srgb, var(--glass-surface-300) 50%, transparent);
+  border-radius: 3px;
 }
-
 .todo-items::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 8px;
-  transition: background var(--transition-fast);
+  background: color-mix(in srgb, var(--aurora-2) 35%, rgba(255,255,255,.18));
+  border-radius: 3px;
+  transition: background var(--motion-fast);
 }
-
 .todo-items::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
+  background: color-mix(in srgb, var(--aurora-2) 55%, rgba(255,255,255,.24));
 }
 
+/* Todo 卡片：surface-500 玻璃 + 左侧 3px Todo 身份渐变条（保留 Todo 特色） */
 .todo-item {
   display: flex;
   align-items: center;
   gap: var(--space-4);
-  padding: var(--space-3) var(--space-4);
-  background: var(--background-white);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-lg);
-  transition: all var(--transition-fast);
-  box-shadow: var(--shadow-sm);
+  padding: var(--space-3) var(--space-4) var(--space-3) calc(var(--space-4) + 4px);
+  background: var(--glass-surface-500);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xs);
+  transition: all var(--motion-fast);
+  box-shadow: var(--glass-inner-hl);
   position: relative;
   overflow: hidden;
   cursor: pointer;
   min-height: 40px;
+  animation: slideInUp 300ms cubic-bezier(.22,1,.36,1);
 }
-
+/* 3px 身份色左条（Todo 特色保留） */
 .todo-item::before {
   content: '';
   position: absolute;
@@ -176,77 +199,84 @@
   top: 0;
   bottom: 0;
   width: 3px;
-  background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
-  border-radius: var(--border-radius-lg) 0 0 var(--border-radius-lg);
+  background: linear-gradient(
+    to bottom,
+    var(--todo-primary, #6366f1),
+    var(--todo-secondary, #ec4899)
+  );
+  border-radius: var(--radius-xs) 0 0 var(--radius-xs);
   transform: scaleY(0);
   transform-origin: top;
-  transition: transform var(--transition-normal);
+  transition: transform var(--motion-normal);
 }
-
 .todo-item:hover {
-  border-color: var(--primary-light);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--aurora-2) 35%, var(--glass-border));
+  box-shadow:
+    var(--glass-inner-hl),
+    0 4px 14px color-mix(in srgb, var(--aurora-2) 22%, transparent);
+  transform: translateY(-1.5px);
 }
-
 .todo-item:hover::before {
   transform: scaleY(1);
 }
 
+/* 复选框：accent-color = aurora-2（统一） */
 .todo-item input[type="checkbox"] {
   width: clamp(16px, 0.7vw, 20px);
   height: clamp(16px, 0.7vw, 20px);
-  accent-color: var(--primary-color);
+  accent-color: var(--aurora-2);
   cursor: pointer;
   flex-shrink: 0;
-  transition: all var(--transition-fast);
+  transition: all var(--motion-fast);
   position: relative;
 }
-
-.todo-item input[type="checkbox"]:hover {
-  transform: scale(1.1);
-}
-
+.todo-item input[type="checkbox"]:hover { transform: scale(1.12); }
 .todo-item input[type="checkbox"]:checked {
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--aurora-2) 22%, transparent);
 }
 
+/* Todo 文本 */
 .todo-item span {
   flex: 1;
   color: var(--text-primary);
   font-size: var(--font-sm);
   line-height: 1.5;
-  transition: all var(--transition-fast);
+  transition: all var(--motion-fast);
   font-weight: 500;
   word-break: break-word;
+  font-family: inherit;
 }
 
+/* 完成态：仅 line-through，删除 italic（用户偏好：禁用元素不用 italic/删除线，
+   这里是"已完成"非disabled，删除线是用户可接受的语义可视化，故仅删 italic） */
 .todo-item span.completed {
   text-decoration: line-through;
-  color: var(--text-secondary);
-  font-style: italic;
+  text-decoration-color: color-mix(in srgb, var(--text-secondary) 75%, transparent);
+  color: var(--text-tertiary);
+  font-style: normal; /* ✅ 去掉原 italic */
+  opacity: 0.72;
 }
 
+/* 删除按钮：danger 语义色 hover（#ffe6f0 白底 → 深色玻璃 + 红色语义派生） */
 .todo-item .delete-todo {
   width: clamp(22px, 1.3vw, 26px);
   height: clamp(22px, 1.3vw, 26px);
   padding: 0;
-  border: none;
-  border-radius: var(--border-radius-md);
-  background: var(--background-light);
-  color: var(--text-secondary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-xs);
+  background: var(--glass-surface-300);
+  color: var(--text-tertiary);
   font-size: var(--font-xs);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all var(--motion-fast);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--glass-inner-hl);
   position: relative;
   overflow: hidden;
 }
-
 .todo-item .delete-todo::before {
   content: '';
   position: absolute;
@@ -254,38 +284,42 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 72, 153, 0.2), transparent);
-  transition: left var(--transition-normal);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--semantic-danger) 20%, transparent),
+    transparent
+  );
+  transition: left var(--motion-normal);
 }
-
-.todo-item .delete-todo:hover::before {
-  left: 100%;
-}
-
+.todo-item .delete-todo:hover::before { left: 100%; }
 .todo-item .delete-todo:hover {
-  background: #ffe6f0;
-  color: var(--secondary-color);
+  background: color-mix(in srgb, var(--semantic-danger) 20%, var(--glass-surface-300));
+  border-color: color-mix(in srgb, var(--semantic-danger) 48%, transparent);
+  color: var(--semantic-danger);
   transform: scale(1.1);
-  box-shadow: 0 4px 8px rgba(236, 72, 153, 0.2);
+  box-shadow:
+    var(--glass-inner-hl),
+    0 4px 10px color-mix(in srgb, var(--semantic-danger) 30%, transparent);
 }
 
-/* todo-footer：最底部统计和清空操作栏。flex-shrink:0 保证任何高度下
-   都不被压缩裁剪，始终贴在待办列表下方。 */
+/* ============================================================
+   Todo Footer 统计栏
+   ============================================================ */
 .todo-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: var(--space-3) var(--space-4);
-  background: var(--background-white);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow-sm);
+  background: var(--glass-surface-500);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xs);
+  box-shadow: var(--glass-inner-hl);
   position: relative;
   overflow: hidden;
   min-height: 38px;
   flex-shrink: 0;
 }
-
 .todo-footer::before {
   content: '';
   position: absolute;
@@ -293,32 +327,36 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+  background: linear-gradient(
+    90deg,
+    var(--todo-primary, #6366f1),
+    var(--todo-secondary, #ec4899)
+  );
 }
-
 .todo-footer span {
   color: var(--text-secondary);
   font-size: var(--font-xs);
   font-weight: 600;
-  font-family: 'Inter', sans-serif;
+  font-family: inherit;
 }
 
+/* 清空按钮：danger 语义 hover（去掉原 #ffe6f0 白底） */
 .todo-footer button {
   padding: var(--space-2) var(--space-4);
-  border: none;
-  border-radius: var(--border-radius-md);
-  background: var(--background-light);
+  border: 1px solid transparent;
+  border-radius: var(--radius-xs);
+  background: var(--glass-surface-300);
   color: var(--text-secondary);
   font-size: var(--font-xs);
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--transition-fast);
-  box-shadow: var(--shadow-sm);
+  transition: all var(--motion-fast);
+  box-shadow: var(--glass-inner-hl);
   position: relative;
   overflow: hidden;
   min-height: 30px;
+  font-family: inherit;
 }
-
 .todo-footer button::before {
   content: '';
   position: absolute;
@@ -326,86 +364,70 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(236, 72, 153, 0.2), transparent);
-  transition: left var(--transition-normal);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--semantic-danger) 20%, transparent),
+    transparent
+  );
+  transition: left var(--motion-normal);
 }
-
-.todo-footer button:hover::before {
-  left: 100%;
-}
-
+.todo-footer button:hover::before { left: 100%; }
 .todo-footer button:hover {
-  background: #ffe6f0;
-  color: var(--secondary-color);
+  background: color-mix(in srgb, var(--semantic-danger) 18%, var(--glass-surface-300));
+  border-color: color-mix(in srgb, var(--semantic-danger) 45%, transparent);
+  color: var(--semantic-danger);
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(236, 72, 153, 0.2);
+  box-shadow:
+    var(--glass-inner-hl),
+    0 4px 10px color-mix(in srgb, var(--semantic-danger) 28%, transparent);
 }
 
-/* 空状态样式：当待办列表为空时居中显示引导提示 */
+/* ============================================================
+   空状态：:empty 伪元素引导（删除 italic）
+   ============================================================ */
 .todo-items:empty::before {
   content: '还没有待办事项，使用上方添加栏输入吧！';
   display: block;
   text-align: center;
   padding: var(--space-6) var(--space-4);
-  color: var(--text-secondary);
-  font-style: italic;
+  color: var(--text-tertiary);
+  font-style: normal; /* ✅ 去掉原 italic（空状态提示≠disabled，保持视觉整洁） */
   font-size: var(--font-sm);
-  background: var(--background-light);
-  border: 2px dashed var(--border-color);
-  border-radius: var(--border-radius-lg);
+  background: color-mix(in srgb, var(--glass-surface-500) 92%, transparent);
+  border: 2px dashed color-mix(in srgb, var(--aurora-2) 28%, var(--glass-border));
+  border-radius: var(--radius-xs);
   position: relative;
-  transition: all var(--transition-normal);
+  transition: all var(--motion-normal);
 }
 
 .todo-items:empty::after {
   content: '✨';
   display: block;
+  text-align: center;
   font-size: clamp(18px, 1.2vw, 22px);
-  margin-bottom: var(--space-4);
-  animation: bounce 2s infinite;
+  margin: 0 0 var(--space-4) 0;
+  animation: bounce 2s ease-in-out infinite;
 }
 
-/* 动画效果 */
+/* bounce 沿用全局兜底：本地未声明则 index.css 共享生效，
+   若未引入则本地再声明一次防白屏 */
 @keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-8px);
-  }
-  60% {
-    transform: translateY(-4px);
-  }
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40%                    { transform: translateY(-8px); }
+  60%                    { transform: translateY(-4px); }
 }
 
-/* 新添加的待办事项动画 */
 @keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.todo-item {
-  animation: slideInUp 300ms ease-out;
-}
-
-/* 完成待办事项动画 */
+/* 完成项出场动画（与老逻辑一致，删除 italic 对应色阶） */
 @keyframes todoSlideOut {
-  from {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateX(-100%);
-  }
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-100%); }
 }
-
 .todo-item span.completed {
   animation: todoSlideOut 300ms ease-out;
 }
@@ -416,11 +438,9 @@
     flex-direction: column;
     align-items: stretch;
   }
-
   .add-todo input {
     width: 100%;
   }
-
   .add-todo button {
     align-self: flex-end;
     min-width: 60px;

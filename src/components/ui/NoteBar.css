@@ -1,0 +1,1163 @@
+/* NoteBar.css － 底部"玻璃弹珠"风笔记栏
+ *
+ * 设计主张：
+ *  · 容器极透明（几乎"看不见一条栏"），把所有聚光灯让给"球"本身
+ *  · 每颗球都是一颗玻璃弹珠（marble）：外层高斯辉光 + 内部多重焦散渐变 + 高光月牙 + 底部实心彩核 + 悬浮脉冲呼吸
+ *  · 互动灵动：hover 弹跳 + 光晕弥散 + 色相抖动；入场 stagger 弹珠一颗一颗出现
+ *  · 绝对不裁切：整栏 overflow:visible + 充足 padding-bottom，hover 放大/弹起永远露全
+ */
+
+/* ═══════════════════════════════════════════════════════════════
+ *  通用 token（内部使用，不污染全局）
+ * ═══════════════════════════════════════════════════════════════ */
+.notebar,
+.notebar * { box-sizing: border-box; }
+
+/* ═══════════════════════════════════════════════════════════════
+ *  显隐：单状态 isOpen + CSS transition-delay 串联三阶段
+ *
+ *     (1) bar rise        : 整栏 translateY(半藏→0)，一条平滑 ease-out；
+ *     (2) peek fade out   : bar 抬升的同时 peek-ball 用 clip-path 隐去
+ *                           （不再改宽高，避免"peek 缩了→球排抖一下"）；
+ *     (3) inner expand    : 稍晚于 peek，让"peek 先让开位置→球排再入场"
+ *                           的视觉逻辑更顺。
+ *
+ *  曲线全部使用 ease-out，移除 cubic-bezier(.22,1.3,.36,1) 的反弹，
+ *  避免 peek-ball 升到顶后又"反向晃一下"（上一轮用户说的不自然主因）。
+ * ═══════════════════════════════════════════════════════════════ */
+.notebar {
+  --peek: var(--sidebar-toggle-size, 44px);
+  --t-bar: 400ms;            /* 阶段 1：抬栏 */
+  --t-peek: 300ms;           /* 阶段 2：peek 淡出 */
+  --t-inner: 360ms;          /* 阶段 3：inner 展开 */
+  --d-peek:  80ms;           /* peek 比 bar 晚一点点启动 */
+  --d-inner: 180ms;          /* inner 比 peek 晚，保证 peek 先让开 */
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translate3d(-50%, calc(100% - (var(--peek) / 2)), 0);
+  transition:
+    transform var(--t-bar) cubic-bezier(.22,.61,.36,1),
+    filter 240ms ease;
+  transition-behavior: normal;
+  z-index: 900;
+  width: 100vw;
+  min-width: 100vw;
+  max-width: 100vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  pointer-events: auto;
+  background: transparent;
+  filter: drop-shadow(0 10px 22px rgba(15,23,42,0.08));
+  overflow: visible !important;
+  isolation: isolate;
+  /* 注意：移除 will-change，避免"永久提升合成层 → 壁纸模糊时每帧都重采样 → CPU 20%"
+   * （经验 165594：will-change + backdrop-filter 相邻是静止 CPU 高的常见来源）。
+   *  动画瞬间才用 translate3d 拿一次 GPU 提升，动画结束即释放。 */
+}
+/* is-open 即阶段 1+2+3 的起点：单 class 统一触发 */
+.notebar.is-open {
+  transform: translate3d(-50%, 0, 0);
+  filter: drop-shadow(0 14px 30px rgba(15,23,42,0.10));
+}
+
+/* peek-ball：隐藏阶段用 clip-path 淡出，而不是 width/height → 0
+ * 理由：width→0 会改变 peek-ball 在 flex column 中的"物理占位"，
+ *       展开瞬间父容器高度从 [peek] → [0 + inner] 阶梯变化，
+ *       球排会抖一下（1557990 同类穿帮）。
+ *       clip-path 只影响视觉，不碰布局盒 → 零抖动。 */
+.notebar-peek-ball {
+  --size: var(--peek);
+  flex-shrink: 0;
+  margin: 0 auto;
+  padding: 0;
+  border: 0;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  position: relative;
+  cursor: pointer;
+  z-index: 901;
+  /* idle 底值：clip 全显，opa 0.3 */
+  clip-path: circle(72% at 50% 50%);
+  -webkit-mask-image: none;
+  mask-image: none;
+  opacity: 0.3;
+  transform: translateY(0) scale(1);
+  filter: none;
+  transition:
+    opacity var(--t-peek) ease var(--d-peek),
+    clip-path var(--t-peek) cubic-bezier(.22,.61,.36,1) var(--d-peek),
+    transform var(--t-peek) cubic-bezier(.22,.61,.36,1) var(--d-peek),
+    filter 260ms ease;
+  transition-behavior: normal;
+  /* [性能] 呼吸动画默认暂停！
+   * 之前 4.6s 无限循环会让合成层每 33~50ms 重新 raster，是"静止仍 20% CPU"
+   * 的第一号嫌疑（经验 177594）。只有 hover 用户真正看的时候才跑。 */
+  animation: nb-peek-breath 4.6s ease-in-out infinite;
+  animation-play-state: paused;
+  overflow: visible;
+  isolation: isolate;
+  /* 玻璃弹珠多层背景叠合 */
+  background:
+    radial-gradient(circle at 30% 22%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 36%),
+    radial-gradient(circle at 68% 70%, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 40%),
+    radial-gradient(circle at 50% 120%, rgba(15,23,42,0.22) 0%, rgba(15,23,42,0) 55%),
+    radial-gradient(circle at 50% 45%,
+      color-mix(in srgb, var(--page-primary-color, #10b981) 82%, #fff) 0%,
+      color-mix(in srgb, var(--page-secondary-color, #f59e0b) 88%, #000) 76%);
+  box-shadow:
+    0 0 0 1px rgba(15,23,42,0.18),
+    0 0 0 3px rgba(255,255,255,0.72),
+    inset 0 0 0 1px rgba(255,255,255,0.55),
+    inset 0 -6px 12px rgba(15,23,42,0.25),
+    0 8px 18px rgba(16,185,129,0.22);
+  /* 不再在 base 层重复写 animation（上一行已经声明）。
+   * 删除这条重复声明，避免它覆盖上面的 animation-play-state:paused */
+  overflow: visible;
+  isolation: isolate;
+}
+/* 静止态不跑呼吸动画；peek-ball 只有在用户把鼠标移过来时才开始呼吸 ——
+ * 这是"静止 CPU 20%"的最大头：静止时 CSS keyframes 虽然频率低，
+ * 但它会持续触发 box-shadow 重绘（特别是 nb-peek-breath 中还加了 10px 外层光环），
+ * 配合 wallpaper 的渲染会让合成器每 ~40ms 都重采样。 */
+.notebar:not(.is-open) .notebar-peek-ball:hover,
+.notebar:not(.is-open) .notebar-peek-ball:focus-visible,
+.notebar.is-open .notebar-peek-ball {
+  animation-play-state: running;
+}
+/* peek-ball hover/focus：仅在非 is-open 时生效 */
+.notebar:not(.is-open) .notebar-peek-ball:hover,
+.notebar:not(.is-open) .notebar-peek-ball:focus-visible {
+  opacity: 1;
+  transform: translateY(-2px) scale(1.06);
+  filter: saturate(1.25);
+  outline: none;
+}
+/* is-open：peek-ball 用 clip-path 收缩到球心，而不是改宽高，
+ * 保持 flex 占位高度恒定 → 球排不会因为 peek"没了"而"掉下去抖一下"。 */
+.notebar.is-open .notebar-peek-ball {
+  opacity: 0;
+  pointer-events: none;
+  clip-path: circle(0% at 50% 50%);
+  transform: translateY(2px) scale(0.92);
+  /* 关掉呼吸，省一次重绘 */
+  animation: none;
+  /* 过渡的 delay 已在 peek-ball base 上声明；这里只补一个 box-shadow 淡出避免阴影突然消失 */
+  box-shadow:
+    0 0 0 0 rgba(15,23,42,0),
+    0 0 0 0 rgba(255,255,255,0),
+    inset 0 0 0 0 rgba(255,255,255,0),
+    inset 0 0 0 0 rgba(15,23,42,0),
+    0 0 0 rgba(16,185,129,0);
+}
+/* 高光小光点（peek-ball 的玻璃反光点） */
+.notebar-peek-ball::after {
+  content: '';
+  position: absolute;
+  left: 28%;
+  top: 20%;
+  width: 18%;
+  height: 10%;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.9);
+  filter: blur(1px);
+  transform: rotate(-22deg);
+  pointer-events: none;
+}
+/* 图标（📝）：球心，阴影增加立体感 */
+.notebar-peek-ball::before {
+  content: '📝';
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--size) * 0.42);
+  filter: drop-shadow(0 1px 0 rgba(255,255,255,0.7)) drop-shadow(0 2px 4px rgba(15,23,42,0.25));
+  z-index: 2;
+}
+
+/* peek ball 呼吸脉冲：让它"活着"但不跳（避免像闹钟） */
+@keyframes nb-peek-breath {
+  0%, 100% { box-shadow:
+    0 0 0 1px rgba(15,23,42,0.18),
+    0 0 0 3px rgba(255,255,255,0.72),
+    inset 0 0 0 1px rgba(255,255,255,0.55),
+    inset 0 -6px 12px rgba(15,23,42,0.25),
+    0 8px 18px rgba(16,185,129,0.22);
+  }
+  50% { box-shadow:
+    0 0 0 1px rgba(15,23,42,0.18),
+    0 0 0 4px rgba(255,255,255,0.7),
+    0 0 0 10px rgba(16,185,129,0.06),
+    inset 0 0 0 1px rgba(255,255,255,0.6),
+    inset 0 -6px 12px rgba(15,23,42,0.25),
+    0 10px 22px rgba(245,158,11,0.18);
+  }
+}
+
+/* ── 内栏（展开态才是主角）
+ * 这次彻底解决两个报告问题：
+ *  (A)「notebar-inner 悬在笔记栏中央」—— 因为之前 inner 上下对称 pad 40~56px 并且
+ *      ball-track 是 inline-flex 居中，导致视觉上球距底部也有 40+px。
+ *      修复：改用【非对称 pad】+【items: flex-end】
+ *        · bottom-pad 只留 clamp(10px, 0.8vw, 14px) —— 球底几乎贴栏底，
+ *          而栏底本身 bottom:0，所以球底几乎贴视口底（正是用户要的底部对齐）。
+ *        · top-pad 放大到 clamp(70px, 5.4vw, 100px) —— 为 hover 向上弹跳 -8px、
+ *          scale(1.18) 的顶溢、辉光 26px、角标 -4px 一起保留"完整安全区"。
+ *  (B)「noteball-row 裁切球」—— 根源有二：
+ *        1. row 声明 overflow-x:auto 时，Chromium 引擎会在开启滚动条能力的前提下
+ *           把合成层大小限制为 row 的 border-box，即便 overflow-y:visible，
+ *           transform 放大的视觉部分也会被"隐式裁剪"（Chromium 已知行为）。
+ *           修复：球总数上限为 8，可视宽度远小于 100vw，因此 row 无需横向滚动 —
+ *           overflow 改为 visible，删除 scrollbar 规则，彻底释放合成层。
+ *        2. noteball-wrapper 的 content-box 仅等于球大小，hover 放大后放大的部分
+ *           虽然 overflow:visible 可见，但仍可能被外层"隐式裁剪"兜底卡一刀。
+ *           修复：wrapper 给正 pad 20/40 扩大 content-box 尺寸（等价于扩大参与合成
+ *           层计算的盒子），再用负 margin 抵消占位，做到"不挤占相邻球 + 盒边界
+ *           远大于 hover 放大后的球"。
+ *
+ * 最后：ball-track/inner 统一使用 align-items:flex-end → 所有球的"物理底"都在
+ *       inner 的 padding-box 下沿，完全符合"笔记球底部对齐笔记栏底部"。
+ * ═══════════════════════════════════════════════════════════════ */
+.notebar-inner {
+  position: relative;
+  display: flex;
+  /* 关键：flex cross-axis 底对齐 → 每颗球的下沿都锁到 inner 底沿 */
+  align-items: flex-end;
+  justify-content: center;
+  /* 非对称：顶部巨量缓冲（hover 弹跳/辉光安全区） + 底部几乎贴屏 */
+  padding:
+    clamp(70px, 5.4vw, 100px)
+    clamp(40px, 3vw, 56px)
+    clamp(10px, 0.8vw, 14px)
+    clamp(40px, 3vw, 56px);
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 0;
+  box-shadow: none;
+  overflow: visible !important;
+  contain: layout style;   /* 非 size，避免 size containment 的隐式裁剪 */
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  border-radius: 0;
+  /* idle：收起。注意 max-height 写 0.1px 而非 0，避免某些浏览器"0 高容器跳过过渡"。 */
+  max-height: 0.1px;
+  opacity: 0;
+  pointer-events: none;
+  /* ⚠ pointer-events 不能参与下方带 --d-inner 延迟的 transition。
+     如果把它写进 transition list，is-open 切换后头 ~540ms inner 视觉
+     已经展开但 pointer-events 仍是 none → 鼠标从 peek-ball 上移到球排
+     时 Chromium 会把 relatedTarget 视作"穿过不响应鼠标的区域"，
+     把 mouseleave 报给 body/document → 误触发 scheduleClose 导致球缩回。
+     解决：pointer-events 用独立一条、0s 瞬切，延迟仅在 is-open→idle 方向
+     让过渡先跑完再禁掉事件（idle→is-open 立刻开启，不产生 180ms 死窗）。 */
+  transform: translateY(8px);
+  transition:
+    max-height    var(--t-inner) cubic-bezier(.22,.61,.36,1) var(--d-inner),
+    padding-top   var(--t-inner) cubic-bezier(.22,.61,.36,1) var(--d-inner),
+    padding-bottom var(--t-inner) cubic-bezier(.22,.61,.36,1) var(--d-inner),
+    padding-left  var(--t-inner) cubic-bezier(.22,.61,.36,1) var(--d-inner),
+    padding-right var(--t-inner) cubic-bezier(.22,.61,.36,1) var(--d-inner),
+    opacity       calc(var(--t-inner) * 0.7) ease calc(var(--d-inner) + 40ms),
+    transform     var(--t-inner) cubic-bezier(.22,.61,.36,1) var(--d-inner);
+  transition-behavior: allow-discrete;
+}
+/* pointer-events：打开瞬间立即 snap 为 auto；关闭时晚 300ms（过渡结束后）再 snap，
+   确保收起动画期间用户仍能与球交互、不会误报 mouseleave。 */
+.notebar-inner {
+  transition-property: max-height, padding-top, padding-bottom, padding-left, padding-right, opacity, transform;
+  transition-duration:
+    var(--t-inner), var(--t-inner), var(--t-inner), var(--t-inner), var(--t-inner),
+    calc(var(--t-inner) * 0.7), var(--t-inner);
+  transition-timing-function:
+    cubic-bezier(.22,.61,.36,1), cubic-bezier(.22,.61,.36,1), cubic-bezier(.22,.61,.36,1),
+    cubic-bezier(.22,.61,.36,1), cubic-bezier(.22,.61,.36,1), ease, cubic-bezier(.22,.61,.36,1);
+  transition-delay:
+    var(--d-inner), var(--d-inner), var(--d-inner), var(--d-inner), var(--d-inner),
+    calc(var(--d-inner) + 40ms), var(--d-inner);
+}
+.notebar.is-open .notebar-inner {
+  max-height: 520px;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  transition:
+    max-height    var(--t-inner) cubic-bezier(.22,.61,.36,1) var(--d-inner),
+    padding-top   var(--t-inner) cubic-bezier(.22,.61,.36,1) var(--d-inner),
+    padding-bottom var(--t-inner) cubic-bezier(.22,.61,.36,1) var(--d-inner),
+    padding-left  var(--t-inner) cubic-bezier(.22,.61,.36,1) var(--d-inner),
+    padding-right var(--t-inner) cubic-bezier(.22,.61,.36,1) var(--d-inner),
+    opacity       calc(var(--t-inner) * 0.7) ease calc(var(--d-inner) + 40ms),
+    transform     var(--t-inner) cubic-bezier(.22,.61,.36,1) var(--d-inner),
+    pointer-events 0s linear 0s;   /* 打开立刻 auto */
+  transition-behavior: allow-discrete;
+}
+.notebar:not(.is-open) .notebar-inner {
+  transition:
+    max-height    var(--t-inner) cubic-bezier(.22,.61,.36,1) 0ms,
+    padding-top   var(--t-inner) cubic-bezier(.22,.61,.36,1) 0ms,
+    padding-bottom var(--t-inner) cubic-bezier(.22,.61,.36,1) 0ms,
+    padding-left  var(--t-inner) cubic-bezier(.22,.61,.36,1) 0ms,
+    padding-right var(--t-inner) cubic-bezier(.22,.61,.36,1) 0ms,
+    opacity       calc(var(--t-inner) * 0.7) ease 0ms,
+    transform     var(--t-inner) cubic-bezier(.22,.61,.36,1) 0ms,
+    pointer-events 0s linear 320ms;  /* 收起动画差不多跑完再切 none */
+  transition-behavior: allow-discrete;
+}
+/* ball-track：+ / 分隔条 / 球 / 分隔条 / … 的居中轨道；align-items:flex-end 保证每一颗球
+ * 的底沿都对齐，不会出现"功能球中心和笔记球中心不一致"的问题 */
+.notebar-ball-track {
+  display: inline-flex;
+  align-items: flex-end;      /* 底对齐而非中心对齐 */
+  justify-content: center;
+  gap: clamp(10px, 0.72vw, 14px);
+  max-width: 100%;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  overflow: visible !important;
+  contain: layout style;
+  flex: 0 1 auto;
+}
+
+/* 分隔条：底对齐 + 自身高度位于"球高度对应带"
+ * 因为球和分隔条都是 flex items:flex-end，分隔条高度会比球小，它会自动贴栏底；
+ * 我们用 margin-bottom 把它向上抬，保证视觉上位于球的中段 */
+.notebar-sep {
+  width: 1px;
+  min-height: clamp(28px, 2.2vw, 38px);
+  background: linear-gradient(180deg,
+    transparent 0%,
+    rgba(120,120,128,0.18) 40%,
+    rgba(120,120,128,0.18) 60%,
+    transparent 100%);
+  flex-shrink: 0;
+  align-self: flex-end;
+  /* 计算：球高度约 50px → 分隔条 36px → 底对齐后分隔条顶比球顶低 14px，正好中段 */
+  margin-bottom: clamp(6px, 0.6vw, 8px);
+}
+
+/* noteball-wrapper：只在「上下方向」扩盒（+弹跳、+角标、+辉光上下溢出），
+ * 左右方向故意不扩、也不加负 margin —— 这是「右边球影响左边球」的根因：
+ * 之前左右 padding/负 margin 各 28~38px，wrapper 的 hit-test 盒会横向互相
+ * 重叠 ~40px，DOM 顺序左→右 + z-index 都为 1，右侧 wrapper 命中在上，
+ * 于是左球右半整条带都被右球 wrapper 吃掉 → 鼠标在左球、实际命中右球、
+ * tooltip 切错 / hover 错 / scheduleClose 偶发。
+ *
+ * 水平辉光靠球本体的 overflow:visible + 祖先容器统一 overflow:visible 保证不裁，
+ * 不依赖 wrapper 横向 pad。 */
+.noteball-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: center;
+  flex-shrink: 0;
+  align-self: flex-end;
+  overflow: visible !important;
+  min-width: 0;
+  /* 上下仍保留大 pad（弹跳/角标/辉光上下安全区），左右归零避免横向 hit 重叠。
+     对应负 margin 也只有上下：把物理占位精确还原回「球本身高度」，
+     视觉上 row 的 baseline/底对齐完全不变。 */
+  padding: clamp(36px, 3vw, 48px) 0 clamp(22px, 1.8vw, 28px) 0;
+  margin:
+    calc(-1 * clamp(36px, 3vw, 48px))
+    0
+    calc(-1 * clamp(22px, 1.8vw, 28px))
+    0;
+  z-index: 1;
+  /* wrapper 自身不响应鼠标（否则 padding 区也会当"悬停在球上"），
+     内部 .noteball 会 pointer-events:auto 覆盖。*/
+  pointer-events: none;
+}
+
+/* 行容器：不再需要横向滚动（最多 8 球），彻底 visible 释放合成层 */
+.noteball-row {
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: clamp(10px, 0.72vw, 14px);
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: visible !important;           /* ⭐ 关键：彻底不滚动，不触发隐式裁剪 */
+  padding: 0;
+  margin: 0;
+  position: relative;
+  align-self: flex-end;
+  contain: layout style;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ *  弹珠球（noteball）-  核心玻璃弹珠质感
+ *
+ *  层叠：
+ *    [外环辉光 glow]  → box-shadow 外扩
+ *    [实体球 body]    → 渐变叠层
+ *    [月牙高光 ::after]
+ *    [文字 glyph]
+ * ═══════════════════════════════════════════════════════════════ */
+.noteball {
+  --ball-size: clamp(40px, 2.9vw, 50px);
+  position: relative;
+  flex-shrink: 0;
+  width: var(--ball-size);
+  height: var(--ball-size);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  border: 0;
+  outline: none;
+  overflow: visible;            /* 重点：球本体的外发光不被自身裁切 */
+  transform-origin: 50% 65%;    /* 弹跳中心偏下，物理感更强 */
+  transition:
+    transform 280ms cubic-bezier(.22,1.6,.36,1),
+    filter 240ms ease,
+    box-shadow 300ms ease;
+  z-index: 1;
+  /* wrapper 是 pointer-events:none（避免它的透明 padding 抢相邻球命中），
+     但球自身及其子节点必须能收到鼠标事件，显式写出来。 */
+  pointer-events: auto;
+
+  /* 玻璃弹珠：通透版基础层叠 v3（平衡版）
+     关键 1：球体保持"玻璃体"——彩芯中等透明度（中心 62% → 66% 处全透明），
+     背景能透进来但不像 v2 那样空到失去球感。
+     关键 2：笔记/功能身份色由 ::after 糖芯用「正常混合」直接着色
+     （screen 混合只提亮、浅色背景会洗掉颜色 → v2 用户反馈"颜色表现不出来"）。
+     (a) 左上主高光（表面弧光）
+     (b) 底部暗影（更淡更散，透过彩芯的立体暗调）
+     (c) 通透彩芯（中心染色 → 边缘透明）
+     (d) 底部折射亮线（玻璃下缘反光）*/
+  --c-core-1: rgba(148, 163, 184, 0.55);   /* 核心近色 */
+  --c-core-2: rgba(71, 85, 105, 0.78);     /* 核心远色 */
+  --glow: rgba(99, 102, 241, 0);           /* 外发光：hover 时才显现 */
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 26%),
+    radial-gradient(circle at 50% 120%, rgba(15,23,42,0.3) 0%, rgba(15,23,42,0) 60%),
+    radial-gradient(circle at 50% 52%,
+      color-mix(in srgb, var(--c-core-1) 62%, transparent) 0%,
+      color-mix(in srgb, var(--c-core-2) 30%, transparent) 40%,
+      transparent 66%),
+    radial-gradient(circle at 50% 100%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 32%);
+  color: #0f172a;
+
+  /* 玻璃边缘：细黑边界定圆，不加硬白圈（用户反馈白色内缘反光突兀）。
+     用柔和的上缘内反光 + 下缘暗影表现球面曲率。 */
+  box-shadow:
+    0 0 0 1px rgba(15,23,42,0.22),                              /* 黑色细边（玻璃边缘折射） */
+    inset 0 -5px 8px rgba(15,23,42,0.18),                      /* 球底部阴影（淡：让背景透出来） */
+    inset 0 2px 4px rgba(255,255,255,0.55),                    /* 球顶部内反光（柔和弧光） */
+    0 0 0 0 var(--glow);                                       /* hover 外发光位 */
+}
+
+/* 小光点（玻璃反光的 highlight point） */
+.noteball::before {
+  content: '';
+  position: absolute;
+  left: 28%;
+  top: 22%;
+  width: 18%;
+  height: 9%;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.95);
+  filter: blur(0.6px);
+  transform: rotate(-20deg);
+  pointer-events: none;
+  z-index: 3;
+}
+/* 注意：不再有通用 .noteball::after —— 右下角白点反光会让球的下四分之一象限
+   出现一片说不清来源的浅色减淡区（用户反馈）。feature / note 球的 ::after
+   焦散层直接覆盖定义，无需这里的底稿。 */
+
+.noteball:focus-visible {
+  box-shadow:
+    0 0 0 1px rgba(15,23,42,0.22),
+    0 0 0 6px rgba(99,102,241,0.3),
+    inset 0 -6px 10px rgba(15,23,42,0.28),
+    inset 0 2px 3px rgba(255,255,255,0.35);
+}
+
+/* Hover：弹跳 + 辉光 + 饱和度拉满
+ * ⚠️ transform/filter/box-shadow 用 !important —— 这是为了在入场 keyframes
+ *    fill-mode forwards 仍在作用的情况下，让 hover 声明依旧获胜（动画 > !important
+ *    的旧说法已不再成立：现代浏览器中 declaration !important 高于 animation
+ *    的普通 keyframe 声明）。实测必须，否则 hover 不动。
+ *    同时入场动画改成 `animation-fill-mode: backwards`，仅保留 animation-delay 前的
+ *    起始值填充，结束后立即归还控制权给 class 样式。 */
+.noteball:hover {
+  transform: translateY(-8px) scale(1.18) rotate(-2deg) !important;
+  --glow: color-mix(in srgb, var(--c-core-1, #6366f1) 70%, transparent);
+  filter: saturate(1.45) brightness(1.04) !important;
+  box-shadow:
+    0 0 0 1px rgba(15,23,42,0.22),
+    inset 0 -6px 10px rgba(15,23,42,0.28),
+    inset 0 2px 3px rgba(255,255,255,0.35),
+    0 0 26px 0 var(--glow),
+    0 16px 32px rgba(15,23,42,0.22) !important;
+  z-index: 20;
+}
+
+.noteball:hover::before {
+  animation: nb-highlight-wobble 1.2s ease-in-out infinite;
+}
+@keyframes nb-highlight-wobble {
+  0%, 100% { transform: rotate(-20deg) translateY(0); }
+  50%      { transform: rotate(-12deg) translateY(12%); opacity: 0.85; }
+}
+
+.noteball:active {
+  transform: translateY(-2px) scale(1.02) !important;
+  filter: saturate(1.15) brightness(0.97) !important;
+  transition-duration: 80ms !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ *  入场 stagger：is-open 后一颗颗从下往上"滑入"。
+ *  用 backwards：动画结束后释放 :hover 控制权（之前已验证有效）。
+ *  缓动统一 ease-out（不再用 cubic-bezier 1.5 回弹 → 避免入场末尾小球
+ *  又"弹一下"造成不自然感）。 */
+.notebar.is-open .noteball {
+  animation: nb-ball-pop 540ms cubic-bezier(.2,.7,.2,1) backwards;
+}
+/* stagger：每颗球的 delay 已被 inner expand 的 180ms 推迟过，所以不用再叠加更多
+ * 整体节奏：bar 0→400ms, peek 80→380ms, inner expand 180→540ms, stagger 每颗 16ms */
+.notebar.is-open .noteball:nth-child(1)  { animation-delay: 0ms; }
+.notebar-inner > .noteball.feature.add    { animation-delay: 0ms; }   /* + 球 */
+.notebar-inner > button.noteball.feature,
+.notebar-inner > :nth-child(4) .noteball,
+.notebar-inner > .noteball.feature.more   { animation-delay: 208ms; }  /* … 球 */
+.noteball-row .noteball:nth-child(1)     { animation-delay: 32ms; }
+.noteball-row .noteball:nth-child(2)     { animation-delay: 48ms; }
+.noteball-row .noteball:nth-child(3)     { animation-delay: 64ms; }
+.noteball-row .noteball:nth-child(4)     { animation-delay: 80ms; }
+.noteball-row .noteball:nth-child(5)     { animation-delay: 96ms; }
+.noteball-row .noteball:nth-child(6)     { animation-delay: 112ms; }
+.noteball-row .noteball:nth-child(7)     { animation-delay: 128ms; }
+.noteball-row .noteball:nth-child(8)     { animation-delay: 144ms; }
+.noteball-row .noteball:nth-child(9)     { animation-delay: 160ms; }
+.noteball-row .noteball:nth-child(10)    { animation-delay: 176ms; }
+
+/* 去反弹后的入场：从下往上 soft pop */
+@keyframes nb-ball-pop {
+  0%   { opacity: 0; transform: translateY(22px) scale(0.78); filter: blur(1.2px); }
+  70%  { opacity: 1; transform: translateY(0)    scale(1.02); filter: blur(0); }
+  100% { opacity: 1; transform: translateY(0)    scale(1);    filter: blur(0); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ *  功能球（+ 与 …）：使用玻璃球 + 功能色系，带专属辉光色
+ * ═══════════════════════════════════════════════════════════════ */
+.noteball.feature.add {
+  /* 与 note 球同构：core-1 亮色 / core-2 深色，均不透明，
+     避免半透明 rgba 被底层白色高光洗淡 → 玻璃珠发灰、质感干 */
+  --c-core-1: #6ee7b7;   /* emerald-300 亮绿 */
+  --c-core-2: #10b981;   /* emerald-500 翠绿 */
+}
+.noteball.feature.add:hover {
+  --glow: rgba(16, 185, 129, 0.55);
+}
+.noteball.feature.more {
+  --c-core-1: #c4b5fd;   /* violet-300 亮紫 */
+  --c-core-2: #6d28d9;   /* violet-700 深紫 */
+}
+.noteball.feature.more:hover {
+  --glow: rgba(139, 92, 246, 0.55);
+}
+.noteball.feature .noteball-glyph {
+  color: #fff;
+  text-shadow:
+    0 1px 0 rgba(15,23,42,0.45),
+    0 2px 6px rgba(15,23,42,0.35);
+  z-index: 4;
+}
+.noteball.feature.add .noteball-glyph {
+  font-size: calc(var(--ball-size) * 0.6);
+  font-weight: 300;
+  transform: translateY(-2px);
+}
+.noteball.feature.more .noteball-glyph {
+  /* 管理球：原 …→⚙︎（齿轮，成熟感、语义化的「管理/设置」身份） */
+  font-size: calc(var(--ball-size) * 0.56);
+  line-height: 1;
+  letter-spacing: 0;
+  transform: translateY(0);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 功能球：与笔记球相同的「焦散光斑」高光（之前只有 note 有，feature 仅有右下角次高光）
+   使用身份色 c-core-1 / c-core-2 生成，形状/尺寸/混合模式与 note::after 一致，
+   保证左侧 + / 右侧 ⚙︎ 两球的玻璃弹珠质感与中间彩色笔记球完全统一。 */
+.noteball.feature::after {
+  /* 焦散糖芯：正常混合直接着色——身份色清晰可见，又保留玻璃透光 */
+  background:
+    radial-gradient(ellipse at 50% 8%, rgba(255,255,255,0.35), rgba(255,255,255,0) 55%),
+    radial-gradient(circle at 50% 58%,
+      var(--c-core-1) 0%,
+      color-mix(in srgb, var(--c-core-1) 45%, transparent) 42%,
+      transparent 66%);
+  transform: none;
+  width: 74%;
+  height: 74%;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  mix-blend-mode: normal;
+  filter: saturate(1.35) brightness(1.03);
+  opacity: 0.9;
+  animation: nb-caustic-breath 4.6s ease-in-out infinite alternate;
+  animation-play-state: paused; /* [性能] 未展开时不跑 CPU 动画 */
+}
+.notebar.is-open .noteball.feature::after {
+  animation: nb-caustic-breath 4.6s ease-in-out infinite;
+  animation-play-state: running;
+}
+.noteball.feature:hover::after {
+  animation-duration: 2.6s;
+  filter: saturate(1.3);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ *  颜色便签球：用 --tint 覆盖核心色；呼吸效果放到 ::after 光斑上（避免破坏入场 stagger 动画）
+ * ═══════════════════════════════════════════════════════════════ */
+.noteball.note {
+  --tint: #fbbf24;
+  /* 身份色直接用于渲染：--c-core-1 用透明混合（不再掺白，避免球色被洗淡）
+     → 球显示的颜色 = 用户设定的 chip 色，所见即所得 */
+  --c-core-1: color-mix(in srgb, var(--tint) 80%, transparent);
+  --c-core-2: color-mix(in srgb, var(--tint) 90%, #000);
+}
+.noteball.note::after {
+  /* 便签球：焦散糖芯——用设定色直接着色（92% 不透明，所见即所得），保留玻璃透光 */
+  background:
+    radial-gradient(ellipse at 50% 8%, rgba(255,255,255,0.35), rgba(255,255,255,0) 55%),
+    radial-gradient(circle at 50% 58%,
+      color-mix(in srgb, var(--tint) 92%, transparent) 0%,
+      color-mix(in srgb, var(--tint) 45%, transparent) 42%,
+      transparent 66%);
+  transform: none;
+  width: 74%;
+  height: 74%;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  mix-blend-mode: normal;
+  filter: saturate(1.35);
+  opacity: 0.9;
+  /* [性能] 默认暂停！
+   * 8 个球同时无限跑 5.8s 的 filter: saturate() 动画，每帧都要做像素着色，
+   * 静止时它是 CPU 占用最大头（经验 165594：持续 filter/transform 动画 + 壁纸层
+   * 合成 → 合成器每帧重采样）。只在 is-open、用户能看到球时才启动。 */
+  animation: nb-caustic-breath 5.8s ease-in-out infinite alternate;
+  animation-play-state: paused;
+}
+/* 只在展开时启动焦散光斑：用户看不见就绝不浪费 CPU */
+.notebar.is-open .noteball.note::after {
+  animation-play-state: running;
+}
+@keyframes nb-caustic-breath {
+  0%   { filter: saturate(1.2) brightness(1);    opacity: 0.78; transform: translate(0, 0) scale(1); }
+  50%  { filter: saturate(1.6) brightness(1.08); opacity: 0.92; transform: translate(2%, -2%) scale(1.03); }
+  100% { filter: saturate(1.4) brightness(1.04); opacity: 0.86; transform: translate(-1%, 1%) scale(1.01); }
+}
+
+/* 16 色便签球：每色提供 --tint（与调色盘 chip 小圆点的背景色 1:1 严格一致）
+ * + --glow（hover 外发光 rgba，透明度统一 0.6 级，直接复用对应 tint 色值保证同色不偏）。
+ *
+ * 用户反馈「颜色过于一致」→ 针对之前 chip/ball 同色系档位重复做三类打散：
+ *   · coral → orange-family (orange-400 #fb923c)，和红 #ef4444 / 深橘 #ea580c 三分橘区；
+ *   · rose  → fuchsia-family (#e879f9)，与 pink (#f472b6 玫红) / red (#ef4444 红) 三色三族互不撞；
+ *   · emerald/teal 不再用 400 档（与 green-400/cyan-400 几乎一色），改为 emerald-600 #059669 / teal-600 #0d9488（深色"森林蓝绿"）。
+ * NoteColor 字面量 16 色全部覆盖。 */
+/* ——— 黄/橙系（4）：黄 400→琥珀 500→深橘 600→珊瑚橙 400（色相+亮度双变化） ——— */
+.noteball.note.color-yellow { --tint: #facc15; }
+.noteball.note.color-yellow:hover { --glow: rgba(250, 204, 21, 0.65); }
+.noteball.note.color-amber  { --tint: #f59e0b; }
+.noteball.note.color-amber:hover  { --glow: rgba(245, 158, 11, 0.6); }
+.noteball.note.color-orange { --tint: #fb923c; }
+.noteball.note.color-orange:hover { --glow: rgba(251, 146, 60, 0.62); }
+.noteball.note.color-coral  { --tint: #f97316; }
+.noteball.note.color-coral:hover  { --glow: rgba(249, 115, 22, 0.62); }
+/* ——— 粉/红系（3）：玫粉 400→品红 400→红 500（pink / fuchsia / red 三族分流） ——— */
+.noteball.note.color-pink   { --tint: #f472b6; }
+.noteball.note.color-pink:hover   { --glow: rgba(244, 114, 182, 0.6); }
+.noteball.note.color-rose   { --tint: #e879f9; }
+.noteball.note.color-rose:hover   { --glow: rgba(232, 121, 249, 0.6); }
+.noteball.note.color-red    { --tint: #f87171; }
+.noteball.note.color-red:hover    { --glow: rgba(248, 113, 113, 0.6); }
+/* ——— 绿/青系（5）：黄绿 400→草绿 400→森林 600→深青 600→湖蓝 400（深浅跳跃） ——— */
+.noteball.note.color-lime   { --tint: #a3e635; }
+.noteball.note.color-lime:hover   { --glow: rgba(163, 230, 53, 0.62); }
+.noteball.note.color-green  { --tint: #4ade80; }
+.noteball.note.color-green:hover  { --glow: rgba(74, 222, 128, 0.62); }
+.noteball.note.color-emerald{ --tint: #34d399; }
+.noteball.note.color-emerald:hover{ --glow: rgba(52, 211, 153, 0.6); }
+.noteball.note.color-teal   { --tint: #2dd4bf; }
+.noteball.note.color-teal:hover   { --glow: rgba(45, 212, 191, 0.6); }
+.noteball.note.color-cyan   { --tint: #22d3ee; }
+.noteball.note.color-cyan:hover   { --glow: rgba(34, 211, 238, 0.62); }
+/* ——— 蓝/紫系（4）：天蓝 400→钴蓝 500→靛蓝 500→紫 500（蓝族内升档→紫，紫比 fuchsia 更紫） ——— */
+.noteball.note.color-sky    { --tint: #38bdf8; }
+.noteball.note.color-sky:hover    { --glow: rgba(56, 189, 248, 0.65); }
+.noteball.note.color-blue   { --tint: #60a5fa; }
+.noteball.note.color-blue:hover   { --glow: rgba(96, 165, 250, 0.65); }
+.noteball.note.color-indigo { --tint: #818cf8; }
+.noteball.note.color-indigo:hover { --glow: rgba(129, 140, 248, 0.62); }
+.noteball.note.color-purple { --tint: #c084fc; }
+.noteball.note.color-purple:hover { --glow: rgba(192, 132, 252, 0.6); }
+
+/* 球首字：玻璃弹珠上的"贴纸字" */
+.noteball-glyph {
+  font-size: calc(var(--ball-size) * 0.46);
+  font-weight: 800;
+  line-height: 1;
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #0f172a;
+  z-index: 4;
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.75),
+    0 2px 5px rgba(15,23,42,0.28);
+  letter-spacing: 0.5px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ *  角标：浮动玻璃质感（半透明+白描边），不再是"硬贴纸"
+ * ═══════════════════════════════════════════════════════════════ */
+.noteball-pin-badge {
+  position: absolute;
+  top: -4px;
+  right: -2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 22%, rgba(255,255,255,0.95), rgba(255,255,255,0) 45%),
+    linear-gradient(135deg, #fde68a, #f59e0b);
+  border: 1.5px solid rgba(255,255,255,0.88);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  line-height: 1;
+  z-index: 5;
+  box-shadow:
+    0 2px 6px rgba(15,23,42,0.22),
+    inset 0 -1px 1px rgba(15,23,42,0.15);
+  /* [性能] 置顶角标默认暂停，展开态才启动浮动，静止不消耗 CPU */
+  animation: nb-badge-float 2.8s ease-in-out infinite;
+  animation-play-state: paused;
+}
+.notebar.is-open .noteball-pin-badge { animation-play-state: running; }
+@keyframes nb-badge-float {
+  0%, 100% { transform: translateY(0) rotate(-8deg); }
+  50%      { transform: translateY(-2px) rotate(-2deg); }
+}
+
+.noteball-more-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 28% 22%, rgba(255,255,255,0.9), rgba(255,255,255,0) 46%),
+    linear-gradient(135deg, #fb7185, #dc2626);
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
+  text-shadow: 0 1px 1px rgba(127, 29, 29, 0.6);
+  border: 1.5px solid rgba(255,255,255,0.9);
+  z-index: 5;
+  box-shadow:
+    0 2px 6px rgba(220, 38, 38, 0.45),
+    inset 0 -1px 1px rgba(127,29,29,0.35);
+  /* [性能] 同 pin-badge：隐藏态不跑 */
+  animation: nb-badge-float 3.2s ease-in-out infinite;
+  animation-delay: 0.6s;
+  animation-play-state: paused;
+}
+.notebar.is-open .noteball-more-badge { animation-play-state: running; }
+
+/* ═══════════════════════════════════════════════════════════════
+ *  空态提示（独立声明，合并旧重复定义）
+ * ═══════════════════════════════════════════════════════════════ */
+.notebar-empty-hint {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(71, 85, 105, 0.9);
+  font-size: clamp(11px, 0.65vw, 12px);
+  font-weight: 500;
+  padding: 6px 14px;
+  text-align: center;
+  justify-content: center;
+  white-space: nowrap;
+  background: rgba(255,255,255,0.55);
+  border: 1px solid rgba(255,255,255,0.75);
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  box-shadow:
+    0 4px 10px rgba(15,23,42,0.08),
+    inset 0 -1px 0 rgba(15,23,42,0.05);
+  align-self: center;
+}
+.notebar-empty-hint .mini-plus {
+  display: inline-flex;
+  width: 14px; height: 14px;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 28% 22%, rgba(255,255,255,0.9), rgba(255,255,255,0) 50%),
+    linear-gradient(135deg, #34d399, #059669);
+  color: #fff;
+  border-radius: 50%;
+  font-weight: 800;
+  font-size: var(--font-xs);
+  line-height: 1;
+  box-shadow:
+    0 2px 4px rgba(5,150,105,0.35),
+    inset 0 -1px 0 rgba(15,23,42,0.15);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ *  拖拽指示：沿用"意外美感"蓝边，但与玻璃球风格调和
+ * ═══════════════════════════════════════════════════════════════ */
+.noteball.dragging {
+  opacity: 0.55;
+  transform: scale(0.92) rotate(3deg);
+  filter: saturate(1.1);
+}
+.noteball.drop-left {
+  box-shadow:
+    -3px 0 0 0 #3b82f6,
+    0 0 0 1px rgba(15,23,42,0.22),
+    0 0 0 3px rgba(255,255,255,0.75),
+    inset 0 0 0 1px rgba(255,255,255,0.45),
+    inset 0 -6px 10px rgba(15,23,42,0.28),
+    0 8px 20px rgba(59,130,246,0.35);
+}
+.noteball.drop-right {
+  box-shadow:
+    3px 0 0 0 #3b82f6,
+    0 0 0 1px rgba(15,23,42,0.22),
+    0 0 0 3px rgba(255,255,255,0.75),
+    inset 0 0 0 1px rgba(255,255,255,0.45),
+    inset 0 -6px 10px rgba(15,23,42,0.28),
+    0 8px 20px rgba(59,130,246,0.35);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ *  Hover 缩略预览 tooltip（玻璃弹珠弹出的"说明书"）
+ * ═══════════════════════════════════════════════════════════════ */
+.noteball-tooltip {
+  --note-accent: #f59e0b;
+  --note-soft:   #fff7d6;
+  --tip-arrow-shift: 0px;
+  position: fixed;
+  left: 0; top: 0;
+  width: clamp(240px, 24vw, 340px);
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.86);
+  backdrop-filter: blur(16px) saturate(170%);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  border: 1px solid rgba(255,255,255,0.85);
+  border-top: 3px solid var(--note-accent);
+  border-radius: 14px;
+  box-shadow:
+    0 18px 44px rgba(15,23,42,0.24),
+    0 0 0 1px rgba(255,255,255,0.75) inset,
+    0 -1px 0 rgba(255,255,255,0.6) inset;
+  color: #0f172a;
+  font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  z-index: 9999;
+  animation: tip-pop 220ms cubic-bezier(.18,1.5,.36,1) both;
+  transform-origin: bottom center;
+  pointer-events: auto;
+  /* [性能] tooltip 也是条件渲染（只有 activeBallId 时 mount），但为了避免
+   * will-change 永久"提升合成层"造成的壁纸重采样（经验 165594），
+   * 用 translate3d 仅在每次 repositionTooltip 调用那帧走 GPU，不要提前声明。 */
+}
+@keyframes tip-pop {
+  /* 纯缩放从锚点弹出：不再 translateY(10px) 下移——那会让气泡入场瞬间
+     底部下沉 10px 盖住球顶（用户反馈"气泡位置过低"）。 */
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.noteball-tooltip-arrow {
+  position: absolute;
+  left: calc(50% + var(--tip-arrow-shift));
+  bottom: -7px;
+  transform: translateX(-50%) rotate(45deg);
+  width: 12px; height: 12px;
+  background: rgba(255,255,255,0.86);
+  border-right: 1px solid rgba(255,255,255,0.7);
+  border-bottom: 1px solid rgba(255,255,255,0.7);
+  border-radius: 2px;
+  backdrop-filter: blur(16px);
+}
+.noteball-tooltip[data-place="below"] .noteball-tooltip-arrow {
+  bottom: auto;
+  top: -7px;
+  border-right: 0;
+  border-bottom: 0;
+  border-left: 1px solid rgba(255,255,255,0.7);
+  border-top: 1px solid rgba(255,255,255,0.7);
+}
+/* 缩略预览的 16 色身份色：--note-accent 与调色板 chip 色值 1:1 一致
+   （此前缺失 → 所有预览都落到默认琥珀 #f59e0b，用户反馈"没体现笔记设置的颜色"）。
+   作用于顶部 accent 条、badge、✏️ 编辑按钮。 */
+.noteball-tooltip.color-yellow  { --note-accent: #facc15; --note-soft: rgba(250,204,21,0.14); }
+.noteball-tooltip.color-amber   { --note-accent: #f59e0b; --note-soft: rgba(245,158,11,0.14); }
+.noteball-tooltip.color-orange  { --note-accent: #fb923c; --note-soft: rgba(251,146,60,0.14); }
+.noteball-tooltip.color-coral   { --note-accent: #f97316; --note-soft: rgba(249,115,22,0.14); }
+.noteball-tooltip.color-pink    { --note-accent: #f472b6; --note-soft: rgba(244,114,182,0.14); }
+.noteball-tooltip.color-rose    { --note-accent: #e879f9; --note-soft: rgba(232,121,249,0.14); }
+.noteball-tooltip.color-red     { --note-accent: #f87171; --note-soft: rgba(248,113,113,0.14); }
+.noteball-tooltip.color-lime    { --note-accent: #a3e635; --note-soft: rgba(163,230,53,0.14); }
+.noteball-tooltip.color-green   { --note-accent: #4ade80; --note-soft: rgba(74,222,128,0.14); }
+.noteball-tooltip.color-emerald { --note-accent: #34d399; --note-soft: rgba(52,211,153,0.14); }
+.noteball-tooltip.color-teal    { --note-accent: #2dd4bf; --note-soft: rgba(45,212,191,0.14); }
+.noteball-tooltip.color-cyan    { --note-accent: #22d3ee; --note-soft: rgba(34,211,238,0.14); }
+.noteball-tooltip.color-sky     { --note-accent: #38bdf8; --note-soft: rgba(56,189,248,0.14); }
+.noteball-tooltip.color-blue    { --note-accent: #60a5fa; --note-soft: rgba(96,165,250,0.14); }
+.noteball-tooltip.color-indigo  { --note-accent: #818cf8; --note-soft: rgba(129,140,248,0.14); }
+.noteball-tooltip.color-purple  { --note-accent: #c084fc; --note-soft: rgba(192,132,252,0.14); }
+.noteball-tooltip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.noteball-tooltip-header h4 {
+  margin: 0;
+  font-size: clamp(12px, 0.75vw, 14px);
+  font-weight: 800;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+.noteball-tooltip-badge {
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: var(--note-soft);
+  color: var(--note-accent);
+  border: 1px solid color-mix(in srgb, var(--note-accent) 36%, transparent);
+  box-shadow: 0 2px 5px color-mix(in srgb, var(--note-accent) 18%, transparent);
+  flex-shrink: 0;
+}
+.noteball-tooltip-body {
+  font-size: clamp(11px, 0.68vw, 13px);
+  line-height: 1.65;
+  color: #334155;
+  min-height: 40px;
+  max-height: 110px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.noteball-tooltip-body .empty { color: #94a3b8; }
+.noteball-tooltip-footer {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(15,23,42,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.noteball-tooltip-time {
+  font-size: 10.5px;
+  color: #64748b;
+  flex: 1;
+  min-width: 0;
+}
+.noteball-tooltip-actions { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.tip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  min-height: 26px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 800;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 180ms cubic-bezier(.22,1.3,.36,1);
+}
+.tip-btn.open {
+  background:
+    radial-gradient(circle at 26% 22%, rgba(255,255,255,0.8), rgba(255,255,255,0) 55%),
+    linear-gradient(135deg, var(--note-accent), color-mix(in srgb, var(--note-accent) 75%, #000));
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(15,23,42,0.25);
+  box-shadow:
+    0 4px 10px color-mix(in srgb, var(--note-accent) 32%, transparent),
+    inset 0 -1px 0 rgba(15,23,42,0.25);
+}
+.tip-btn.open:hover {
+  transform: translateY(-1px) scale(1.04);
+  box-shadow:
+    0 8px 16px color-mix(in srgb, var(--note-accent) 44%, transparent),
+    inset 0 -1px 0 rgba(15,23,42,0.25);
+}
+.tip-btn-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ *  Portal 根容器：气泡/缩略预览统一渲染在 body 下（脱离 notebar 的
+ *  transform containing-block 陷阱）。壳层自身不拦截任何鼠标事件，
+ *  只有子级气泡（pointer-events:auto）可交互。
+ * ═══════════════════════════════════════════════════════════════ */
+.nb-portal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ *  气泡提示 nb-bubble-tip：替换系统默认 title（原生灰色方框太丑）。
+ *  设计：
+ *   · 玻璃 surface-300 + backdrop-filter: blur(16px)（与 Aurora 侧边栏 peek-ball 一致）；
+ *   · 3px 顶部身份色 accent 条 + 菱形箭头 + 回弹动画 tip-pop；
+ *   · 四种变体：--brand / --add（翠绿）/ --more（极光紫）/ --micro（badge & 编辑按钮的一行小字）。
+ *  与 note 缩略预览共用同一套 reposition 逻辑和 --tip-arrow-shift 变量。
+ * ═══════════════════════════════════════════════════════════════ */
+.nb-bubble-tip {
+  --tip-accent: var(--aurora-2, #8b5cf6);
+  --tip-arrow-shift: 0px;
+  position: fixed;
+  left: 0; top: 0;
+  min-width: 150px;
+  max-width: 260px;
+  padding: 10px 14px 12px;
+  background: var(--glass-surface-700);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid color-mix(in srgb, var(--tip-accent) 32%, var(--glass-border));
+  border-top: 3px solid var(--tip-accent); /* 顶部 accent 条：与 noteball-tooltip 的 border-top 实色直条同形 */
+  border-radius: var(--radius-md);
+  box-shadow:
+    0 16px 40px rgba(15,23,42,0.34),
+    0 0 0 1px rgba(255,255,255,0.68) inset,
+    0 -1px 0 rgba(255,255,255,0.5) inset,
+    0 0 18px color-mix(in srgb, var(--tip-accent) 30%, transparent);
+  color: var(--text-primary);
+  z-index: 9999;
+  overflow: visible;
+  animation: tip-pop 220ms cubic-bezier(.18,1.52,.36,1) both;
+  transform-origin: bottom center;
+  pointer-events: auto;
+  font-family: inherit;
+}
+.nb-bubble-tip-arrow {
+  position: absolute;
+  left: calc(50% + var(--tip-arrow-shift));
+  bottom: -7px;
+  transform: translateX(-50%) rotate(45deg);
+  width: 12px; height: 12px;
+  background: var(--glass-surface-700);
+  border-right: 1px solid color-mix(in srgb, var(--tip-accent) 28%, rgba(255,255,255,0.5));
+  border-bottom: 1px solid color-mix(in srgb, var(--tip-accent) 28%, rgba(255,255,255,0.5));
+  border-radius: 2px;
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  pointer-events: none;
+}
+.nb-bubble-tip[data-place="below"] .nb-bubble-tip-arrow {
+  bottom: auto;
+  top: -7px;
+  border-right: 0;
+  border-bottom: 0;
+  border-left: 1px solid color-mix(in srgb, var(--tip-accent) 28%, rgba(255,255,255,0.5));
+  border-top: 1px solid color-mix(in srgb, var(--tip-accent) 28%, rgba(255,255,255,0.5));
+}
+.nb-bubble-tip-title {
+  font-size: var(--font-sm);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.nb-bubble-tip-text {
+  font-size: var(--font-xs);
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+/* 四种身份色变体：accent 参与 accent 条 + 外框 + glow shadow */
+.nb-bubble-tip--brand {
+  --tip-accent: #10b981; /* 翠绿 → 与 peek-ball 身份色一致 */
+}
+.nb-bubble-tip--add {
+  --tip-accent: #34d399; /* 翠绿（+ 球 emerald 绿） */
+}
+.nb-bubble-tip--more {
+  --tip-accent: #8b5cf6; /* 极光紫（⚙︎ 球 aurora indigo） */
+}
+.nb-bubble-tip--badge {
+  --tip-accent: #f59e0b; /* 琥珀（+N 角标 警告/更多语义） */
+  max-width: 230px;
+}
+.nb-bubble-tip--edit {
+  --tip-accent: #6366f1; /* 靛蓝（编辑按钮的色阶） */
+  max-width: 240px;
+}
+
+/* micro 单行版：没有标题，仅正文，padding 更紧凑 */
+.nb-bubble-tip--micro {
+  padding: 8px 12px 10px;
+}
+.nb-bubble-tip--micro .nb-bubble-tip-title { display: none; }
+
+/* ═══════════════════════════════════════════════════════════════
+ *  触控 & 窄屏
+ * ═══════════════════════════════════════════════════════════════ */
+@media (hover: none) and (pointer: coarse) {
+  .noteball { --ball-size: 52px; }
+  /* 触控：点击才打开，不再使用"半藏→悬浮"的 hover 语义，
+   * 让 peek-ball 默认完全露出来（不被 translateY 半藏），用户点得到 */
+  .notebar { transform: translate3d(-50%, calc(100% - var(--peek) + 4px), 0); }
+  .notebar.is-open { transform: translate3d(-50%, 0, 0); }
+  .notebar-peek-ball { opacity: 0.55; }
+  .noteball:hover { transform: none; }
+  .noteball:active { transform: scale(0.95); }
+}
+
+@media (max-width: 560px) {
+  .notebar-inner { gap: 8px; }
+  .noteball-row { gap: 8px; }
+  .noteball { --ball-size: 42px; }
+  .notebar-empty-hint { font-size: var(--font-xs); padding-inline: 10px; }
+}

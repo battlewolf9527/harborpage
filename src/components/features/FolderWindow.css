@@ -1,65 +1,72 @@
+/* ============================================================
+   FolderWindow.css — Aurora Dark Glass 统一视觉
+   组件身份：文件夹浏览器（中心大窗口）→ 左侧 3px aurora 竖条当视觉锚点
+   包含三层：folder-overlay / folder-window / 内嵌 confirm-dialog
+   按钮布局：footer 功能按钮左，解散/删除作为功能按钮 左对齐；内嵌confirm 取消最右(margin-left:auto)
+   所有内嵌 @keyframes 改为调用全局共享 glass-modal-scale / fadeIn 等
+   ============================================================ */
+
+/* ---------- 第一层：Overlay ---------- */
 .folder-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  inset: 0;
+  background: var(--overlay-bg);
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 999;
-  animation: fadeIn 0.3s ease;
+  /* ※ 关键修复：var(--motion-normal) = "260ms cubic-bezier(...)" 本身已经含 easing；
+     后面再写 "ease" 等于在同一个 <single-animation> 里叠了 2 个 easing-function → CSS 语法非法，
+     浏览器直接整条 animation ignore → 完全无淡入。 改：只保留 fill-mode both。 */
+  animation: fadeIn var(--motion-normal) both;
 }
-
 .folder-overlay.closing {
-  animation: fadeOut 0.3s ease forwards;
+  /* 同上：删除多余 "ease" */
+  animation: fadeOut var(--motion-normal) both;
 }
 
+/* ---------- 第二层：Folder Window 外壳 ---------- */
 .folder-window {
-  background: rgba(255, 255, 255, 0.4);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  /* 旧：min-width/max-width 都是 min(900px,63vw)
-     —— min(X,Y) 会取两者中更小的，所以 ≥1428px 就卡死 900px，4K 下仅占屏宽 23%。
-     新：用 clamp() 给出下/中/上限三层保护：
-     - ≤~1385px：保底 900px（旧行为不回退）
-     - 1920px 1080p：65% × 1920 = 1248px（居中弹窗比主页稍小）
-     - 2560px 2K  ：65% × 2560 = 1664px，被 clamp 到 1600 上限
-     - 3840px 4K  ：封顶 1800px，避免弹窗铺得太空导致内容稀薄 */
+  position: relative; /* 承载 ::before 左竖条 */
+  background: var(--glass-surface-700);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(155%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(155%);
+  box-shadow:
+    var(--glass-inner-hl),
+    var(--shadow-glass-lg);
   min-width: clamp(900px, 65%, 1800px);
   max-width: clamp(900px, 65%, 1800px);
   max-height: 80vh;
   display: flex;
   flex-direction: column;
-  animation: scaleIn 0.3s ease;
+  /* ※ 关键修复：之前 "var(--motion-spring) cubic-bezier(.22,1.3,.36,1)" = 2 个 easing，
+     CSS 解析非法 → 整条 animation 被忽略 → 窗口"跳出来"无动画。
+     Folder 专属回弹（1.3 > 全局 1.25）用显式时长 + easing，保证语法合法：
+     <name> <duration> <easing> <fill-mode>  （正好 1 个 easing）。 */
+  animation: glass-modal-scale 360ms cubic-bezier(.22, 1.3, .36, 1) both;
+  overflow: hidden; /* 让左竖条圆角贴合 */
 }
-
 .folder-overlay.closing .folder-window {
-  animation: scaleOut 0.3s ease forwards;
+  /* 与入场对称回弹，拆显式写法（避免 motion-spring 内置 easing 不一致） */
+  animation: glass-modal-scale-reverse 360ms cubic-bezier(.22, 1.3, .36, 1) both;
 }
 
-@keyframes scaleIn {
-  from {
-    transform: scale(0.9);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
+/* 文件夹窗口采用居中大圆角 + h3::before/h2::before 作视觉锚点，
+   外壳不再放左侧 3px 极光竖条（突兀不美观，居中弹窗的视觉重心在内部）。 */
 
+/* ---------- Header ---------- */
 .folder-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: clamp(14px, 1.8vw, 20px) clamp(18px, 2.2vw, 24px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid color-mix(in srgb, var(--glass-border) 90%, transparent);
   gap: clamp(10px, 1vw, 16px);
+  background: color-mix(in srgb, var(--glass-surface-500) 50%, transparent);
 }
 
 .folder-name-container {
@@ -68,107 +75,100 @@
   gap: 12px;
   position: relative;
   flex: 1;
+  min-width: 0; /* 防标题撑高 */
 }
 
 .folder-name-display {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  border-radius: 12px;
-  transition: all 0.3s ease;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--motion-fast);
 }
-
 .folder-name-display:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: color-mix(in srgb, var(--aurora-2) 8%, transparent);
 }
 
 .folder-title {
   margin: 0;
-  font-size: 22px;
+  font-size: var(--font-xl);
   font-weight: 600;
-  color: white;
-  font-family: 'Poppins', sans-serif;
-  transition: all 0.3s ease;
+  color: var(--text-primary);
+  font-family: inherit;
+  letter-spacing: 0.005em;
+  transition: color var(--motion-fast);
 }
 
+/* 编辑按钮：32px + 10px 圆角，ghost 玻璃 */
 .folder-edit-btn {
   width: 32px;
   height: 32px;
   padding: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--glass-surface-300);
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--motion-fast);
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
   opacity: 0;
-  animation: fadeIn 0.2s ease forwards;
+  animation: fadeIn var(--motion-fast) forwards;
+  box-shadow: var(--glass-inner-hl);
 }
-
-.folder-name-display:hover .folder-edit-btn {
-  opacity: 1;
-}
-
+.folder-name-display:hover .folder-edit-btn { opacity: 1; }
 .folder-edit-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: white;
-  border-color: rgba(100, 150, 255, 0.3);
+  background: color-mix(in srgb, var(--aurora-2) 16%, var(--glass-surface-300));
+  color: var(--text-primary);
+  border-color: color-mix(in srgb, var(--aurora-2) 40%, var(--glass-border));
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(100, 150, 255, 0.2);
+  box-shadow:
+    var(--glass-inner-hl),
+    0 4px 12px color-mix(in srgb, var(--aurora-2) 28%, transparent);
 }
 
+/* 编辑态输入容器 */
 .folder-name-edit {
   display: flex;
   align-items: center;
   gap: 12px;
   width: 100%;
   padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(100, 150, 255, 0.3);
-  border-radius: 12px;
-  animation: slideIn 0.3s ease;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  background: var(--glass-surface-500);
+  border: 1px solid color-mix(in srgb, var(--aurora-2) 36%, var(--glass-border));
+  border-radius: var(--radius-sm);
+  box-shadow: var(--glass-inner-hl);
+  animation: slideInRight var(--motion-spring) both;
 }
 
 .folder-name-input {
   flex: 1;
-  padding: 10px 16px;
-  border: 2px solid rgba(100, 150, 255, 0.4);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  font-size: 18px;
-  font-family: 'Poppins', sans-serif;
+  padding: 9px 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xs);
+  background: var(--glass-surface-700);
+  color: var(--text-primary);
+  font-size: var(--font-lg);
+  font-family: inherit;
   outline: none;
-  transition: all 0.3s ease;
-  min-width: 200px;
+  transition: all var(--motion-fast);
+  min-width: 0;
+  box-shadow: var(--glass-inner-hl);
 }
-
 .folder-name-input:focus {
-  border-color: rgba(100, 150, 255, 0.8);
-  background: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 0 0 3px rgba(100, 150, 255, 0.15);
-  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--aurora-2) 50%, var(--glass-border));
+  background: var(--glass-surface-700);
+  box-shadow:
+    var(--glass-inner-hl),
+    0 0 0 4px color-mix(in srgb, var(--aurora-2) 18%, transparent);
+  transform: translateY(-0.5px);
 }
-
 .folder-name-input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
-  font-style: italic;
+  color: var(--text-tertiary);
+  font-style: italic; /* placeholder 用 italic 合理，用户偏好针对的是禁用元素 */
 }
 
 .edit-actions {
@@ -176,110 +176,106 @@
   gap: 8px;
 }
 
+/* 保存/取消：32px，save = success 语义 + 极光描边，cancel = danger 语义 淡红底 */
 .edit-action-btn {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  font-size: 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-md);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--motion-fast);
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
   flex-shrink: 0;
+  box-shadow: var(--glass-inner-hl);
 }
 
 .edit-action-btn.save-btn {
-  background: linear-gradient(135deg, rgba(0, 200, 100, 0.2), rgba(0, 180, 80, 0.3));
-  color: #00ff88;
-  border-color: rgba(0, 200, 100, 0.3);
+  background: color-mix(in srgb, var(--semantic-success) 16%, transparent);
+  color: var(--semantic-success);
+  border-color: color-mix(in srgb, var(--semantic-success) 40%, transparent);
 }
-
 .edit-action-btn.save-btn:hover {
-  background: linear-gradient(135deg, rgba(0, 200, 100, 0.3), rgba(0, 180, 80, 0.4));
-  border-color: rgba(0, 200, 100, 0.5);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 200, 100, 0.3);
+  background: color-mix(in srgb, var(--semantic-success) 28%, transparent);
+  border-color: color-mix(in srgb, var(--semantic-success) 60%, transparent);
+  transform: translateY(-1.5px);
+  box-shadow:
+    var(--glass-inner-hl),
+    0 4px 12px color-mix(in srgb, var(--semantic-success) 35%, transparent);
 }
 
 .edit-action-btn.cancel-btn {
-  background: linear-gradient(135deg, rgba(200, 80, 80, 0.2), rgba(180, 60, 60, 0.3));
-  color: #ff6b6b;
-  border-color: rgba(200, 80, 80, 0.3);
+  background: color-mix(in srgb, var(--semantic-danger) 14%, transparent);
+  color: var(--semantic-danger);
+  border-color: color-mix(in srgb, var(--semantic-danger) 36%, transparent);
 }
-
 .edit-action-btn.cancel-btn:hover {
-  background: linear-gradient(135deg, rgba(200, 80, 80, 0.3), rgba(180, 60, 60, 0.4));
-  border-color: rgba(200, 80, 80, 0.5);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(200, 80, 80, 0.3);
+  background: color-mix(in srgb, var(--semantic-danger) 26%, transparent);
+  border-color: color-mix(in srgb, var(--semantic-danger) 58%, transparent);
+  transform: translateY(-1.5px);
+  box-shadow:
+    var(--glass-inner-hl),
+    0 4px 12px color-mix(in srgb, var(--semantic-danger) 32%, transparent);
 }
 
+/* 关闭按钮：32×32 / 10px / hover 红色语义背景（全站统一） */
 .folder-close-btn {
   width: 32px;
   height: 32px;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  color: white;
-  font-size: 16px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--glass-surface-300);
+  color: var(--text-secondary);
+  font-size: var(--font-lg);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--motion-fast);
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
+  flex-shrink: 0;
+  box-shadow: var(--glass-inner-hl);
 }
-
 .folder-close-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(100, 100, 255, 0.5);
-  transform: scale(1.1);
+  background: color-mix(in srgb, var(--semantic-danger) 22%, var(--glass-surface-300));
+  color: white;
+  border-color: color-mix(in srgb, var(--semantic-danger) 45%, var(--glass-border));
+  transform: translateY(-1px);
+  box-shadow:
+    var(--glass-inner-hl),
+    0 4px 14px color-mix(in srgb, var(--semantic-danger) 32%, transparent);
 }
 
+/* ---------- Content ---------- */
 .folder-content {
   padding: clamp(16px, 2vw, 24px);
   overflow-y: auto;
-  /* 必须显式关 x 溢出：每个 .icon-wrapper 左右都有 2 根 50px 宽的 drop-zone
-     绝对定位在 wrapper 外面（-5px 边距），行首 / 行尾的 drop-zone 会把
-     folder-content 的水平可滚动区域硬生生撑大 55px。
-     如果这里只写 overflow-y:auto、不写 overflow-x:hidden，CSS 规范会把
-     x 侧的 visible 强制转成 auto（因为 y 侧创建了滚动容器），于是一行
-     最后一个图标的 after drop-zone 会触发水平滚动条 —— 视觉就是
-     "把图标拖到行尾最后一个左侧，下方忽然出现滚动条，文件夹窗口变宽"。 */
   overflow-x: hidden;
   max-height: calc(80vh - 80px);
+  color: var(--text-primary);
 }
 
-.folder-content::-webkit-scrollbar {
-  width: 6px;
-}
-
+/* 滚动条 6px 深色主题色阶 */
+.folder-content::-webkit-scrollbar { width: 6px; }
 .folder-content::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: color-mix(in srgb, var(--glass-surface-300) 55%, transparent);
   border-radius: 3px;
 }
-
 .folder-content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: color-mix(in srgb, var(--aurora-2) 35%, rgba(255,255,255,.18));
   border-radius: 3px;
 }
-
 .folder-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: color-mix(in srgb, var(--aurora-2) 55%, rgba(255,255,255,.24));
 }
 
-.folder-icons-grid {
-  width: 100%;
-}
-
-.folder-icons-grid.dragging-out {
-  opacity: 0.5;
-}
+.folder-icons-grid { width: 100%; }
+.folder-icons-grid.dragging-out { opacity: 0.5; }
 
 .folder-icon-item {
   text-align: center;
@@ -288,191 +284,243 @@
   align-items: center;
 }
 
-/* 文件夹操作按钮 */
+/* ---------- Footer Actions ---------- */
+/* 解散 / 删除：都是功能性破坏性动作，不关闭 FolderWindow（会触发内嵌二次确认）。
+   这一组按钮单独放 footer 中央，用户一眼就能定位；与按钮容器 footer 左/右分栏规则不冲突。 */
 .folder-actions {
   display: flex;
-  justify-content: center;
+  align-items: center;
+  justify-content: center; /* 功能动作居中（左右留白对称） */
   gap: 16px;
   padding: 16px 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
+  border-top: 1px solid color-mix(in srgb, var(--glass-border) 90%, transparent);
+  background: color-mix(in srgb, var(--glass-surface-500) 45%, transparent);
 }
 
+/* 功能按钮：与全局 Aurora 按钮规格 1:1 对齐（--btn-h / --btn-radius / --btn-pad-x），
+   之前 13.5px + radius-xs=7px + 9px padding 太小，用户看不清不易点。 */
 .folder-action-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  font-size: 14px;
+  justify-content: center;
+  gap: 7px;
+  min-height: var(--btn-h);           /* 38px 统一按钮高 */
+  padding: 0 var(--btn-pad-x);        /* 水平 18px */
+  border: 1px solid var(--glass-border);
+  border-radius: var(--btn-radius);   /* 10px 统一圆角 */
+  background: var(--glass-surface-300);
+  color: var(--text-primary);
+  font-size: var(--font-md);          /* 14.5~15px 清晰字号 */
+  font-weight: 550;
+  line-height: 1;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--motion-fast);
+  box-shadow: var(--glass-inner-hl);
+  letter-spacing: 0.005em;
+  user-select: none;
 }
-
 .folder-action-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
+  background: color-mix(in srgb, var(--aurora-2) 16%, var(--glass-surface-300));
+  border-color: color-mix(in srgb, var(--aurora-2) 40%, var(--glass-border));
+  transform: translateY(-1.5px);
+  box-shadow:
+    var(--glass-inner-hl),
+    0 6px 16px color-mix(in srgb, var(--aurora-2) 25%, transparent);
 }
 
+/* 解散按钮 hover 改 success 语义 */
 .disband-btn:hover {
-  border-color: rgba(100, 200, 100, 0.5);
-  background: rgba(100, 200, 100, 0.15);
+  background: color-mix(in srgb, var(--semantic-success) 20%, var(--glass-surface-300));
+  border-color: color-mix(in srgb, var(--semantic-success) 48%, var(--glass-border));
+  color: var(--semantic-success);
+  box-shadow:
+    var(--glass-inner-hl),
+    0 6px 16px color-mix(in srgb, var(--semantic-success) 28%, transparent);
 }
 
+/* 删除按钮 hover 改 danger 语义 */
 .delete-btn:hover {
-  border-color: rgba(255, 100, 100, 0.5);
-  background: rgba(255, 100, 100, 0.15);
+  background: color-mix(in srgb, var(--semantic-danger) 22%, var(--glass-surface-300));
+  border-color: color-mix(in srgb, var(--semantic-danger) 50%, var(--glass-border));
+  color: var(--semantic-danger);
+  box-shadow:
+    var(--glass-inner-hl),
+    0 6px 16px color-mix(in srgb, var(--semantic-danger) 28%, transparent);
 }
 
-/* 确认对话框 */
+/* ============================================================
+   第三层：内嵌 Confirm Dialog（FolderWindow 自己的 confirm，
+   不走全局 ConfirmDialog 组件）
+   ============================================================ */
 .confirm-dialog-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  inset: 0;
+  background: var(--overlay-bg);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1001;
-  animation: fadeIn 0.3s ease;
+  /* ※ 关键修复：删除多余 "ease"（var(--motion-normal) 已内置 easing → 双 easing 非法） */
+  animation: fadeIn var(--motion-normal) both;
 }
 
 .confirm-dialog {
-  background: rgba(30, 30, 30, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 16px;
-  padding: 24px 32px;
+  position: relative;
+  background: var(--glass-surface-700);
+  backdrop-filter: blur(var(--glass-blur)) saturate(155%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(155%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 24px 26px;
   max-width: 400px;
   width: 90%;
   text-align: center;
-  animation: scaleIn 0.3s ease;
+  box-shadow:
+    var(--glass-inner-hl),
+    var(--shadow-glass-lg);
+  overflow: hidden; /* 让 aurora 顶条被圆角裁切 */
+  animation: glass-modal-scale var(--motion-spring) both;
+}
+/* Aurora 3px 顶条 */
+.confirm-dialog::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--aurora-gradient);
+  pointer-events: none;
 }
 
 .confirm-dialog h4 {
-  margin: 0 0 12px 0;
-  font-size: 18px;
-  color: white;
+  margin: 0 0 10px 0;
+  font-size: var(--font-lg);
+  color: var(--text-primary);
   font-weight: 600;
+  font-family: inherit;
 }
-
 .confirm-dialog p {
-  margin: 0 0 24px 0;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
-  line-height: 1.6;
+  margin: 0 0 22px 0;
+  font-size: var(--font-md);
+  color: var(--text-secondary);
+  line-height: 1.65;
 }
 
+/* FolderWindow 内嵌确认对话框按钮容器：
+   按用户约定：「会关闭窗口的按钮全部放右侧，取消按钮最右侧」
+   所以 confirm（功能+关闭）+ cancel（纯关闭）= 都 justify flex-end；DOM 顺序 [confirm → cancel] = cancel 视觉最右；
+   gap 10px 与全局 ConfirmDialog 对齐；不再使用 margin-left:auto 推取消按钮。 */
 .confirm-dialog-buttons {
   display: flex;
-  gap: 12px;
-  justify-content: center;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
 }
 
 .confirm-dialog-buttons .confirm-btn,
 .confirm-dialog-buttons .cancel-btn {
-  padding: 10px 24px;
+  padding: 0 var(--btn-pad-x);
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: var(--btn-radius);
+  font-size: var(--font-md);
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  width: auto;
-  height: auto;
+  transition: all var(--motion-fast);
+  min-height: var(--btn-h);
+  min-width: 0;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  letter-spacing: 0.01em;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1;
 }
 
+/* 确认按钮：极光主按钮（danger 变体换语义红渐变，与全局 ConfirmDialog 一致） */
 .confirm-dialog-buttons .confirm-btn {
-  background: rgba(100, 150, 255, 0.8);
-  color: white;
+  color: var(--text-on-accent);
+  background: var(--aurora-gradient);
+  box-shadow: var(--aurora-glow);
 }
-
-.confirm-dialog-buttons .confirm-btn.danger {
-  background: rgba(255, 100, 100, 0.8);
-}
-
 .confirm-dialog-buttons .confirm-btn:hover {
-  background: rgba(100, 150, 255, 1);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
+  box-shadow:
+    0 14px 32px color-mix(in srgb, var(--aurora-2) 44%, transparent),
+    0 0 0 1px rgba(255, 255, 255, 0.14) inset;
+}
+.confirm-dialog-buttons .confirm-btn:active {
+  transform: translateY(0);
 }
 
+/* Danger 变体：语义红渐变（统一 token，不再硬编码三色） */
+.confirm-dialog-buttons .confirm-btn.danger {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--semantic-danger) 95%, #fff),
+    color-mix(in srgb, var(--semantic-danger) 65%, #000));
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--semantic-danger) 38%, transparent);
+}
 .confirm-dialog-buttons .confirm-btn.danger:hover {
-  background: rgba(255, 100, 100, 1);
+  box-shadow:
+    0 14px 32px color-mix(in srgb, var(--semantic-danger) 50%, transparent),
+    0 0 0 1px rgba(255, 255, 255, 0.14) inset;
 }
 
+/* 取消按钮：glass 幽灵规格（与全局 ConfirmDialog 完全一致）；
+   因容器 justify-content:flex-end + DOM 在最后一位 → 自然处于最右位置，不再需 margin-left:auto */
 .confirm-dialog-buttons .cancel-btn {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--glass-surface-300);
+  color: var(--text-secondary);
+  border: var(--glass-border);
+  box-shadow: var(--glass-inner-hl);
 }
-
 .confirm-dialog-buttons .cancel-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
-}
-
-
-
-/* 重命名文件夹对话框样式 */
-.rename-input-container {
-  margin: 20px 0;
-}
-
-.rename-input {
-  width: 100%;
-  padding: 12px 16px;
-  border: 2px solid rgba(100, 150, 255, 0.4);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  font-size: 16px;
-  font-family: 'Poppins', sans-serif;
-  outline: none;
-  transition: all 0.3s ease;
-}
-
-.rename-input:focus {
-  border-color: rgba(100, 150, 255, 0.8);
-  background: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 0 0 3px rgba(100, 150, 255, 0.15);
+  background: var(--glass-surface-hover);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.18);
   transform: translateY(-1px);
 }
 
+/* 重命名输入框：对齐 input-token（10px 圆角 + aurora focus ring，增加输入框↔按钮间距） */
+.rename-input-container {
+  margin: 20px 0 18px;
+  text-align: left;
+}
+.rename-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--btn-radius); /* 统一 10px 圆角，与按钮保持一致 */
+  background: var(--glass-surface-500);
+  color: var(--text-primary);
+  font-size: var(--font-md);
+  font-family: inherit;
+  outline: none;
+  transition: all var(--motion-fast);
+  box-shadow: var(--glass-inner-hl);
+  box-sizing: border-box;
+}
+.rename-input:focus {
+  border-color: color-mix(in srgb, var(--aurora-2) 50%, var(--glass-border));
+  box-shadow:
+    var(--glass-inner-hl),
+    0 0 0 4px color-mix(in srgb, var(--aurora-2) 18%, transparent);
+  transform: translateY(-0.5px);
+}
 .rename-input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-tertiary);
   font-style: italic;
 }
 
-@keyframes scaleIn {
-  from { 
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to { 
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes scaleOut {
-  from { 
-    opacity: 1;
-    transform: scale(1);
-  }
-  to { 
-    opacity: 0;
-    transform: scale(0.9);
-  }
-}
-
-/* 响应式设计 - 平板 */
+/* ============================================================
+   响应式断点 —— 保留原多断点，但统一圆角/内边距 token
+   ============================================================ */
 @media (min-width: 769px) and (max-width: 1024px) {
   .folder-window {
     min-width: 75vw;
@@ -480,168 +528,107 @@
   }
 }
 
-/* 响应式设计 - 手机 */
 @media (max-width: 768px) {
   .folder-window {
     min-width: 92vw;
     max-width: 92vw;
     max-height: 72vh;
-    border-radius: 14px;
+    border-radius: var(--radius-md);
   }
-
   .folder-title {
     font-size: clamp(16px, 2.2vw, 20px);
   }
-
   .folder-name-input {
     min-width: 0;
-    font-size: 16px;
+    font-size: var(--font-md);
     padding: 8px 12px;
   }
-
   .folder-actions {
     padding: 12px 16px;
     gap: 10px;
     flex-wrap: wrap;
   }
-
   .folder-action-btn {
     padding: 8px 14px;
-    font-size: 13px;
+    font-size: var(--font-sm);
     flex: 1;
     min-width: 0;
     justify-content: center;
   }
 }
 
-/* 响应式设计 - 超小屏手机 */
 @media (max-width: 375px) {
   .folder-window {
     min-width: 94vw;
     max-width: 94vw;
     max-height: 74vh;
-    border-radius: 12px;
+    border-radius: var(--radius-md);
   }
-
   .folder-header {
     padding: 12px 14px;
     flex-wrap: wrap;
   }
-
   .folder-content {
     padding: 12px;
   }
-
   .folder-actions {
     padding: 10px 12px;
     gap: 8px;
   }
-
   .folder-action-btn {
     padding: 8px 12px;
-    font-size: 12px;
+    font-size: var(--font-sm);
   }
 }
 
-/* ============================================================
-   大屏断点 - 文件夹窗口尺寸
-   与 IconsContainer.css 的 1080p/2K/4K 断点配套。
-   注意：FolderWindow 是居中弹窗，所以上限比主页更保守，
-   避免在 4K 上铺成"一大片广场"导致内容稀薄难扫视。
-   ============================================================ */
-
-/* ≥ 1080p (1920px)：clamp 上/下限收紧，窗口 ≈1100-1400px，header/content padding 稍放大 */
+/* 大屏（1080p / 2K / 4K）：clamp 维度保留，视觉 tokens 自动适配 */
 @media (min-width: 1920px) {
   .folder-window {
     min-width: clamp(1100px, 65%, 1400px);
     max-width: clamp(1100px, 65%, 1400px);
   }
-
-  .folder-header {
-    padding: 20px 26px;
-  }
-
-  .folder-content {
-    padding: 26px;
-  }
-
-  .folder-actions {
-    padding: 18px 26px;
-    gap: 18px;
-  }
+  .folder-header  { padding: 20px 26px; }
+  .folder-content { padding: 26px; }
+  .folder-actions { padding: 18px 26px; gap: 18px; }
 }
 
-/* ≥ 2K / QHD (2560px)：clamp 上限提至 1600px */
 @media (min-width: 2560px) {
   .folder-window {
     min-width: clamp(1300px, 65%, 1600px);
     max-width: clamp(1300px, 65%, 1600px);
   }
-
-  .folder-header {
-    padding: 22px 28px;
-  }
-
-  .folder-content {
-    padding: 28px;
-  }
-
-  .folder-title {
-    font-size: 24px;
-  }
-
-  .folder-actions {
-    padding: 18px 28px;
-    gap: 20px;
-  }
-
+  .folder-header  { padding: 22px 28px; }
+  .folder-content { padding: 28px; }
+  .folder-title   { font-size: var(--font-2xl); }
+  .folder-actions { padding: 18px 28px; gap: 20px; }
   .folder-action-btn {
-    padding: 12px 22px;
-    font-size: 15px;
+    padding: 10px 20px;
+    font-size: var(--font-md);
   }
 }
 
-/* ≥ 4K / UHD (3840px)：clamp 上限到 1800px，比例降到 60%（居中弹窗不应过宽） */
 @media (min-width: 3840px) {
   .folder-window {
     min-width: clamp(1600px, 60%, 1800px);
     max-width: clamp(1600px, 60%, 1800px);
-    border-radius: 20px;
   }
-
-  .folder-header {
-    padding: 26px 32px;
-  }
-
-  .folder-content {
-    padding: 32px;
-  }
-
-  .folder-title {
-    font-size: 26px;
-  }
-
+  .folder-header  { padding: 26px 32px; }
+  .folder-content { padding: 32px; }
+  .folder-title   { font-size: 24px; }
   .folder-close-btn {
     width: 36px;
     height: 36px;
-    font-size: 18px;
+    font-size: 17px;
   }
-
-  .folder-actions {
-    padding: 20px 32px;
-    gap: 22px;
-  }
-
+  .folder-actions { padding: 20px 32px; gap: 22px; }
   .folder-action-btn {
-    padding: 14px 24px;
-    font-size: 16px;
-    border-radius: 10px;
+    padding: 12px 22px;
+    font-size: var(--font-lg);
+    border-radius: var(--radius-sm);
   }
 }
 
-/* 拖拽全局激活时（body.is-dragging-active）降低 FolderWindow 的模糊半径，
-   减少与其他 backdrop-filter 元素（icon-circle、search bar、confirm dialog）叠加后
-   导致的多层层化 + 每帧重采样 GPU 开销，避免极端情况下 GPU OOM 崩溃。 */
+/* 拖拽全局激活时（body.is-dragging-active）降模糊，防多层 backdrop-filter GPU 开销 */
 body.is-dragging-active .folder-overlay {
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
@@ -657,4 +644,18 @@ body.is-dragging-active .confirm-dialog-overlay {
 body.is-dragging-active .confirm-dialog {
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+}
+
+/* 共享 keyframes 不存在时的兜底（仅当 index.css 被误用时生效） */
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+@keyframes glass-modal-scale-reverse {
+  from { transform: scale(1); opacity: 1; }
+  to   { transform: scale(0.94); opacity: 0; }
 }

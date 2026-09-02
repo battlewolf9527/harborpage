@@ -18,6 +18,7 @@ import { useSettingsSelector, useIconsDataSelector, useIconsUISelector, useImpor
 import Weather from './components/features/Weather'
 import TodoSidebar from './components/features/TodoSidebar'
 import PagesSidebar from './components/features/PagesSidebar'
+import NoteBar from './components/ui/NoteBar'
 import type { Website, SearchEngine } from './types'
 import { useAuth } from './hooks/useAuth';
 import { useDataInitialization } from './hooks/useDataInitialization';
@@ -295,6 +296,9 @@ function App() {
 
       <PagesSidebar />
       <TodoSidebar />
+
+      {/* 底部半隐入笔记栏（仅登录后展示） */}
+      <NoteBar />
 
       <MoveToPageDialog
         isOpen={!!moveDialog}

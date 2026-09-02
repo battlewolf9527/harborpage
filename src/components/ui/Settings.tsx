@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import SettingsWindow from './SettingsWindow';
 import WallpaperManager from '../features/WallpaperManager';
 import SearchManager from '../features/SearchManager';
-import Notes from '../common/Notes';
 import IconSettings from './IconSettings';
+import AutoSaveSettings from './AutoSaveSettings';
 import FaviconSettings from './FaviconSettings';
 import ImportPresetDialog from './ImportPresetDialog';
 import ImportExport from './ImportExport';
@@ -27,10 +27,43 @@ interface SettingsProps {
 }
 
 const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
+  /* —— 延迟卸载机制（根治「滑出无动画」）
+       关闭有 2 条路径：
+         A) 子窗口内点 ✕ / ESC / overlay → 子 260ms 过渡 → 父 onClose() → 本组件 isOpen=false
+         B) 齿轮按钮 toggle 关（setShowSettings(false) 直接外部改 isOpen=false）→ 走 return null 立刻卸
+       之前 return null 让路径 B 完全跳过过渡。
+       修复：mounted + closing 双 state + isOpen useEffect 统一延迟卸载；
+       并把 closing 作为 isClosing 传给子 → 子 CSS transition 一致可见。 */
+  const [mounted, setMounted] = useState(isOpen);
+  const [closing, setClosing] = useState(false);
+  const closingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      // 打开：立即挂载 + 取消 closing
+      if (closingTimerRef.current) { clearTimeout(closingTimerRef.current); closingTimerRef.current = null; }
+      setMounted(true);
+      setClosing(false);
+    } else {
+      // 关闭（任何路径）：先进入 closing 过渡 280ms，再卸载
+      setClosing(true);
+      if (closingTimerRef.current) clearTimeout(closingTimerRef.current);
+      closingTimerRef.current = setTimeout(() => {
+        closingTimerRef.current = null;
+        setMounted(false);
+        setClosing(false);
+      }, 280); // 与 SettingsWindow.css transition 260ms + 20ms 保险
+    }
+    return () => {
+      if (closingTimerRef.current) { clearTimeout(closingTimerRef.current); closingTimerRef.current = null; }
+    };
+  }, [isOpen]);
+
   const [showWallpaperManager, setShowWallpaperManager] = useState(false);
+  const [showIconSettings, setShowIconSettings] = useState(false);
+  const [showAutoSaveSettings, setShowAutoSaveSettings] = useState(false);
   const [showSearchManager, setShowSearchManager] = useState(false);
   const [showFaviconManager, setShowFaviconManager] = useState(false);
-  const [showNotesManager, setShowNotesManager] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -167,121 +200,83 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
     setShowCleanupConfirm(false);
   };
 
-  if (!isOpen) return null;
+  // 延迟卸载：任何关闭路径（✕/齿轮 toggle/ESC）都必须等 closing 过渡播完才真正卸载
+  if (!mounted) return null;
 
   return (
     <>
+      {/* closing/!isOpen 任一为真 → 子进入关闭态 CSS class（transform translateX(100%) + overlay 淡出） */}
       <SettingsWindow 
         title="设置"
+        isClosing={closing || !isOpen}
         onClose={onClose}
       >
+        {/* ── 第 1 组：个性化 ───────────────────────────────── */}
         <div className="settings-section">
-          <h3>网站标题</h3>
-          <div className="option-item">
-            <label>页面标题</label>
-            <input
-              type="text"
-              value={siteTitle}
-              onChange={(e) => setSiteTitle(e.target.value)}
-              placeholder="输入页面标题"
-              className="title-input"
-            />
-          </div>
-        </div>
-        <div className="settings-section">
-          <h3>壁纸设置</h3>
-          <button onClick={() => setShowWallpaperManager(true)}>更改壁纸</button>
-        </div>
-        <IconSettings 
-          iconColumns={iconColumns}
-          onIconColumnsChange={setIconColumns}
-          onCleanupIcons={handleCleanupIcons}
-          isCleaningUp={isCleaningUp}
-        />
-        <div className="settings-section">
-          <h3>图标源设置</h3>
-          <button onClick={() => setShowFaviconManager(true)}>管理图标源</button>
-        </div>
-        <div className="settings-section">
-          <h3>搜索设置</h3>
-          <button onClick={() => setShowSearchManager(true)}>管理搜索引擎</button>
-        </div>
-
-        <div className="settings-section">
-          <h3>笔记</h3>
-          <button onClick={() => setShowNotesManager(true)}>笔记</button>
-        </div>
-
-        <div className="settings-section">
-          <h3>自动保存</h3>
-          <div className="option-item">
-            <label>
-              倒计时时长: {autoSaveDuration}秒
-              <input 
-                type="range" 
-                min="10" 
-                max="99" 
-                value={autoSaveDuration}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value);
-                  setAutoSaveDuration(value);
-                }}
+          <h3>个性化</h3>
+          <div className="tool-buttons">
+            <div className="setting-item">
+              <label>网站标题</label>
+              <input
+                type="text"
+                value={siteTitle}
+                onChange={(e) => setSiteTitle(e.target.value)}
+                placeholder="输入页面标题"
+                className="title-input"
               />
-            </label>
-          </div>
-          <div className="option-item">
-            <label>
-              启用自动保存
-              <label className="toggle-switch">
-                <input 
-                  type="checkbox" 
-                  checked={autoSaveEnabled}
-                  onChange={(e) => {
-                    setAutoSaveEnabled(e.target.checked);
-                  }}
-                />
-                <span className="toggle-slider"></span>
-              </label>
-            </label>
+            </div>
+            <button onClick={() => setShowWallpaperManager(true)}>更改壁纸</button>
+            <button onClick={() => setShowIconSettings(true)}>桌面图标设置</button>
+            <button onClick={() => setShowFaviconManager(true)}>管理图标源</button>
           </div>
         </div>
 
+        {/* ── 第 2 组：偏好设置 ───────────────────────────── */}
+        <div className="settings-section">
+          <h3>偏好设置</h3>
+          <div className="tool-buttons">
+            <button onClick={() => setShowSearchManager(true)}>管理搜索引擎</button>
+            <button onClick={() => setShowAutoSaveSettings(true)}>自动保存设置</button>
+          </div>
+        </div>
+
+        {/* ── 第 3 组：数据管理 ───────────────────────────── */}
         <div className="settings-section">
           <h3>数据管理</h3>
-          <button
-            onClick={handleLoadFromKV}
-            disabled={isLoading}
-          >
-            {isLoading ? '加载中...' : '从云端加载数据'}
-          </button>
-          <button
-            onClick={handleImportPreset}
-            className="reset-button"
-          >
-            导入预设站点
-          </button>
-          <button
-            onClick={handleClearAllSites}
-            className="logout-button"
-          >
-            清空所有站点
-          </button>
-          <ImportExport />
+          <div className="tool-buttons">
+            <button
+              onClick={handleLoadFromKV}
+              disabled={isLoading}
+            >
+              {isLoading ? '加载中...' : '从云端加载数据'}
+            </button>
+            <button
+              onClick={handleImportPreset}
+            >
+              导入预设站点
+            </button>
+            <ImportExport />
+            <button
+              onClick={handleClearAllSites}
+              className="logout-button"
+            >
+              清空所有站点
+            </button>
+          </div>
         </div>
 
+        {/* ── 第 4 组：账户与关于 ─────────────────────────── */}
         <div className="settings-section">
-          <h3>账户</h3>
-          <button
-            onClick={() => setShowLogoutConfirm(true)}
-            className="logout-button"
-          >
-            注销登录
-          </button>
-        </div>
-
-        <div className="settings-section">
-          <h3>关于</h3>
-          <button onClick={() => setShowAboutDialog(true)}>关于 HarborPage</button>
+          <h3>账户与关于</h3>
+          <div className="tool-buttons">
+            <button
+              onClick={() => setShowLogoutConfirm(true)}
+              className="logout-button"
+            >
+              注销登录
+            </button>
+            <button onClick={() => setShowAboutDialog(true)}>关于 HarborPage</button>
+          </div>
         </div>
       </SettingsWindow>
 
@@ -379,13 +374,33 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
         </SettingsWindow>
       )}
 
-      {/* 笔记管理面板 */}
-      {showNotesManager && (
-        <SettingsWindow 
-          title="笔记"
-          onClose={() => setShowNotesManager(false)}
+      {/* 桌面图标设置面板 */}
+      {showIconSettings && (
+        <SettingsWindow
+          title="桌面图标设置"
+          onClose={() => setShowIconSettings(false)}
         >
-          <Notes />
+          <IconSettings
+            iconColumns={iconColumns}
+            onIconColumnsChange={setIconColumns}
+            onCleanupIcons={handleCleanupIcons}
+            isCleaningUp={isCleaningUp}
+          />
+        </SettingsWindow>
+      )}
+
+      {/* 自动保存设置面板 */}
+      {showAutoSaveSettings && (
+        <SettingsWindow
+          title="自动保存设置"
+          onClose={() => setShowAutoSaveSettings(false)}
+        >
+          <AutoSaveSettings
+            duration={autoSaveDuration}
+            enabled={autoSaveEnabled}
+            onDurationChange={setAutoSaveDuration}
+            onEnabledChange={setAutoSaveEnabled}
+          />
         </SettingsWindow>
       )}
     </>

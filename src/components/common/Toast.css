@@ -1,28 +1,23 @@
-/* Toast 提示框 - 与网站风格一致 */
+/* ============================================================
+   Toast.css — Aurora Dark Glass 统一视觉
+   组件身份：全局浮动通知 → 玻璃外壳 + 顶部长条 aurora 彩条当视觉锚点
+   语义色：success/warn/info/danger 的 icon 背景用 color-mix 派生自全局语义 token，
+          保留各自辨识度（不强行用极光渐变）
+   ============================================================ */
+
 .toast {
   position: fixed;
-  top: 30px;
+  top: 28px;
   left: 50%;
-  transform: translateX(-50%) translateY(-100px);
+  transform: translateX(-50%) translateY(-120%);
   z-index: 2000;
   opacity: 0;
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   min-width: 280px;
   max-width: 480px;
-}
-
-.toast-content {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 24px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05);
-  position: relative;
+  transition:
+    transform var(--motion-spring),
+    opacity var(--motion-normal);
+  will-change: transform, opacity;
 }
 
 .toast-visible {
@@ -30,185 +25,201 @@
   opacity: 1;
 }
 
-/* 图标容器 */
+/* Toast 外壳：surface-700 玻璃 + 圆角 radius-lg（与对话框同） + 顶条 3px aurora */
+.toast-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px 15px;
+  border-radius: var(--radius-lg);
+  background: var(--glass-surface-700);
+  backdrop-filter: blur(var(--glass-blur)) saturate(155%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(155%);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    var(--glass-inner-hl),
+    var(--shadow-glass-lg),
+    0 14px 40px rgba(0, 0, 0, 0.32);
+  overflow: hidden; /* 让::before顶条/底部进度条被圆角裁掉 */
+  animation: glass-modal-pop var(--motion-spring) both;
+}
+
+/* Aurora 3px 顶条视觉锚点 */
+.toast-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--aurora-gradient);
+  pointer-events: none;
+}
+
+/* 图标容器：统一 34px 圆角 10px（非圆形，与全站按钮节奏一致），
+   背景色从全局语义 token 派生 */
 .toast-icon-wrapper {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-size: 18px;
-  transition: all 0.3s ease;
+  font-size: var(--font-lg);
+  transition: all var(--motion-fast);
+  border: 1px solid transparent;
 }
 
-/* 成功状态 */
 .toast-success .toast-icon-wrapper {
-  background: rgba(34, 197, 94, 0.15);
-  box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+  background: color-mix(in srgb, var(--semantic-success) 18%, transparent);
+  border-color: color-mix(in srgb, var(--semantic-success) 35%, transparent);
+  color: var(--semantic-success);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--semantic-success) 42%, transparent);
 }
-
 .toast-success .toast-icon {
-  filter: drop-shadow(0 0 4px rgba(34, 197, 94, 0.6));
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--semantic-success) 70%, transparent));
 }
 
-/* 错误状态 */
 .toast-error .toast-icon-wrapper {
-  background: rgba(239, 68, 68, 0.15);
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+  background: color-mix(in srgb, var(--semantic-danger) 18%, transparent);
+  border-color: color-mix(in srgb, var(--semantic-danger) 35%, transparent);
+  color: var(--semantic-danger);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--semantic-danger) 42%, transparent);
 }
-
 .toast-error .toast-icon {
-  filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.6));
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--semantic-danger) 70%, transparent));
 }
 
-/* 警告状态 */
 .toast-warning .toast-icon-wrapper {
-  background: rgba(250, 204, 21, 0.15);
-  box-shadow: 0 0 20px rgba(250, 204, 21, 0.3);
+  background: color-mix(in srgb, var(--semantic-warn) 20%, transparent);
+  border-color: color-mix(in srgb, var(--semantic-warn) 38%, transparent);
+  color: var(--semantic-warn);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--semantic-warn) 42%, transparent);
 }
-
 .toast-warning .toast-icon {
-  filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.6));
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--semantic-warn) 70%, transparent));
 }
 
-/* 信息状态 */
 .toast-info .toast-icon-wrapper {
-  background: rgba(59, 130, 246, 0.15);
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  background: color-mix(in srgb, var(--semantic-info) 20%, transparent);
+  border-color: color-mix(in srgb, var(--semantic-info) 38%, transparent);
+  color: var(--semantic-info);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--semantic-info) 42%, transparent);
 }
-
 .toast-info .toast-icon {
-  filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.6));
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--semantic-info) 70%, transparent));
 }
 
-/* 消息文本 */
+/* 消息文本：统一字色/字阶 */
 .toast-message {
   flex: 1;
-  font-size: 14px;
+  font-size: var(--font-md);
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--text-primary);
   line-height: 1.5;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  letter-spacing: 0.005em;
 }
 
-/* 继续按钮 */
+/* Continue 按钮：glass-surface-300 幽灵按钮（与取消按钮同造型） */
 .toast-continue-btn {
-  padding: 6px 16px;
-  border-radius: 8px;
-  font-size: 13px;
+  padding: 6px 14px;
+  min-height: var(--btn-h);
+  border-radius: var(--btn-radius);
+  font-size: var(--font-sm);
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.95);
-  transition: all 0.3s ease;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-surface-300);
+  color: var(--text-primary);
+  transition: all var(--motion-fast);
   flex-shrink: 0;
+  box-shadow: var(--glass-inner-hl);
 }
-
 .toast-continue-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: color-mix(in srgb, var(--aurora-2) 20%, var(--glass-surface-300));
+  border-color: color-mix(in srgb, var(--aurora-2) 40%, var(--glass-border));
   transform: translateY(-1px);
+  box-shadow:
+    var(--glass-inner-hl),
+    0 4px 12px color-mix(in srgb, var(--aurora-2) 28%, transparent);
 }
-
 .toast-continue-btn:active {
   transform: translateY(0);
 }
 
-/* 进度条 */
+/* 进度条：高度 3px，用对应语义色渐变（不硬写 rgba，让各状态辨识度一致） */
 .toast-progress {
   position: absolute;
   bottom: 0;
-  left: 10%;
-  width: 80%;
+  left: 12px;
+  right: 12px;
   height: 3px;
-  border-radius: 8px 8px 0 0;
+  border-radius: 3px 3px 0 0;
   transform-origin: left;
   z-index: 1;
 }
-
 .toast-success .toast-progress {
-  background: linear-gradient(90deg, rgba(34, 197, 94, 0.8), rgba(34, 197, 94, 0.4));
+  background: linear-gradient(
+    90deg,
+    var(--semantic-success),
+    color-mix(in srgb, var(--semantic-success) 40%, transparent)
+  );
 }
-
 .toast-error .toast-progress {
-  background: linear-gradient(90deg, rgba(239, 68, 68, 0.8), rgba(239, 68, 68, 0.4));
+  background: linear-gradient(
+    90deg,
+    var(--semantic-danger),
+    color-mix(in srgb, var(--semantic-danger) 40%, transparent)
+  );
 }
-
 .toast-warning .toast-progress {
-  background: linear-gradient(90deg, rgba(250, 204, 21, 0.8), rgba(250, 204, 21, 0.4));
+  background: linear-gradient(
+    90deg,
+    var(--semantic-warn),
+    color-mix(in srgb, var(--semantic-warn) 40%, transparent)
+  );
 }
-
 .toast-info .toast-progress {
-  background: linear-gradient(90deg, rgba(59, 130, 246, 0.8), rgba(59, 130, 246, 0.4));
+  background: linear-gradient(
+    90deg,
+    var(--semantic-info),
+    color-mix(in srgb, var(--semantic-info) 40%, transparent)
+  );
 }
 
-/* 进入动画 */
-@keyframes toastSlideIn {
-  0% {
-    transform: translateX(-50%) translateY(-100px);
-    opacity: 0;
-  }
-  60% {
-    transform: translateX(-50%) translateY(10px);
-    opacity: 1;
-  }
-  100% {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-  }
+/* 图标轻弹跳动画（替换旧 keyframes 为本地声明） */
+@keyframes toast-icon-bounce {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.18); }
 }
-
-/* 图标弹跳动画 */
-@keyframes iconBounce {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.2);
-  }
-}
-
 .toast-visible .toast-icon-wrapper {
-  animation: iconBounce 0.5s ease;
+  animation: toast-icon-bounce 0.5s cubic-bezier(.34,1.56,.64,1);
 }
 
-/* 响应式设计 */
+/* ========== 响应式：手机端 ========== */
 @media (max-width: 768px) {
   .toast {
-    top: 20px;
-    left: 20px;
-    right: 20px;
-    transform: translateY(-100px);
-    min-width: auto;
+    top: 16px;
+    left: 14px;
+    right: 14px;
+    transform: translateY(-120%);
+    min-width: 0;
     max-width: none;
   }
-
-  .toast-content {
-    padding: 14px 20px;
-  }
-
   .toast-visible {
     transform: translateY(0);
   }
-
+  .toast-content {
+    padding: 13px 16px 14px;
+    gap: 10px;
+  }
   .toast-icon-wrapper {
     width: 32px;
     height: 32px;
-    font-size: 16px;
   }
-
   .toast-message {
-    font-size: 13px;
-  }
-}
-
-/* 深色模式优化 */
-@media (prefers-color-scheme: dark) {
-  .toast-content {
-    background: rgba(30, 30, 30, 0.8);
-    border-color: rgba(255, 255, 255, 0.1);
+    font-size: var(--font-sm);
   }
 }

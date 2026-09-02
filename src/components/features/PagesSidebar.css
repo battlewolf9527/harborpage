@@ -1,28 +1,33 @@
-/* PagesSidebar.css - 与 TodoSidebar 对称的左侧页面切换栏（响应式版） */
-:root {
+/* PagesSidebar.css - Aurora Dark Glass 左侧页面切换侧边栏
+ * — 本地 sidebar 专有色（Pages 用 emerald/amber 作为品牌绿-金系），
+ *   外壳、阴影、文字、边框全部用全局 glass token。
+ */
+.pages-sidebar {
   --page-primary-color: #10b981;
   --page-primary-light: #34d399;
   --page-primary-dark: #059669;
   --page-secondary-color: #f59e0b;
-}
 
-.pages-sidebar {
   position: fixed;
   left: calc(var(--sidebar-width) * -1);
   top: 50%;
   transform: translateY(-50%);
   height: min(600px, 65vh);
   width: var(--sidebar-width);
-  background: var(--background-white);
-  backdrop-filter: blur(16px);
-  border: 1px solid var(--border-color);
-  border-radius: 0 14px 14px 0;
-  transition: all var(--transition-normal);
+  background: var(--glass-surface-700);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-left: 0;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  transition: all var(--motion-normal);
   z-index: 1002;
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-glass-md);
   overflow: visible;
+  color: var(--text-primary);
+  font-family: inherit;
 }
 
 .pages-sidebar.expanded {
@@ -34,8 +39,15 @@
   pointer-events: none;
 }
 
-/* 圆形图标按钮 - 左侧（使用与 TodoSidebar 一致的 clamp 尺寸） */
+/* 圆形图标按钮 - 左侧（完全对齐 NoteBar peek-ball 玻璃弹珠风格）
+   —— 身份色保留 emerald→amber，但加上 4 层 radial-gradient 玻璃质感、
+      外白环+内高光 3 层 box-shadow 堆叠、hover 时才显形放大。
+   关键：本容器是 <.pages-sidebar> 的 DOM 兄弟节点，CSS 变量不会跨兄弟继承 →
+        必须在本容器自己的 scope 上重新声明 --page-primary-color / --page-secondary-color，
+        否则 identity gradient / box-shadow 的 color-mix 会因变量 undefined 整行失效 → 球全透明连外框都没 */
 .pages-sidebar-icon {
+  --page-primary-color: #10b981;
+  --page-secondary-color: #f59e0b;
   position: fixed;
   left: calc(var(--sidebar-toggle-size) / 2 * -1 + 2px);
   top: 50%;
@@ -44,8 +56,12 @@
   height: var(--sidebar-toggle-size);
   cursor: pointer;
   z-index: 1000;
-  transition: all var(--transition-normal);
-  opacity: 0.3;
+  transition:
+    left var(--motion-normal),
+    opacity var(--motion-fast),
+    transform var(--motion-normal);
+  /* idle：0.75（原 0.3 太低几乎不可见），与 NoteBar peek-ball 平衡 */
+  opacity: 0.75;
 }
 
 .pages-sidebar-icon:hover {
@@ -53,66 +69,122 @@
   opacity: 1;
 }
 
+/* expanded：按钮贴边并旋转（保持旧交互语义，但视觉从 child .pages-icon-container 呈现） */
 .pages-sidebar.expanded ~ .pages-sidebar-icon {
   left: 0 !important;
   transform: translateY(-50%) rotate(180deg);
   opacity: 1 !important;
-  box-shadow: var(--shadow-md);
   z-index: 1000;
 }
 
 .pages-sidebar.expanded ~ .pages-sidebar-icon:hover {
-  transform: translateY(-50%) rotate(180deg) scale(1.1);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-50%) rotate(180deg) scale(1.06);
 }
 
+/* ── 核心：玻璃弹珠层 —— 与 NoteBar.peek-ball 同规格 ── */
 .pages-icon-container {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, var(--page-primary-color), var(--page-secondary-color));
-  border-radius: var(--border-radius-full);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-md);
   position: relative;
-  transition: all var(--transition-normal);
-  border: clamp(2px, 0.16vw, 3px) solid var(--background-white);
+  transition:
+    transform var(--motion-spring),
+    filter 260ms ease,
+    opacity 260ms ease;
+  transform: translateY(0) scale(1);
+  filter: none;
+  isolation: isolate;
+  overflow: visible;
+  /* 4 层 radial-gradient 玻璃弹珠：外层高光 + 内层暗部 + 身份色核心
+     渐变色饱和度加深：身份色 90% 混白（原 82% 太淡呈半透明感） */
+  background:
+    radial-gradient(circle at 30% 22%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 36%),
+    radial-gradient(circle at 68% 70%, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 40%),
+    radial-gradient(circle at 50% 120%, rgba(15,23,42,0.32) 0%, rgba(15,23,42,0) 55%),
+    radial-gradient(circle at 50% 45%,
+      color-mix(in srgb, var(--page-primary-color) 90%, #fff) 0%,
+      color-mix(in srgb, var(--page-secondary-color) 92%, #000) 76%);
+  /* 3 层内外描边：外环白 3px + 内暗环 1px + 内侧高光 + 底部阴影 + 身份色 glow */
+  box-shadow:
+    0 0 0 1px rgba(15,23,42,0.28),
+    0 0 0 3px rgba(255,255,255,0.82),
+    inset 0 0 0 1px rgba(255,255,255,0.62),
+    inset 0 -6px 12px rgba(15,23,42,0.32),
+    0 8px 20px color-mix(in srgb, var(--page-primary-color) 32%, transparent);
+  /* 呼吸动画（默认暂停，仅 hover 用户看时跑，防 CPU 空转） */
+  animation: pages-peek-breath 4.6s ease-in-out infinite;
+  animation-play-state: paused;
 }
 
-.pages-icon-container:hover {
-  transform: scale(1.1);
-  box-shadow: var(--shadow-lg);
+/* hover 跑呼吸 + 弹跳显形：完全对齐 NoteBar.peek-ball hover 行为 */
+.pages-sidebar-icon:hover .pages-icon-container,
+.pages-sidebar-icon:focus-visible .pages-icon-container,
+.pages-sidebar.expanded ~ .pages-sidebar-icon .pages-icon-container {
+  animation-play-state: running;
+}
+.pages-sidebar-icon:hover .pages-icon-container,
+.pages-sidebar-icon:focus-visible .pages-icon-container {
+  opacity: 1;
+  transform: translateY(-2px) scale(1.06);
+  filter: saturate(1.25);
+  outline: none;
+}
+
+/* 高光小光点（玻璃反光） */
+.pages-icon-container::after {
+  content: '';
+  position: absolute;
+  left: 28%;
+  top: 20%;
+  width: 18%;
+  height: 10%;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.9);
+  filter: blur(1px);
+  transform: rotate(-22deg);
+  pointer-events: none;
 }
 
 .pages-icon-container svg {
   color: white;
   width: clamp(16px, 0.9vw, 20px);
   height: clamp(16px, 0.9vw, 20px);
-  transition: all var(--transition-fast);
+  transition: transform var(--motion-fast);
+  /* 图标阴影：白底 + 暗底双 drop-shadow，与 NoteBar peek-ball emoji 阴影一致 */
+  filter:
+    drop-shadow(0 1px 0 rgba(255,255,255,0.7))
+    drop-shadow(0 2px 4px rgba(15,23,42,0.25));
+  position: relative;
+  z-index: 2;
 }
 
-/* 气球提示 */
+/* 气球提示：升级为 Aurora 玻璃 tooltip（与 Todo tooltip 统一） */
 .pages-tooltip {
   position: absolute;
   left: 100%;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(30, 41, 59, 0.95);
-  color: white;
+  background: var(--glass-surface-300);
+  backdrop-filter: var(--glass-blur-soft);
+  -webkit-backdrop-filter: var(--glass-blur-soft);
+  color: var(--text-primary);
   padding: 6px 12px;
-  border-radius: var(--border-radius-md);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border-subtle);
   font-size: var(--font-sm);
   font-weight: 500;
-  font-family: 'Inter', sans-serif;
+  font-family: inherit;
   white-space: nowrap;
   opacity: 0;
   visibility: hidden;
-  transition: all var(--transition-fast);
+  transition: all var(--motion-fast);
   pointer-events: none;
   z-index: 1001;
-  margin-left: 8px;
-  box-shadow: var(--shadow-md);
+  margin-left: 10px;
+  box-shadow: var(--shadow-glass-sm);
 }
 
 .pages-tooltip::after {
@@ -122,12 +194,34 @@
   top: 50%;
   transform: translateY(-50%);
   border: 6px solid transparent;
-  border-right-color: rgba(30, 41, 59, 0.95);
+  border-right-color: var(--glass-surface-300);
 }
 
 .pages-sidebar-icon:hover .pages-tooltip {
   opacity: 1;
   visibility: visible;
+}
+
+/* 呼吸动画：与 NoteBar.nb-peek-breath 相同 timing + box-shadow 堆叠，
+   身份色替换为 Pages 绿-金系 */
+@keyframes pages-peek-breath {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(15,23,42,0.18),
+      0 0 0 3px rgba(255,255,255,0.72),
+      inset 0 0 0 1px rgba(255,255,255,0.55),
+      inset 0 -6px 12px rgba(15,23,42,0.25),
+      0 8px 18px color-mix(in srgb, var(--page-primary-color) 22%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(15,23,42,0.18),
+      0 0 0 4px rgba(255,255,255,0.7),
+      0 0 0 10px color-mix(in srgb, var(--page-primary-color) 6%, transparent),
+      inset 0 0 0 1px rgba(255,255,255,0.6),
+      inset 0 -6px 12px rgba(15,23,42,0.25),
+      0 10px 22px color-mix(in srgb, var(--page-secondary-color) 18%, transparent);
+  }
 }
 
 /* 侧边栏内容 */

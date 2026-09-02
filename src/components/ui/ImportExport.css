@@ -1,240 +1,191 @@
-/* 导入/导出组件样式 */
+/* ImportExport.css - Aurora Dark Glass 统一版
+   导入/导出（SettingsWindow 内触发的文件名对话框 + 导入确认面板）。 */
 
-/* 隐藏原生文件输入，由按钮触发 */
-.ie-file-input {
-  display: none;
-}
+/* 隐藏原生文件输入 */
+.ie-file-input { display: none; }
 
-/* 导出文件名对话框遮罩 */
+/* Overlay */
 .ie-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  inset: 0;
+  background: var(--overlay-bg);
+  backdrop-filter: var(--overlay-blur);
+  -webkit-backdrop-filter: var(--overlay-blur);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1001;
-  animation: ieFadeIn 0.2s ease;
+  animation: fadeIn var(--motion-normal);
 }
 
-/* 对话框卡片 */
+/* Dialog 主体 */
 .ie-dialog {
-  width: 90%;
-  max-width: 420px;
-  background: rgba(30, 30, 30, 0.95);
-  border-radius: 16px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: min(420px, 90%);
+  background: var(--glass-surface-700);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  box-shadow: var(--shadow-glass-lg), var(--glass-inner-hl);
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  animation: ieSlideUp 0.3s ease-out;
+  animation: glass-modal-scale var(--motion-spring);
+  color: var(--text-primary);
+  font-family: inherit;
+  position: relative;
+}
+.ie-dialog::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--aurora-gradient);
+  z-index: 2;
 }
 
-/* 对话框头部 */
+/* Header */
 .ie-dialog-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 18px 22px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: var(--glass-border-subtle);
 }
-
 .ie-dialog-header h3 {
   margin: 0;
-  font-size: 17px;
+  font-size: var(--font-lg);
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--text-primary);
+  position: relative;
+  padding-left: 12px;
+}
+.ie-dialog-header h3::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 0.95em;
+  background: var(--aurora-gradient);
+  border-radius: 2px;
 }
 
+/* 关闭按钮：统一 32×32 / 10px / hover 红 */
 .ie-close-btn {
-  width: 30px;
-  height: 30px;
+  width: var(--btn-close-size);
+  height: var(--btn-close-size);
   padding: 0;
-  border: none;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 20px;
+  border: var(--glass-border-subtle);
+  border-radius: var(--btn-close-radius);
+  background: var(--glass-surface-300);
+  color: var(--text-secondary);
+  font-size: var(--font-lg);
   line-height: 1;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--motion-fast);
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: inherit;
 }
-
 .ie-close-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 1);
+  background: color-mix(in srgb, var(--semantic-danger) 22%, transparent);
+  border-color: color-mix(in srgb, var(--semantic-danger) 50%, transparent);
+  color: #fff;
 }
 
-/* 对话框主体 */
+/* Body */
 .ie-dialog-body {
   padding: 20px 22px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-
 .ie-label {
-  font-size: 13px;
+  font-size: var(--font-md);
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-secondary);
 }
-
 .ie-filename-input {
   width: 100%;
   box-sizing: border-box;
   padding: 10px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  color: white;
-  font-size: 14px;
-  transition: all 0.2s ease;
-}
-
-.ie-filename-input:focus {
+  border: 1px solid var(--input-border);
+  border-radius: var(--input-radius);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: var(--font-md);
+  transition: all var(--motion-fast);
+  font-family: inherit;
   outline: none;
-  border-color: rgba(100, 100, 255, 0.5);
-  background: rgba(255, 255, 255, 0.08);
+  box-shadow: var(--glass-inner-hl);
 }
-
-.ie-filename-input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+.ie-filename-input:focus {
+  border-color: var(--input-focus-border);
+  background: color-mix(in srgb, var(--input-bg) 80%, #fff);
+  box-shadow: var(--input-focus-ring), var(--glass-inner-hl);
 }
+.ie-filename-input::placeholder { color: var(--text-quaternary); }
 
 .ie-hint {
   margin: 6px 0 0 0;
-  font-size: 12px;
+  font-size: var(--font-sm);
   line-height: 1.5;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--text-quaternary);
 }
 
-/* 对话框底部按钮 */
-.ie-dialog-footer {
-  padding: 16px 22px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
-
-.ie-btn {
-  padding: 9px 20px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.ie-btn-secondary {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.ie-btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.ie-btn-primary {
-  background: rgba(6, 182, 212, 0.9);
-  color: white;
-}
-
-.ie-btn-primary:hover {
-  background: rgba(6, 182, 212, 1);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
-}
-
-.ie-btn-danger {
-  background: rgba(239, 68, 68, 0.85);
-  color: white;
-}
-
-.ie-btn-danger:hover {
-  background: rgba(239, 68, 68, 1);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-}
-
-/* 导入确认对话框：摘要与方式说明 */
+/* 导入确认 */
 .ie-summary {
   margin: 0 0 14px 0;
-  font-size: 14px;
+  font-size: var(--font-md);
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-primary);
 }
-
 .ie-mode-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
   margin-bottom: 12px;
 }
-
 .ie-mode-hint {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--font-md);
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--text-tertiary);
 }
-
 .ie-mode-label {
   display: inline-block;
   min-width: 34px;
   margin-right: 8px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--text-primary);
 }
 
-/* 分区标题 */
-.ie-section-label {
-  margin-top: 6px;
-}
+.ie-section-label { margin-top: 6px; }
 
-/* 勾选项组 */
+/* Checkbox 组 */
 .ie-checkbox-group {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-
-/* 单个勾选项 */
 .ie-checkbox-item {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 12px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-sm);
+  background: var(--glass-surface-500);
+  border: var(--glass-border-subtle);
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background var(--motion-fast);
   user-select: none;
   position: relative;
 }
-
-.ie-checkbox-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-
+.ie-checkbox-item:hover { background: var(--glass-surface-hover); }
 .ie-checkbox-item.ie-disabled {
-  opacity: 0.4;
+  opacity: 0.45;
   cursor: not-allowed;
 }
-
-.ie-checkbox-item.ie-disabled:hover {
-  background: rgba(255, 255, 255, 0.03);
-}
+.ie-checkbox-item.ie-disabled:hover { background: var(--glass-surface-500); }
 
 /* 隐藏原生 checkbox */
 .ie-checkbox-item input[type="checkbox"] {
@@ -243,72 +194,171 @@
   pointer-events: none;
 }
 
-/* 自定义 checkbox 外观 */
+/* 自定义 checkbox */
 .ie-checkbox-custom {
-  width: 18px;
-  height: 18px;
+  width: 18px; height: 18px;
   border-radius: 5px;
   border: 2px solid rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--glass-surface-300);
   flex-shrink: 0;
   position: relative;
-  transition: all 0.2s ease;
+  transition: all var(--motion-fast);
 }
-
-/* 选中状态 */
 .ie-checkbox-item input[type="checkbox"]:checked ~ .ie-checkbox-custom {
-  background: rgba(6, 182, 212, 0.9);
-  border-color: rgba(6, 182, 212, 0.9);
+  background: var(--aurora-gradient);
+  border-color: transparent;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--aurora-2) 40%, transparent);
 }
-
 .ie-checkbox-item input[type="checkbox"]:checked ~ .ie-checkbox-custom::after {
   content: '';
   position: absolute;
-  left: 5px;
-  top: 1px;
-  width: 5px;
-  height: 10px;
-  border: solid white;
+  left: 5px; top: 1px;
+  width: 5px; height: 10px;
+  border: solid #fff;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
 
-/* 勾选项标签 */
 .ie-checkbox-label {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: var(--font-md);
+  color: var(--text-primary);
 }
-
-/* 数量显示 */
 .ie-checkbox-count {
   margin-left: auto;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.45);
+  font-size: var(--font-sm);
+  color: var(--text-quaternary);
 }
 
-/* 禁用按钮 */
+/* Footer */
+.ie-dialog-footer {
+  padding: 16px 22px 20px;
+  border-top: var(--glass-border-subtle);
+  display: flex;
+  justify-content: flex-start; /* 功能按钮左 */
+  align-items: center;
+  gap: 12px;
+}
+.ie-dialog-footer .ie-btn-secondary { margin-left: auto; } /* 取消最右 */
+
+.ie-btn {
+  padding: 0 var(--btn-pad-x);
+  min-height: var(--btn-h);
+  border: none;
+  border-radius: var(--btn-radius);
+  font-size: var(--font-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--motion-fast);
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.ie-btn-secondary {
+  background: var(--glass-surface-300);
+  color: var(--text-secondary);
+  border: var(--glass-border);
+}
+.ie-btn-secondary:hover {
+  background: var(--glass-surface-hover);
+  color: var(--text-primary);
+  border-color: var(--glass-border-strong);
+}
+.ie-btn-primary {
+  background: var(--aurora-gradient);
+  color: var(--text-on-accent);
+  box-shadow: var(--aurora-glow);
+}
+.ie-btn-primary:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--aurora-2) 48%, transparent);
+}
+.ie-btn-danger {
+  background: color-mix(in srgb, var(--semantic-danger) 88%, #fff);
+  color: white;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--semantic-danger) 35%, transparent);
+}
+.ie-btn-danger:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--semantic-danger) 42%, transparent);
+}
+
 .ie-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+  background: var(--glass-surface-300) !important;
+  color: var(--text-quaternary) !important;
+  border-color: var(--glass-border-subtle) !important;
   pointer-events: none;
 }
 
-@keyframes ieFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+/* SavePrompt / Toast 等 Overlay 组件的根字号见各自文件。
+   以下：ImportExport 在 Settings 侧边栏「数据管理」里的一对并列触发按钮。
+   设计：row 等宽 + 左右主副色区分（导出 primary 极光 / 导入 secondary 玻璃），
+   视觉上形成「同一功能模块的双子项」，与上下的单枚按钮形成节奏感。 */
+.ie-triggers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
 }
+.ie-trigger-btn {
+  min-height: var(--btn-h);
+  padding: 0 var(--btn-pad-x);
+  border-radius: var(--btn-radius);
+  font-size: var(--font-md);
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all var(--motion-fast);
+  line-height: 1;
+  user-select: none;
+}
+.ie-trigger-icon {
+  font-size: 1.05em;
+  line-height: 1;
+  transform: translateY(-0.5px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.ie-trigger-btn--primary {
+  background: var(--aurora-gradient);
+  color: var(--text-on-accent);
+  border: 1px solid transparent;
+  box-shadow: var(--aurora-glow);
+}
+.ie-trigger-btn--primary:hover {
+  transform: translateY(-1.5px);
+  box-shadow:
+    0 12px 30px color-mix(in srgb, var(--aurora-2) 46%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+.ie-trigger-btn--secondary {
+  background: var(--glass-surface-300);
+  color: var(--text-primary);
+  border: var(--glass-border);
+  box-shadow: var(--glass-inner-hl);
+}
+.ie-trigger-btn--secondary:hover {
+  background: var(--glass-surface-hover);
+  border-color: color-mix(in srgb, var(--aurora-2) 38%, var(--glass-border));
+  color: var(--text-primary);
+  transform: translateY(-1.5px);
+  box-shadow:
+    var(--glass-inner-hl),
+    0 6px 16px color-mix(in srgb, var(--aurora-2) 20%, transparent);
+}
+.ie-trigger-btn:active { transform: translateY(0) !important; }
 
+@keyframes ieFadeIn  { from { opacity: 0; } to { opacity: 1; } }
 @keyframes ieSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }

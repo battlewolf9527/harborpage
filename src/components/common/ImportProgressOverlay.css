@@ -73,7 +73,7 @@
 /* 标题 */
 .progress-title {
   margin: 0;
-  font-size: 24px;
+  font-size: var(--font-2xl);
   font-weight: 600;
   color: #ffffff;
   margin-bottom: 12px;
@@ -83,7 +83,7 @@
 /* 当前导入项 - 渐变色文字 */
 .progress-message {
   margin: 0;
-  font-size: 15px;
+  font-size: var(--font-md);
   color: #a0a0b0;
   margin-bottom: 32px;
   font-weight: 500;
@@ -151,7 +151,7 @@
 
 /* 导入百分比文字 */
 .import-progress-percentage {
-  font-size: 18px;
+  font-size: var(--font-lg);
   font-weight: 700;
   color: #667eea;
   min-width: 48px;
@@ -163,7 +163,7 @@
 /* 底部提示 */
 .progress-hint {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--font-md);
   color: #606070;
   display: flex;
   align-items: center;
@@ -174,7 +174,7 @@
 .progress-hint::before {
   content: '•';
   color: #667eea;
-  font-size: 20px;
+  font-size: var(--font-xl);
   line-height: 0;
   animation: blinkProgress 2s infinite;
 }

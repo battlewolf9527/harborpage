@@ -1,22 +1,23 @@
 import React, { useState, memo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import './TodoList.css';
-import ConfirmDialog from './ConfirmDialog';
 import { useTodoStore } from '../../store/useTodoStore';
 
-const TodoList: React.FC = memo(() => {
-  const [newTodo, setNewTodo] = useState<string>('');
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<'delete' | 'clear' | null>(null);
-  const [todoIdToDelete, setTodoIdToDelete] = useState<string | null>(null);
+interface TodoListProps {
+  /** 请求父级打开「删除待办」确认对话框（由父级统一在主界面/侧边栏根级全屏渲染 ConfirmDialog） */
+  onRequestDeleteTodo: (todoId: string) => void;
+  /** 请求父级打开「清空已完成」确认对话框 */
+  onRequestClearCompleted: () => void;
+}
 
-  const { todos, addTodo, toggleTodo, deleteTodo, clearCompleted } = useTodoStore(
+const TodoList: React.FC<TodoListProps> = memo(({ onRequestDeleteTodo, onRequestClearCompleted }) => {
+  const [newTodo, setNewTodo] = useState<string>('');
+
+  const { todos, addTodo, toggleTodo } = useTodoStore(
     useShallow((s) => ({
       todos: s.todos,
       addTodo: s.addTodo,
       toggleTodo: s.toggleTodo,
-      deleteTodo: s.deleteTodo,
-      clearCompleted: s.clearCompleted,
     })),
   );
 
@@ -27,32 +28,14 @@ const TodoList: React.FC = memo(() => {
     setNewTodo('');
   };
 
+  // —— 二次确认：不再本地渲染 ConfirmDialog（之前 container=parent 导致弹框出现在侧边栏内部）
+  //    改为回调父 TodoSidebar，由其在侧边栏根级（全屏 fixed 定位）渲染，与「删除页面」对话框一致。
   const handleDeleteTodo = (id: string) => {
-    setTodoIdToDelete(id);
-    setConfirmAction('delete');
-    setShowConfirmDialog(true);
+    onRequestDeleteTodo(id);
   };
 
   const handleClearCompleted = () => {
-    setConfirmAction('clear');
-    setShowConfirmDialog(true);
-  };
-
-  const handleConfirm = () => {
-    if (confirmAction === 'delete' && todoIdToDelete) {
-      deleteTodo(todoIdToDelete);
-    } else if (confirmAction === 'clear') {
-      clearCompleted();
-    }
-    setShowConfirmDialog(false);
-    setConfirmAction(null);
-    setTodoIdToDelete(null);
-  };
-
-  const handleCancel = () => {
-    setShowConfirmDialog(false);
-    setConfirmAction(null);
-    setTodoIdToDelete(null);
+    onRequestClearCompleted();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -106,15 +89,6 @@ const TodoList: React.FC = memo(() => {
           )}
         </div>
       )}
-
-      <ConfirmDialog
-        isOpen={showConfirmDialog}
-        title={confirmAction === 'delete' ? '确认删除' : '确认清空'}
-        message={confirmAction === 'delete' ? '确定要删除这个待办事项吗？' : '确定要清空所有已完成的待办事项吗？'}
-        onConfirm={handleConfirm}
-        onCancel={handleCancel}
-        container="parent"
-      />
     </div>
   );
 });

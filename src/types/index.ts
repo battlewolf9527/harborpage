@@ -39,12 +39,26 @@ export interface Todo {
   createdAt: number;
 }
 
+// 便签颜色（与多彩便签球/卡片视觉对应；按色相渐变排列，保证相邻两篇不撞色）
+export type NoteColor =
+  | 'yellow' | 'amber' | 'orange' | 'coral'
+  | 'pink' | 'rose'
+  | 'red'
+  | 'green' | 'lime' | 'emerald' | 'teal' | 'cyan'
+  | 'blue' | 'sky'
+  | 'purple' | 'indigo';
+
 // 笔记类型
 export interface Note {
   id: string;
   title: string;
   content: string;
   createdAt: string;
+  // ===== 新增（均为可选，旧数据零侵入）=====
+  updatedAt?: string;   // 最后更新时间（用于列表默认排序）
+  /** @deprecated 已移除置顶 UI 入口，字段保留仅用于读取历史数据，新建/修改不会再写 */
+  pinned?: boolean;
+  color?: NoteColor;    // 便签球/卡片颜色
 }
 
 // 文件夹状态类型（运行时状态，持久化中不存储此结构）

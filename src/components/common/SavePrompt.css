@@ -1,4 +1,5 @@
-/* SavePrompt.css - 完整优化版 */
+/* SavePrompt.css - Aurora Dark Glass 统一版
+   保存状态：右上角浮动图标 + 下拉面板。 */
 
 /* 图标容器 */
 .save-prompt-icon-only {
@@ -9,20 +10,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: slideIn 0.5s ease-out;
+  animation: slideIn 0.5s cubic-bezier(0.22, 1.25, 0.36, 1);
   transition: opacity 0.5s ease, transform 0.5s ease;
+  font-family: inherit;
 }
-
 .save-prompt-icon-only.exiting {
   opacity: 0;
   transform: scale(0.8) translateY(-20px);
 }
-
 @media (max-width: 768px) {
-  .save-prompt-icon-only {
-    top: 20px;
-    right: 100px;
-  }
+  .save-prompt-icon-only { top: 20px; right: 100px; }
 }
 
 .save-icon-container {
@@ -32,163 +29,215 @@
   justify-content: center;
 }
 
+/* 倒计时环 */
 .countdown-ring {
   position: absolute;
-  top: -4px;
-  left: -4px;
+  top: -4px; left: -4px;
   z-index: 1;
 }
-
 .countdown-circle {
   transform: rotate(-90deg);
   background: transparent;
   overflow: visible;
 }
-
 .countdown-circle-bg {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.1);
+  stroke: rgba(255, 255, 255, 0.12);
   stroke-width: 2;
 }
-
 .countdown-circle-progress {
   fill: none;
-  stroke: rgba(250, 204, 21, 0.8);
+  stroke: var(--semantic-warn);
   stroke-width: 3;
   stroke-linecap: round;
   transition: stroke-dashoffset 1s linear;
-  filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.5));
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--semantic-warn) 60%, transparent));
 }
 
+/* 浮动图标按钮 */
 .save-icon {
-  width: 48px;
-  height: 48px;
+  width: 48px; height: 48px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--glass-surface-300);
+  backdrop-filter: var(--glass-blur-soft);
+  -webkit-backdrop-filter: var(--glass-blur-soft);
+  border: var(--glass-border);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all var(--motion-fast);
+  box-shadow: var(--shadow-glass-sm), var(--glass-inner-hl);
   position: relative;
   z-index: 2;
+  color: var(--text-secondary);
 }
-
 .save-icon:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--glass-surface-hover);
+  color: var(--text-primary);
   transform: scale(1.05);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-glass-md), var(--glass-inner-hl);
 }
 
+/* 有未保存更改：amber 语义色提示 */
 .save-prompt-icon-only.has-changes .save-icon {
-  background: rgba(250, 204, 21, 0.2);
-  border-color: rgba(250, 204, 21, 0.4);
-  animation: pulse 2s infinite;
+  background: color-mix(in srgb, var(--semantic-warn) 18%, transparent);
+  border-color: color-mix(in srgb, var(--semantic-warn) 45%, transparent);
+  color: #fff;
+  animation: hasChangesPulse 2s infinite;
+}
+@keyframes hasChangesPulse {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--semantic-warn) 50%, transparent); }
+  70%  { box-shadow: 0 0 0 10px color-mix(in srgb, var(--semantic-warn) 0%, transparent); }
+  100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--semantic-warn) 0%, transparent); }
 }
 
+/* 保存中：信息蓝 */
 .save-icon.saving {
-  background: rgba(100, 181, 246, 0.2) !important;
-  border-color: rgba(100, 181, 246, 0.4) !important;
-  animation: pulse-blue 1.5s infinite;
+  background: color-mix(in srgb, var(--semantic-info) 20%, transparent) !important;
+  border-color: color-mix(in srgb, var(--semantic-info) 45%, transparent) !important;
+  color: #fff !important;
+  animation: savingPulse 1.5s infinite;
   cursor: not-allowed;
 }
+@keyframes savingPulse {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--semantic-info) 50%, transparent); }
+  70%  { box-shadow: 0 0 0 10px color-mix(in srgb, var(--semantic-info) 0%, transparent); }
+  100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--semantic-info) 0%, transparent); }
+}
 
+/* 已保存：成功绿 */
 .save-icon.saved {
-  background: rgba(76, 175, 80, 0.2) !important;
-  border-color: rgba(76, 175, 80, 0.4) !important;
+  background: color-mix(in srgb, var(--semantic-ok) 20%, transparent) !important;
+  border-color: color-mix(in srgb, var(--semantic-ok) 45%, transparent) !important;
+  color: #fff !important;
   cursor: not-allowed;
   animation: none !important;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.05) inset,
+              0 4px 14px color-mix(in srgb, var(--semantic-ok) 30%, transparent) !important;
 }
 
+/* 保存错误：危险红 */
 .save-icon.error {
-  background: rgba(239, 68, 68, 0.2) !important;
-  border-color: rgba(239, 68, 68, 0.4) !important;
-  animation: pulse-red 1.5s infinite;
+  background: color-mix(in srgb, var(--semantic-danger) 20%, transparent) !important;
+  border-color: color-mix(in srgb, var(--semantic-danger) 45%, transparent) !important;
+  color: #fff !important;
+  animation: errorPulse 1.5s infinite;
   cursor: pointer;
+}
+@keyframes errorPulse {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--semantic-danger) 50%, transparent); }
+  70%  { box-shadow: 0 0 0 10px color-mix(in srgb, var(--semantic-danger) 0%, transparent); }
+  100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--semantic-danger) 0%, transparent); }
 }
 
 .save-prompt-icon-only:hover .save-icon:not(.saving):not(.saved) {
   transform: scale(1.1);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-glass-md), var(--glass-inner-hl);
 }
-
 .save-prompt-icon-only:hover .save-icon.error {
   transform: scale(1.1);
-  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
 }
 
-/* 提示框 */
+/* 下拉提示面板 */
 .save-tooltip {
   position: absolute;
   top: 60px;
   right: 0;
   width: 300px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  background: var(--glass-surface-700);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--radius-md);
   padding: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  animation: savePromptFadeIn 0.3s ease-out;
+  box-shadow: var(--shadow-glass-lg), var(--glass-inner-hl);
+  animation: glass-modal-scale var(--motion-normal);
   pointer-events: auto;
+  color: var(--text-primary);
+  /* 顶部极光小横条 */
+  position: absolute;
+  overflow: hidden;
+}
+.save-tooltip::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--aurora-gradient);
 }
 
 .tooltip-content {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  padding-top: 4px;
 }
-
 .tooltip-content h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: var(--font-lg);
   font-weight: 600;
-  color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  color: var(--text-primary);
+  position: relative;
+  padding-left: 12px;
 }
-
+.tooltip-content h3::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 0.95em;
+  background: var(--aurora-gradient);
+  border-radius: 2px;
+}
 .tooltip-content p {
   margin: 0;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  line-height: 1.4;
+  font-size: var(--font-md);
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
-
 .tooltip-content.error {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.3);
+  background: transparent; /* 外壳已统一 */
+  border: none;
+}
+.tooltip-content.error p {
+  color: color-mix(in srgb, var(--semantic-danger) 85%, #fff);
+  background: color-mix(in srgb, var(--semantic-danger) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--semantic-danger) 30%, transparent);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
 }
 
+/* 保存按钮：极光主按钮 */
 .save-button {
-  padding: 10px 20px;
+  padding: 0 var(--btn-pad-x);
+  min-height: var(--btn-h);
   border: none;
-  border-radius: 8px;
-  background: rgba(59, 130, 246, 0.8);
-  color: white;
-  font-size: 14px;
+  border-radius: var(--btn-radius);
+  background: var(--aurora-gradient);
+  color: var(--text-on-accent);
+  font-size: var(--font-md);
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(5px);
+  transition: all var(--motion-fast);
   align-self: flex-start;
+  font-family: inherit;
+  box-shadow: var(--aurora-glow);
+  display: inline-flex;
+  align-items: center;
 }
-
 .save-button:hover:not(:disabled) {
-  background: rgba(59, 130, 246, 1);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  transform: translateY(-1.5px);
+  box-shadow: 0 14px 32px color-mix(in srgb, var(--aurora-2) 46%, transparent);
 }
-
 .save-button:disabled {
-  background: rgba(59, 130, 246, 0.4);
+  opacity: 0.5;
+  box-shadow: none;
   cursor: not-allowed;
   transform: none;
-  box-shadow: none;
+  background: var(--glass-surface-300);
+  color: var(--text-quaternary);
 }
 
 /* 自动保存控制 */
@@ -198,150 +247,79 @@
   justify-content: space-between;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: var(--glass-border-subtle);
 }
-
 .auto-save-control span {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  font-size: var(--font-md);
+  color: var(--text-secondary);
 }
 
-/* 安卓风格开关 */
+/* Toggle：全站统一版 */
 .toggle-switch {
   position: relative;
   display: inline-block;
   width: 50px;
-  height: 24px;
+  height: 26px;
 }
-
 .toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
+  opacity: 0; width: 0; height: 0;
 }
-
 .toggle-slider {
   position: absolute;
   cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.2);
-  transition: .4s;
-  border-radius: 24px;
+  inset: 0;
+  background: var(--glass-surface-300);
+  border: var(--glass-border);
+  transition: var(--motion-normal);
+  border-radius: 26px;
 }
-
 .toggle-slider:before {
   position: absolute;
   content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: .4s;
+  height: 20px;
+  width: 20px;
+  left: 2px;
+  bottom: 2px;
+  background-color: rgba(255, 255, 255, 0.88);
+  transition: var(--motion-normal);
   border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
-
 input:checked + .toggle-slider {
-  background-color: rgba(59, 130, 246, 0.8);
+  background: var(--aurora-gradient);
+  border-color: transparent;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.06) inset,
+              0 2px 10px color-mix(in srgb, var(--aurora-2) 40%, transparent);
 }
-
 input:checked + .toggle-slider:before {
-  transform: translateX(26px);
+  transform: translateX(24px);
 }
 
 /* 动画 */
 @keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px) scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(-20px) scale(0.8); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
-
 @keyframes savePromptFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(10px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.4);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(250, 204, 21, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(250, 204, 21, 0);
-  }
-}
-
-@keyframes pulse-blue {
-  0% {
-    box-shadow: 0 0 0 0 rgba(100, 181, 246, 0.4);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(100, 181, 246, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(100, 181, 246, 0);
-  }
-}
-
-@keyframes pulse-red {
-  0% {
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
-  }
-}
-
-/* 响应式设计 */
+/* 响应式 */
 @media (max-width: 480px) {
-  .save-prompt-icon-only {
-    top: 15px;
-    right: 15px;
-  }
-
-  .save-icon {
-    width: 44px;
-    height: 44px;
-    font-size: 20px;
-  }
-
+  .save-prompt-icon-only { top: 15px; right: 15px; }
+  .save-icon { width: 44px; height: 44px; }
   .save-tooltip {
     width: 260px;
     padding: 16px;
     top: 54px;
   }
-
-  .tooltip-content h3 {
-    font-size: 14px;
-  }
-
-  .tooltip-content p {
-    font-size: 12px;
-  }
-
+  .tooltip-content h3 { font-size: var(--font-md); }
+  .tooltip-content p  { font-size: var(--font-sm); }
   .save-button {
-    padding: 8px 16px;
-    font-size: 12px;
+    padding: 0 16px;
+    min-height: 34px;
+    font-size: var(--font-sm);
   }
 }
 
@@ -349,20 +327,19 @@ input:checked + .toggle-slider:before {
 .save-progress {
   width: 100%;
   height: 4px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255,255,255,0.08);
   border-radius: 2px;
   margin-top: 12px;
   overflow: hidden;
 }
-
 .save-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, rgba(59, 130, 246, 0.8), rgba(100, 181, 246, 1));
+  background: var(--aurora-gradient);
   border-radius: 2px;
-  transition: width 0.3s ease;
+  transition: width var(--motion-normal);
 }
 
-/* 保存进度指示器 */
+/* 保存进度指示器气泡 */
 .save-progress-indicator {
   position: absolute;
   top: calc(100% + 12px);
@@ -373,49 +350,44 @@ input:checked + .toggle-slider:before {
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  background: rgba(30, 30, 30, 0.95);
-  border-radius: 12px;
-  backdrop-filter: blur(20px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  background: var(--glass-surface-300);
+  border-radius: var(--radius-sm);
+  backdrop-filter: var(--glass-blur-soft);
+  -webkit-backdrop-filter: var(--glass-blur-soft);
+  border: var(--glass-border);
+  box-shadow: var(--shadow-glass-md), var(--glass-inner-hl);
   z-index: 10;
-  animation: fadeIn 0.2s ease;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: fadeIn var(--motion-fast);
 }
-
 .progress-text {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.95);
+  font-size: var(--font-md);
+  color: var(--text-primary);
   font-weight: 500;
   white-space: nowrap;
 }
-
 .progress-bar-container {
   width: 60px;
   height: 4px;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255,255,255,0.1);
   border-radius: 2px;
   overflow: hidden;
 }
-
 .progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, rgba(6, 182, 212, 0.9), rgba(59, 130, 246, 0.9));
+  background: var(--aurora-gradient);
   border-radius: 2px;
-  transition: width 0.3s ease;
+  transition: width var(--motion-normal);
 }
-
 .progress-bar.loading {
-  background: linear-gradient(90deg, rgba(59, 130, 246, 0.3), rgba(100, 181, 246, 0.6), rgba(59, 130, 246, 0.3));
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--aurora-1) 30%, transparent),
+    color-mix(in srgb, var(--aurora-2) 70%, #fff),
+    color-mix(in srgb, var(--aurora-1) 30%, transparent));
   background-size: 200% 100%;
-  animation: loading-shimmer 1.5s infinite;
+  animation: loadingShimmer 1.5s infinite;
   width: 30% !important;
 }
-
-@keyframes loading-shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+@keyframes loadingShimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
 }

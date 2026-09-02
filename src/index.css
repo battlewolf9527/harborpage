@@ -1,60 +1,155 @@
+/* ==========================================================================
+   Aurora Dark Glass － 全站统一设计令牌
+   所有对话框/侧边栏/面板/窗口的唯一视觉源头。
+   ========================================================================== */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont,
+    'PingFang SC', 'Microsoft YaHei', 'Segoe UI', Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
   color-scheme: dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
+  color: var(--text-primary);
+  background-color: #0b1020;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* ========== 统一响应式设计 Token ========== */
-  /* 侧边栏：使用 clamp() 确保小屏最小可用尺寸 */
+  /* ── 响应式基础 Token（保留原系统，与旧组件兼容） ── */
   --sidebar-width: clamp(280px, 18vw, 360px);
   --sidebar-icon-size: clamp(36px, 2.4vw, 48px);
   --sidebar-toggle-size: clamp(40px, 3vw, 52px);
-
-  /* 通用字体：clamp(最小, 自适应vw, 最大) — 防止 4K/2K 下 vw 无上限膨胀。
-     上限取 1080p~2K 桌面的合理值，大屏（≥1440 CSS 宽）使用之前 session 加的 min-width 断点按需放大。 */
   --font-xs: clamp(11px, 0.6vw, 14px);
   --font-sm: clamp(12px, 0.7vw, 16px);
   --font-md: clamp(14px, 0.8vw, 18px);
   --font-lg: clamp(16px, 0.95vw, 22px);
   --font-xl: clamp(18px, 1.1vw, 24px);
   --font-2xl: clamp(22px, 1.4vw, 30px);
-
-  /* 间距：clamp(最小, 自适应vw, 最大) — 原理同上；
-     4K 下 space-5 旧值 max(16,0.9vw)=34.56px → 新值 clamp 到 24px，减少总高度占用 ~30% */
   --space-1: clamp(4px, 0.2vw, 6px);
   --space-2: clamp(6px, 0.3vw, 9px);
   --space-3: clamp(8px, 0.5vw, 14px);
   --space-4: clamp(12px, 0.7vw, 18px);
   --space-5: clamp(16px, 0.9vw, 24px);
   --space-6: clamp(20px, 1.1vw, 28px);
-
-  /* 图标尺寸 */
   --icon-circle-min: 56px;
   --icon-circle-max: 120px;
   --icon-label-min: 12px;
-
-  /* 天气组件：同样加上限，避免 4K 下天气区域把页面顶出视口 */
   --weather-padding: clamp(10px, 0.8vw, 18px);
   --weather-time-min: 22px;
   --weather-temp-min: 18px;
-
-  /* 触控设备点击区域（44px iOS 标准） */
   --touch-target: 44px;
 
-  /* 断点参考（与媒体查询保持一致） */
-  /* --bp-xs: 375px (超小屏: iPhone SE) */
-  /* --bp-sm: 480px (小屏手机) */
-  /* --bp-md: 768px (平板 / 大屏手机横屏) */
-  /* --bp-lg: 1024px (平板横屏 / 小型笔记本) */
-  /* --bp-xl: 1440px (大屏桌面) */
+  /* ═══════════════════════════════════════════════════════════════
+     ── Aurora Dark Glass：三层玻璃表面 ──
+     surface-300 = 最表层（按钮/chip/输入框）  更深、更实
+     surface-500 = 卡片/内容区                中等
+     surface-700 = 窗口/面板/对话框主体       更透、更高光
+     ═══════════════════════════════════════════════════════════════ */
+  --glass-surface-300: rgba(17, 20, 34, 0.78);
+  --glass-surface-500: rgba(14, 17, 30, 0.72);
+  --glass-surface-700: rgba(11, 14, 26, 0.66);
+  --glass-surface-hover: rgba(30, 34, 54, 0.78);
+  --glass-blur: blur(22px) saturate(155%);
+  --glass-blur-soft: blur(14px) saturate(140%);
+
+  /* ── 边框系统：统一玻璃边 + 内侧高光 ── */
+  --glass-border: 1px solid rgba(255, 255, 255, 0.11);
+  --glass-border-strong: 1px solid rgba(255, 255, 255, 0.17);
+  --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.07);
+  --glass-inner-hl: 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  --glass-inner-strong-hl: 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+
+  /* ── 遮罩系统：统一 overlay（遮罩下方背景模糊 8px + 80% 深蓝遮罩） ── */
+  --overlay-bg: rgba(5, 8, 20, 0.72);
+  --overlay-blur: blur(8px);
+  --overlay-soft-bg: rgba(8, 12, 28, 0.55);  /* 软遮罩：用于笔记/管理器的轻模态 */
+  --overlay-soft-blur: blur(5px);
+
+  /* ── 圆角系统：全站只用 4 档 ──
+       radius-xs = 7px  小控件（chip / small button）
+       radius-sm = 10px 输入框 / 普通按钮 / 卡片
+       radius-md = 14px 中型对话框 / 侧边栏
+       radius-lg = 18px 大型对话框 / 主面板   (使用 clamp 适配大屏) */
+  --radius-xs: 7px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: clamp(14px, 1.1vw, 18px);
+
+  /* ── 阴影系统：三档玻璃阴影 + 彩色 accent glow ── */
+  --shadow-glass-sm:
+    0 6px 18px rgba(0, 0, 0, 0.36),
+    0 1px 0 rgba(255, 255, 255, 0.04) inset;
+  --shadow-glass-md:
+    0 14px 42px rgba(0, 0, 0, 0.46),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  --shadow-glass-lg:
+    0 24px 72px rgba(0, 0, 0, 0.56),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+
+  /* ── 极光渐变色（Accent）：全站唯一主渐变色源 ──
+       靛蓝 → 紫 → 品红，与原 purple-gradient 视觉族一致，但色相更统一、饱和度均衡 */
+  --aurora-1: #6366f1;   /* indigo-500  */
+  --aurora-2: #8b5cf6;   /* violet-500  */
+  --aurora-3: #d946ef;   /* fuchsia-500 */
+  --aurora-gradient: linear-gradient(135deg, var(--aurora-1), var(--aurora-2) 55%, var(--aurora-3));
+  --aurora-gradient-soft: linear-gradient(135deg,
+                              color-mix(in srgb, var(--aurora-1) 14%, transparent),
+                              color-mix(in srgb, var(--aurora-3) 14%, transparent));
+  --aurora-glow: 0 10px 28px color-mix(in srgb, var(--aurora-2) 38%, transparent);
+
+  /* 语义色 */
+  --semantic-ok:     #10b981;  /* 成功/正面  emerald-500 */
+  --semantic-warn:   #f59e0b;  /* 警告        amber-500   */
+  --semantic-danger: #ef4444;  /* 危险/删除   red-500     */
+  --semantic-info:   #3b82f6;  /* 信息        blue-500    */
+
+  /* ── 文字色阶：5 档 ── */
+  --text-primary:   rgba(248, 250, 252, 0.97);  /* 标题、按钮文字 */
+  --text-secondary: rgba(226, 232, 240, 0.80);  /* 正文、标签 */
+  --text-tertiary:  rgba(148, 163, 184, 0.82);  /* 辅助说明、meta */
+  --text-quaternary:rgba(100, 116, 139, 0.78);  /* 占位符、次要说明 */
+  --text-on-accent: #ffffff;                    /* accent 按钮上的文字 */
+
+  /* ── 按钮基础尺寸 ── */
+  --btn-h-sm: 34px;
+  --btn-h:    38px;
+  --btn-h-lg: 44px;
+  --btn-pad-x: 18px;
+  --btn-radius: var(--radius-sm);
+  --btn-close-size: 32px;
+  --btn-close-radius: 10px;
+
+  /* ── 输入框基础样式 ── */
+  --input-radius: var(--radius-sm);
+  --input-bg:     rgba(255, 255, 255, 0.05);
+  --input-border: rgba(255, 255, 255, 0.12);
+  --input-focus-border: color-mix(in srgb, var(--aurora-2) 60%, #fff);
+  --input-focus-ring:   0 0 0 4px color-mix(in srgb, var(--aurora-2) 20%, transparent);
+
+  /* ── 动画曲线 & 时长：全站标准三套 ──
+       motion-fast   = 180ms · ease-out    悬停、颜色、轻微位移
+       motion-normal = 260ms · 极光曲线    打开/关闭、过渡
+       motion-spring = 360ms · 回弹        pop、缩放 */
+  --motion-fast:   180ms cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-normal: 260ms cubic-bezier(0.22, 0.8, 0.2, 1);
+  --motion-spring: 360ms cubic-bezier(0.22, 1.25, 0.36, 1);
+
+  /* ── 兼容 Token：旧组件里用了 var(--background-white) 等 ── */
+  --background-white: var(--glass-surface-700);
+  --background-light: var(--glass-surface-500);
+  --border-color:     rgba(255, 255, 255, 0.1);
+  --text-primary-old: var(--text-primary);
+  --text-secondary-old: var(--text-secondary);
+  --shadow-sm: var(--shadow-glass-sm);
+  --shadow-md: var(--shadow-glass-md);
+  --shadow-lg: var(--shadow-glass-lg);
+  --border-radius-sm:   var(--radius-sm);
+  --border-radius-md:   var(--radius-md);
+  --border-radius-lg:   var(--radius-lg);
+  --border-radius-full: 9999px;
+  --transition-fast:   var(--motion-fast);
+  --transition-normal: var(--motion-normal);
+  --transition-slow:   var(--motion-spring);
 }
 
 body {
@@ -81,28 +176,83 @@ body {
   }
 }
 
-/* 共享动画定义 —— 各组件复用，避免重复声明 */
+/* 共享动画定义 —— 全站复用，避免重复声明
+   所有 Modal/Dialog 的 overlay/dialog 动画统一用下面 5 个。 */
 @keyframes fadeIn {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
-
 @keyframes fadeOut {
   from { opacity: 1; }
-  to { opacity: 0; }
+  to   { opacity: 0; }
 }
-
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to   { transform: rotate(360deg); }
+}
+/* 全站统一的 Modal 入场：fade + 轻微上移 + 回弹缩放 */
+@keyframes glass-modal-pop {
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 14px)) scale(0.965); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+/* 无 translate 的独立容器用（例：居中 flex 布局内的 Dialog） */
+@keyframes glass-modal-scale {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+/* 通用侧边栏滑入：向右展开（从左边进入屏幕） */
+@keyframes glass-side-in-l {
+  from { transform: translateX(-100%) translateY(-50%); }
+  to   { transform: translateX(0)     translateY(-50%); }
+}
+/* 通用侧边栏滑入：向左展开（从右边进入屏幕） */
+@keyframes glass-side-in-r {
+  from { transform: translateX(100%) translateY(-50%); }
+  to   { transform: translateX(0)     translateY(-50%); }
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+/* ==========================================================================
+   全站自定义滚动条：轨道 + 拇指均可见（Windows 深色默认透明，需显式定义）
+   优先级：根样式最松；组件级 .xxx::-webkit-scrollbar 会覆盖本条
+   ========================================================================== */
+:root {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) rgba(255, 255, 255, 0.05);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) rgba(255, 255, 255, 0.05);
+}
+
+/* WebKit / Chromium / Edge —— 加深轨道与描边，确保在深色背景下肉眼可见 */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.10); /* 原 0.045，加深 2 倍使轨道显形 */
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.28); /* 内描边增加轨道层次感 */
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.26); /* 原 0.20，加强 30% */
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.16); /* 1px 白边避免暗色背景下拇指「糊成一团」 */
+  background-clip: padding-box;
+  transition: background var(--motion-fast);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.40); /* 原 0.32 → 加强 hover */
+  background-clip: padding-box;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+*::-webkit-scrollbar-thumb:active {
+  background: rgba(255, 255, 255, 0.54); /* 原 0.42 → 加强按压 */
+}
+*::-webkit-scrollbar-corner {
+  background: rgba(255, 255, 255, 0.06);
 }

@@ -1,74 +1,79 @@
+/* AboutDialog.css — 全站统一 Aurora Dark Glass 风格 */
+
 .about-dialog-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  inset: 0;
+  background: var(--overlay-bg);
+  backdrop-filter: var(--overlay-blur);
+  -webkit-backdrop-filter: var(--overlay-blur);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1100;
-  animation: about-fade-in 0.25s ease;
+  animation: fadeIn var(--motion-normal) both;
 }
 
 .about-dialog {
   position: relative;
-  background: rgba(30, 30, 30, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 16px;
-  padding: 32px 36px 28px;
+  background: var(--glass-surface-700);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 30px 34px 24px;
   max-width: 480px;
-  width: 90%;
-  max-height: 85vh;
+  width: 92%;
+  max-height: 86vh;
   overflow-y: auto;
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
-  animation: about-scale-in 0.3s ease;
+  box-shadow: var(--shadow-glass-lg);
+  animation: glass-modal-scale var(--motion-spring) both;
+  color: var(--text-primary);
+  overflow: hidden;
 }
 
-.about-dialog::-webkit-scrollbar {
-  width: 6px;
+.about-dialog::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--aurora-gradient);
+  opacity: 0.9;
 }
 
-.about-dialog::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 3px;
-}
+/* 滚动条 */
+.about-dialog::-webkit-scrollbar        { width: 6px; }
+.about-dialog::-webkit-scrollbar-track  { background: rgba(255, 255, 255, 0.03); border-radius: 3px; }
+.about-dialog::-webkit-scrollbar-thumb  { background: rgba(255, 255, 255, 0.14); border-radius: 3px; }
+.about-dialog::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.22); }
 
-.about-dialog::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
-}
-
+/* 关闭按钮：统一 32px / 10px 圆角 / hover 红 */
 .about-dialog-close {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 32px;
-  height: 32px;
+  top: 18px;
+  right: 18px;
+  width: var(--btn-close-size);
+  height: var(--btn-close-size);
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  color: white;
-  font-size: 16px;
+  border: var(--glass-border);
+  border-radius: var(--btn-close-radius);
+  background: var(--glass-surface-300);
+  color: var(--text-tertiary);
+  font-size: var(--font-md);
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--motion-fast);
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
+  box-shadow: var(--glass-inner-hl);
+  z-index: 2;
 }
-
 .about-dialog-close:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: rotate(90deg);
+  background: var(--semantic-danger);
+  color: #fff;
+  border-color: var(--semantic-danger);
+  transform: translateY(-1px);
 }
 
 .about-dialog-header {
@@ -76,185 +81,172 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-bottom: 24px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 22px;
+  padding-bottom: 18px;
+  border-bottom: var(--glass-border-subtle);
 }
 
 .about-dialog-logo {
-  width: 72px;
-  height: 72px;
-  border-radius: 16px;
-  margin-bottom: 14px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  width: 68px;
+  height: 68px;
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.38);
   object-fit: contain;
+  background: var(--aurora-gradient-soft);
+  padding: 8px;
+  border: var(--glass-border);
 }
 
 .about-dialog-title {
   margin: 0;
-  color: #ffffff;
-  font-size: 26px;
+  color: var(--text-primary);
+  font-size: var(--font-xl);
   font-weight: 700;
-  font-family: 'Poppins', sans-serif;
-  letter-spacing: 0.5px;
+  font-family: inherit;
+  letter-spacing: 0.3px;
 }
 
 .about-dialog-subtitle {
   margin: 6px 0 0 0;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 14px;
+  color: var(--text-tertiary);
+  font-size: var(--font-sm);
   font-weight: 400;
 }
 
 .about-dialog-body {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 20px;
+  overflow-y: auto;
+  max-height: 50vh;
+  padding-right: 4px;
 }
 
 .about-dialog-desc {
   margin: 0;
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 14px;
-  line-height: 1.7;
+  color: var(--text-secondary);
+  font-size: var(--font-md);
+  line-height: 1.75;
   text-align: justify;
 }
 
 .about-dialog-features {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  gap: 9px;
 }
-
 .about-dialog-feature-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 13px;
-  transition: all 0.3s ease;
+  padding: 9px 11px;
+  background: var(--glass-surface-500);
+  border: var(--glass-border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  transition: all var(--motion-fast);
 }
-
 .about-dialog-feature-item:hover {
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--glass-surface-hover);
   border-color: rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
 }
-
 .about-dialog-feature-icon {
-  font-size: 16px;
+  font-size: var(--font-md);
   flex-shrink: 0;
 }
 
 .about-dialog-tech {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 9px;
 }
-
 .about-dialog-section-title {
   margin: 0;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 13px;
+  color: var(--text-quaternary);
+  font-size: var(--font-xs);
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
 }
-
 .about-dialog-tech-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 7px;
 }
-
 .about-dialog-tag {
-  padding: 5px 11px;
-  background: rgba(102, 126, 234, 0.15);
-  border: 1px solid rgba(102, 126, 234, 0.3);
-  border-radius: 12px;
-  color: #a5b4fc;
-  font-size: 12px;
+  padding: 4px 11px;
+  background: color-mix(in srgb, var(--aurora-2) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--aurora-2) 28%, transparent);
+  border-radius: 999px;
+  color: color-mix(in srgb, var(--aurora-2) 85%, #fff);
+  font-size: var(--font-xs);
   font-weight: 500;
 }
 
 .about-dialog-footer {
   margin-top: 22px;
   padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: var(--glass-border-subtle);
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 14px;
+  flex-wrap: wrap;
 }
-
-.about-dialog-github-link {
+.about-dialog-footer-left {
   display: flex;
   align-items: center;
-  color: rgba(255, 255, 255, 0.5);
-  transition: color 0.3s ease, transform 0.3s ease;
+  gap: 12px;
+}
+.about-dialog-github-link {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-quaternary);
+  transition: all var(--motion-fast);
   line-height: 0;
 }
-
 .about-dialog-github-link:hover {
-  color: #ffffff;
-  transform: translateY(-2px);
+  color: var(--text-primary);
+  transform: translateY(-1px);
 }
-
-.about-dialog-github-icon {
-  fill: currentColor;
-}
-
+.about-dialog-github-icon { fill: currentColor; width: 20px; height: 20px; }
 .about-dialog-license {
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 12px;
+  color: var(--text-quaternary);
+  font-size: var(--font-xs);
 }
 
+/* 底部：按钮 */
 .about-dialog-buttons {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   justify-content: center;
-  margin-top: 20px;
+  margin-top: 18px;
 }
-
 .about-dialog-button {
-  padding: 10px 32px;
+  padding: 0 26px;
+  min-height: var(--btn-h);
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: var(--btn-radius);
+  font-size: var(--font-md);
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--motion-fast);
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
-
 .about-dialog-button-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--aurora-gradient);
+  color: var(--text-on-accent);
+  box-shadow: var(--aurora-glow);
 }
-
 .about-dialog-button-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-@keyframes about-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes about-scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.92);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  transform: translateY(-1px);
+  box-shadow:
+    0 14px 32px color-mix(in srgb, var(--aurora-2) 44%, transparent),
+    0 0 0 1px rgba(255, 255, 255, 0.14) inset;
 }

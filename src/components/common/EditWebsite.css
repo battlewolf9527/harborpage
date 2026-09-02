@@ -1,17 +1,37 @@
+/* EditWebsite.css - Aurora Dark Glass 统一版
+   EditWebsite 是 Modal 内嵌的"编辑网站"表单，没有独立 overlay/modal 壳。
+   这里只需要统一样式：输入框 / 按钮 / color picker / 上传控件 等全部用全站 token。 */
+
 .edit-website-container {
   padding: 24px;
-  border-radius: 16px;
-  color: white;
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
   width: 100%;
   box-sizing: border-box;
+  font-family: inherit;
 }
 
 .edit-website-header {
   margin-bottom: 20px;
-  font-size: 18px;
+  font-size: var(--font-xl);
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--text-primary);
   text-align: center;
+  padding-left: 12px;
+  padding-right: 12px;
+  /* h3 左侧 aurora 竖条（与 SettingsWindow 标题一致） */
+  position: relative;
+}
+.edit-website-header::before {
+  content: '';
+  display: inline-block;
+  vertical-align: middle;
+  width: 3px;
+  height: 1em;
+  margin-right: 10px;
+  background: var(--aurora-gradient);
+  border-radius: 2px;
+  transform: translateY(-1px);
 }
 
 .edit-website-form {
@@ -20,115 +40,106 @@
   gap: 16px;
 }
 
+/* ── 预览卡片（80px 方形） ── */
 .edit-website-preview {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 80px;
   height: 80px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
+  background: var(--glass-surface-500);
+  border-radius: var(--radius-md);
   margin: 0 auto;
-  border: 2px dashed rgba(255, 255, 255, 0.3);
-  transition: all 0.3s ease;
+  border: 2px dashed rgba(255, 255, 255, 0.18);
+  transition: all var(--motion-fast);
+  box-shadow: var(--shadow-glass-sm);
 }
-
 .edit-website-preview:hover {
-  border-color: rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.2);
+  border-color: color-mix(in srgb, var(--aurora-2) 60%, #fff);
+  background: var(--glass-surface-hover);
 }
-
 .edit-website-preview-image {
-  width: 60px;
-  height: 60px;
+  width: 60px; height: 60px;
   object-fit: contain;
   object-position: center center;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   display: block;
 }
-
 .edit-website-preview-placeholder {
   font-size: 32px;
   opacity: 0.5;
+  color: var(--text-tertiary);
 }
 
+/* ── Input Group ── */
 .edit-website-input-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-
 .edit-website-label {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: var(--font-md); /* 原 13px → md=14px，表单 label 核心信息不压抑 */
+  color: var(--text-secondary);
   font-weight: 500;
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
-
 .edit-website-tip {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
+  width: 16px; height: 16px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 10px;
+  background: var(--glass-surface-300);
+  border: var(--glass-border-subtle);
+  color: var(--text-tertiary);
+  font-size: var(--font-xs); /* 原 10px → xs token 11-14px，小问号不再蚂蚁大 */
   font-weight: 600;
   cursor: help;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: background var(--motion-fast), color var(--motion-fast);
   user-select: none;
 }
-
 .edit-website-tip:hover,
 .edit-website-tip:focus {
-  background: rgba(255, 255, 255, 0.25);
-  color: rgba(255, 255, 255, 0.9);
+  background: color-mix(in srgb, var(--aurora-2) 22%, transparent);
+  color: var(--text-primary);
   outline: none;
 }
-
 .edit-website-tip::after {
   content: '';
   position: absolute;
-  top: calc(100% + 6px);
-  left: 50%;
+  top: calc(100% + 6px); left: 50%;
   transform: translateX(-50%);
   border: 5px solid transparent;
-  border-bottom-color: rgba(30, 30, 30, 0.95);
+  border-bottom-color: var(--glass-surface-300);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--motion-fast);
   z-index: 10;
 }
-
 .edit-website-tip::before {
   content: '支持三种输入方式：\A 1. 图标URL：图片链接（如 https://.../icon.png）\A 2. 文字：任意文字（如 "Ba"、"ABC"），将生成带颜色的文字图标（最多4字符）\A 3. Emoji：emoji字符（如 🚀、⭐）\A\A 留空则自动获取网站favicon';
   position: absolute;
-  top: calc(100% + 14px);
-  left: 50%;
+  top: calc(100% + 14px); left: 50%;
   transform: translateX(-50%);
-  background: rgba(30, 30, 30, 0.95);
-  backdrop-filter: blur(10px);
-  color: rgba(255, 255, 255, 0.92);
-  font-size: 13px;
+  background: var(--glass-surface-300);
+  backdrop-filter: var(--glass-blur-soft);
+  color: var(--text-primary);
+  font-size: var(--font-md); /* 原 13px → md=14px，悬浮 tooltip 正文要清晰 */
   line-height: 1.7;
   padding: 12px 16px;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
+  border: var(--glass-border);
   white-space: pre-wrap;
-  min-width: 280px;
-  max-width: 380px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  min-width: 280px;  max-width: 380px;
+  box-shadow: var(--shadow-glass-md);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--motion-fast);
   z-index: 10;
 }
-
 .edit-website-tip:hover::after,
 .edit-website-tip:hover::before,
 .edit-website-tip:focus::after,
@@ -138,123 +149,109 @@
 }
 
 .edit-website-fetching {
-  font-size: 12px;
-  color: rgba(100, 200, 255, 0.8);
+  font-size: var(--font-sm); /* 原 12px → sm token 12-16px，加载文字不糊 */
+  color: color-mix(in srgb, var(--aurora-1) 90%, #fff);
   margin-left: 8px;
-  animation: pulse 1.5s ease-in-out infinite;
+  animation: fetchingPulse 1.5s ease-in-out infinite;
 }
-
-@keyframes pulse {
+@keyframes fetchingPulse {
   0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
+  50%      { opacity: 1;   }
 }
 
+/* ── 输入框：统一 input token ── */
 .edit-website-input {
   width: 100%;
   padding: 12px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  font-size: 14px;
-  transition: all 0.3s ease;
+  border: 1px solid var(--input-border);
+  border-radius: var(--input-radius);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: var(--font-md);
+  font-family: inherit;
+  transition: all var(--motion-fast);
   outline: none;
   box-sizing: border-box;
+  box-shadow: var(--glass-inner-hl);
 }
-
-.edit-website-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
-}
-
+.edit-website-input::placeholder { color: var(--text-quaternary); }
 .edit-website-input:focus {
-  border-color: rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+  border-color: var(--input-focus-border);
+  background: color-mix(in srgb, var(--input-bg) 80%, #fff);
+  box-shadow: var(--input-focus-ring), var(--glass-inner-hl);
 }
-
 .edit-website-input.error {
-  border-color: rgba(255, 100, 100, 0.6);
-  background: rgba(255, 100, 100, 0.1);
+  border-color: color-mix(in srgb, var(--semantic-danger) 70%, #fff);
+  background: color-mix(in srgb, var(--semantic-danger) 10%, transparent);
 }
 
-/* URL输入框包装器 */
+/* ── URL 输入框包装器（协议选择器 + 输入框 ── 统一外边框） ── */
 .edit-website-url-wrapper {
   display: flex;
   align-items: center;
   gap: 0;
-  border-radius: 10px;
+  border-radius: var(--input-radius);
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
-  transition: all 0.3s ease;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  transition: all var(--motion-fast);
+  box-shadow: var(--glass-inner-hl);
 }
-
 .edit-website-url-wrapper:focus-within {
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--input-focus-border);
+  box-shadow: var(--input-focus-ring), var(--glass-inner-hl);
+  background: color-mix(in srgb, var(--input-bg) 90%, #fff);
 }
-
 .edit-website-url-wrapper.error {
-  border-color: rgba(255, 100, 100, 0.6);
-  background: rgba(255, 100, 100, 0.1);
+  border-color: color-mix(in srgb, var(--semantic-danger) 70%, #fff);
+  background: color-mix(in srgb, var(--semantic-danger) 10%, transparent);
 }
-
-/* 协议选择框 */
+/* 协议选择框：内容右对齐，贴近 URL 内容（用户偏好） */
 .edit-website-url-protocol {
-  padding: 12px 2px 12px 8px;
+  padding: 12px 2px 12px 10px;
   border: none;
   background: transparent;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 13px;
+  color: var(--text-secondary);
+  font-size: var(--font-md);
   font-weight: 500;
   outline: none;
   cursor: pointer;
-  min-width: 65px;
-  transition: all 0.3s ease;
+  min-width: 68px;
+  transition: background var(--motion-fast);
   appearance: none;
   text-align: right;
   position: relative;
+  font-family: inherit;
 }
-
 .edit-website-url-protocol::after {
-  content: '▼';
+  content: '▾';
   position: absolute;
-  right: 4px;
-  top: 50%;
+  right: 6px; top: 50%;
   transform: translateY(-50%);
-  font-size: 8px;
-  color: rgba(255, 255, 255, 0.4);
+  font-size: var(--font-xs);
+  color: var(--text-quaternary);
   pointer-events: none;
+  margin-left: 2px;
 }
-
-.edit-website-url-protocol:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
-}
-
+.edit-website-url-protocol:hover,
 .edit-website-url-protocol:focus {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
+  background: var(--glass-surface-300);
+  color: var(--text-primary);
 }
-
 .edit-website-url-protocol option {
-  background: #1a1a2e;
-  color: white;
+  background: #0f1226;
+  color: var(--text-primary);
   padding: 8px 12px;
 }
-
-/* URL输入框（在包装器内） */
 .edit-website-url-wrapper .edit-website-input {
   border: none !important;
   border-radius: 0 !important;
   box-shadow: none !important;
   background: transparent !important;
-  padding-left: 2px !important;
+  padding-left: 4px !important;
   padding-right: 16px !important;
   margin: 0 !important;
 }
-
 .edit-website-url-wrapper .edit-website-input:focus {
   background: transparent !important;
   box-shadow: none !important;
@@ -262,95 +259,104 @@
 }
 
 .edit-website-error {
-  color: rgba(255, 150, 150, 0.9);
-  font-size: 12px;
+  color: color-mix(in srgb, var(--semantic-danger) 85%, #fff);
+  font-size: var(--font-sm);
   margin-top: 4px;
   min-height: 16px;
 }
 
+/* ── 按钮布局：功能按钮左/取消最右（用户偏好） ── */
 .edit-website-buttons {
   display: flex;
   gap: 10px;
-  justify-content: flex-end;
+  justify-content: flex-start; /* 功能按钮默认靠左 */
+  align-items: center;
   margin-top: 8px;
 }
+.edit-website-buttons .edit-website-button-secondary { margin-left: auto; } /* 取消按钮推到最右 */
 
 .edit-website-button {
-  padding: 10px 20px;
+  padding: 0 var(--btn-pad-x);
   border: none;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 500;
+  border-radius: var(--btn-radius);
+  font-size: var(--font-md);
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--motion-fast);
   outline: none;
+  font-family: inherit;
+  min-height: var(--btn-h);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
-
+/* 主按钮：极光渐变 + glow */
 .edit-website-button-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--aurora-gradient);
+  color: var(--text-on-accent);
+  box-shadow: var(--aurora-glow);
 }
-
 .edit-website-button-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  transform: translateY(-1.5px);
+  box-shadow: 0 14px 32px color-mix(in srgb, var(--aurora-2) 42%, transparent);
 }
-
-.edit-website-button-primary:active {
-  transform: translateY(0);
-}
-
+.edit-website-button-primary:active { transform: translateY(0); }
+/* 取消按钮：幽灵玻璃按钮 */
 .edit-website-button-secondary {
-  background: rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--glass-surface-300);
+  color: var(--text-secondary);
+  border: var(--glass-border);
 }
-
 .edit-website-button-secondary:hover {
-  background: rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: var(--glass-surface-hover);
+  color: var(--text-primary);
+  border-color: var(--glass-border-strong);
 }
 
 .edit-website-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  transform: none;
+  transform: none !important;
+  box-shadow: none !important;
+  background: var(--glass-surface-300) !important;
+  color: var(--text-quaternary) !important;
+  border-color: var(--glass-border-subtle) !important;
 }
 
-.edit-website-button:disabled:hover {
-  transform: none;
-  box-shadow: none;
-}
-
+/* 上传控件组 */
 .edit-website-button-upload {
-  background: rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.9);
-  border: 1px dashed rgba(255, 255, 255, 0.3);
+  background: var(--glass-surface-300);
+  color: var(--text-secondary);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
   padding: 10px 24px;
 }
-
 .edit-website-button-upload:hover {
-  background: rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: var(--glass-surface-hover);
+  border-color: color-mix(in srgb, var(--aurora-2) 50%, #fff);
+  color: var(--text-primary);
 }
 
 .edit-website-upload-buttons {
   display: flex;
   gap: 10px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
+/* 自动获取图标按钮 */
 .edit-website-button-autofetch {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: var(--aurora-gradient);
+  background-size: 140% 140%;
+  background-position: 80% 50%;
   color: white;
   border: none;
   padding: 10px 16px;
   white-space: nowrap;
 }
-
 .edit-website-button-autofetch:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+  transform: translateY(-1.5px);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--aurora-3) 35%, transparent);
 }
 
 .edit-website-upload-group {
@@ -359,93 +365,80 @@
   gap: 8px;
 }
 
-.edit-website-upload-button-wrapper {
-  position: relative;
-}
-
+.edit-website-upload-button-wrapper { position: relative; }
 .edit-website-file-input {
   position: absolute;
   opacity: 0;
-  width: 0;
-  height: 0;
+  width: 0; height: 0;
   overflow: hidden;
 }
 
+/* 上传进度 */
 .edit-website-upload-progress {
   height: 4px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 2px;
   margin-top: 8px;
   overflow: hidden;
 }
-
 .edit-website-upload-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  background: var(--aurora-gradient);
   border-radius: 2px;
-  transition: width 0.3s ease;
+  transition: width var(--motion-normal);
 }
 
 .edit-website-upload-hint {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: var(--font-sm);
+  color: var(--text-quaternary);
   margin: 4px 0 0 0;
 }
-
 .edit-website-upload-hint-disabled {
   margin-left: 6px;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-quaternary);
+  opacity: 0.65;
 }
 
+/* 保存到 R2 */
 .edit-website-button-save-r2 {
-  background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+  background: linear-gradient(135deg, #0ea5e9, var(--aurora-1));
   color: white;
   border: none;
   padding: 10px 16px;
   white-space: nowrap;
 }
-
 .edit-website-button-save-r2:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  transform: translateY(-1.5px);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--aurora-1) 40%, transparent);
 }
+.edit-website-button-save-r2:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.edit-website-button-save-r2:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* 图标颜色选择器 */
+/* ── 颜色选择器 ── */
 .edit-website-color-picker {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   align-items: center;
 }
-
 .edit-website-color-swatch {
-  width: 28px;
-  height: 28px;
+  width: 28px; height: 28px;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.22);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--motion-fast);
   position: relative;
   overflow: hidden;
   line-height: 1;
 }
-
 .edit-website-color-swatch:hover {
-  transform: scale(1.1);
-  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.12);
+  border-color: rgba(255, 255, 255, 0.55);
 }
-
 .edit-website-color-swatch.active {
   border-color: #fff;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--aurora-2) 45%, transparent),
+              var(--aurora-glow);
 }
-
-/* 用 ::after 伪元素显示对勾，选中时显示 */
 .edit-website-color-swatch::after {
   content: '✓';
   position: absolute;
@@ -454,38 +447,33 @@
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 16px;
+  font-size: var(--font-md);
   font-weight: 700;
   line-height: 1;
   opacity: 0;
-  transition: opacity 0.12s ease;
+  transition: opacity 120ms ease;
   pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
+.edit-website-color-swatch.active::after { opacity: 1; }
 
-.edit-website-color-swatch.active::after {
-  opacity: 1;
-}
-
-/* 透明色色块：用棋盘格背景表示 */
 .edit-website-color-swatch.transparent {
   background:
     linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.2) 75%),
     linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.2) 75%);
   background-size: 10px 10px;
   background-position: 0 0, 5px 5px;
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: rgba(255, 255, 255, 0.06);
 }
 
-/* 自定义颜色选择器：彩虹渐变背景 */
 .edit-website-color-custom {
-  width: 28px;
-  height: 28px;
+  width: 28px; height: 28px;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.22);
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  transition: all 0.15s ease;
+  transition: all var(--motion-fast);
   line-height: 1;
   background: conic-gradient(
     #EF4444 0deg, #F97316 30deg, #EAB308 60deg,
@@ -494,17 +482,12 @@
     #EF4444 360deg
   );
 }
-
-.edit-website-color-custom:hover {
-  transform: scale(1.1);
-  border-color: rgba(255, 255, 255, 0.5);
-}
-
+.edit-website-color-custom:hover { transform: scale(1.12); border-color: rgba(255,255,255,0.55); }
 .edit-website-color-custom.active {
   border-color: #fff;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--aurora-2) 45%, transparent),
+              var(--aurora-glow);
 }
-
 .edit-website-color-custom::after {
   content: '✓';
   position: absolute;
@@ -513,22 +496,19 @@
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 16px;
+  font-size: var(--font-md);
   font-weight: 700;
   line-height: 1;
   opacity: 0;
-  transition: opacity 0.12s ease;
+  transition: opacity 120ms ease;
   pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
 }
-
-.edit-website-color-custom.active::after {
-  opacity: 1;
-}
+.edit-website-color-custom.active::after { opacity: 1; }
 
 .edit-website-color-hidden {
   position: absolute;
-  width: 0;
-  height: 0;
+  width: 0; height: 0;
   opacity: 0;
   pointer-events: none;
   overflow: hidden;

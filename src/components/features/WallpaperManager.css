@@ -1,55 +1,115 @@
+/* ============================================================
+   WallpaperManager.css — Aurora Dark Glass 统一视觉
+   面板身份：设置页内部二级子面板 → 用 h3::before aurora 左竖条当视觉锚点
+   ============================================================ */
+
 .wallpaper-manager {
   padding: 20px;
-  color: white;
+  color: var(--text-primary);
+  font-family: inherit;
 }
 
+/* h3 标题：加 aurora 左竖条 + 字号/字重统一 */
 .wallpaper-manager h3 {
-  margin-bottom: 24px;
-  font-size: 18px;
+  position: relative;
+  margin: 0 0 24px 0;
+  padding: 4px 0 4px 14px;
+  font-size: var(--font-xl);
   font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+}
+.wallpaper-manager h3::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 72%;
+  border-radius: 2px;
+  background: var(--aurora-gradient);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--aurora-2) 55%, transparent);
 }
 
 .wallpaper-sources {
   margin-bottom: 32px;
 }
 
-.wallpaper-sources h4 {
-  margin-bottom: 16px;
-  font-size: 16px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.8);
+/* 子标题：h4 规格统一（Settings 同款） */
+.wallpaper-sources h4,
+.wallpaper-options h4,
+.wallpaper-preview h4 {
+  margin: 0 0 14px 0;
+  font-size: var(--font-md);
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.01em;
 }
 
 .source-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
+/* 源选项卡：surface-500 玻璃卡片 + inner-hl + hover aurora 描边 glow */
 .source-item {
-  padding: 14px 16px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--glass-surface-500);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-inner-hl);
+  backdrop-filter: blur(var(--glass-blur)) saturate(155%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(155%);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition:
+    background-color var(--motion-fast),
+    border-color var(--motion-fast),
+    transform var(--motion-spring),
+    box-shadow var(--motion-fast);
+  position: relative;
+  color: var(--text-primary);
+  font-size: var(--font-md);
+  font-weight: 500;
 }
-
 .source-item:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: color-mix(in srgb, var(--glass-surface-300) 86%, transparent);
+  border-color: color-mix(in srgb, var(--aurora-2) 38%, var(--glass-border));
+  transform: translateY(-1px);
+  box-shadow:
+    var(--glass-inner-hl),
+    0 0 0 1px color-mix(in srgb, var(--aurora-2) 30%, transparent),
+    0 6px 18px rgba(0, 0, 0, 0.28);
 }
 
+/* 选中态：左侧 3px aurora 彩条 + 背景变 surface-300 */
 .source-item.selected {
-  background: rgba(255, 255, 255, 0.3);
-  border-left: 4px solid white;
+  background: var(--glass-surface-300);
+  border-color: color-mix(in srgb, var(--aurora-2) 48%, var(--glass-border));
+  box-shadow:
+    var(--glass-inner-hl),
+    0 0 0 1px color-mix(in srgb, var(--aurora-2) 40%, transparent),
+    0 0 14px color-mix(in srgb, var(--aurora-2) 30%, transparent);
+}
+.source-item.selected::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--aurora-gradient);
 }
 
 .local-upload {
   margin-top: 12px;
   margin-bottom: 32px;
 }
-
 .local-upload input {
-  color: white;
+  color: var(--text-primary);
+  accent-color: var(--aurora-2);
 }
 
 .solid-color {
@@ -57,23 +117,29 @@
   margin-bottom: 32px;
 }
 
-.solid-color input {
+/* 纯色选择器：外框加 input token */
+.solid-color input[type="color"] {
   width: 100%;
-  height: 40px;
-  border: none;
-  border-radius: 8px;
+  height: 44px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--glass-surface-500);
+  padding: 4px;
+  box-shadow: var(--glass-inner-hl);
   cursor: pointer;
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast);
+}
+.solid-color input[type="color"]:hover,
+.solid-color input[type="color"]:focus {
+  border-color: color-mix(in srgb, var(--aurora-2) 42%, var(--glass-border));
+  outline: none;
+  box-shadow:
+    var(--glass-inner-hl),
+    0 0 0 4px color-mix(in srgb, var(--aurora-2) 18%, transparent);
 }
 
 .wallpaper-options {
   margin-bottom: 32px;
-}
-
-.wallpaper-options h4 {
-  margin-bottom: 16px;
-  font-size: 16px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.8);
 }
 
 .option-item {
@@ -84,33 +150,89 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  font-size: 14px;
+  font-size: var(--font-md);
+  color: var(--text-primary);
   cursor: pointer;
+  font-weight: 500;
 }
 
 .option-item input[type="checkbox"] {
   width: auto;
+  align-self: flex-start;
   cursor: pointer;
+  accent-color: var(--aurora-2);
+  transform: scale(1.05);
 }
 
+/* Range slider：与 SettingsWindow 同款（track 灰色 + thumb 极光渐变） */
 .option-item input[type="range"] {
   width: 100%;
   cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  height: 24px;
+}
+.option-item input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--glass-border);
+  border-radius: 2px;
+}
+.option-item input[type="range"]::-moz-range-track {
+  height: 4px;
+  background: var(--glass-border);
+  border-radius: 2px;
+}
+.option-item input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: var(--aurora-gradient);
+  box-shadow:
+    0 0 0 2px rgba(10, 12, 24, 0.55),
+    0 0 10px color-mix(in srgb, var(--aurora-2) 60%, transparent);
+  cursor: pointer;
+  transition: transform var(--motion-spring), box-shadow var(--motion-fast);
+}
+.option-item input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  background: var(--aurora-gradient);
+  box-shadow:
+    0 0 0 2px rgba(10, 12, 24, 0.55),
+    0 0 10px color-mix(in srgb, var(--aurora-2) 60%, transparent);
+  cursor: pointer;
+}
+.option-item input[type="range"]:hover::-webkit-slider-thumb,
+.option-item input[type="range"]:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+  box-shadow:
+    0 0 0 2px rgba(10, 12, 24, 0.55),
+    0 0 16px color-mix(in srgb, var(--aurora-2) 75%, transparent);
 }
 
 .wallpaper-preview {
   margin-top: 24px;
 }
 
-.wallpaper-preview h4 {
-  margin-bottom: 16px;
-  font-size: 16px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.8);
-}
-
 .preview-image {
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-glass-md);
+  border: 1px solid var(--glass-border);
+  position: relative;
+}
+.preview-image::after {
+  /* 内侧高光，让预览框和玻璃外壳的精致度一致 */
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow: var(--glass-inner-hl);
 }

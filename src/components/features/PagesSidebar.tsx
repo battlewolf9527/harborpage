@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import './PagesSidebar.css';
+import ConfirmDialog from '../common/ConfirmDialog';
 import { usePagesSelector } from '../../store/selectors';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import type { Page } from '../../types';
@@ -326,84 +327,20 @@ const PagesSidebar: React.FC = () => {
         </div>
       </div>
 
-      {/* 删除确认对话框 - 使用全局 ConfirmDialog 的内联简化版本 */}
-      {pendingDelete && (
-        <>
-          <div
-            style={{
-              position: 'fixed',
-              inset: 0,
-              background: 'rgba(0,0,0,0.4)',
-              zIndex: 1010,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backdropFilter: 'blur(4px)',
-            }}
-            onClick={handleCancelDelete}
-          >
-            <div
-              style={{
-                background: 'var(--background-white)',
-                borderRadius: '0.8vw',
-                padding: '1.2vw 1.4vw',
-                width: '18vw',
-                boxShadow: 'var(--shadow-lg)',
-                fontFamily: "'Inter', sans-serif",
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 style={{ margin: '0 0 0.6vw', fontSize: '0.85vw', fontWeight: 700, color: 'var(--text-primary)' }}>
-                确认删除
-              </h3>
-              <p style={{ margin: '0 0 1.2vw', fontSize: '0.7vw', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                确定要删除页面「<strong style={{ color: 'var(--text-primary)' }}>{pendingDelete.name}</strong>」吗？<br />
-                该页面中的所有网站图标也会被删除。
-              </p>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5vw' }}>
-                <button
-                  onClick={handleConfirmDelete}
-                  style={{
-                    padding: '0.4vw 1vw',
-                    fontSize: '0.65vw',
-                    borderRadius: '0.4vw',
-                    border: 'none',
-                    background: '#ef4444',
-                    color: 'white',
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                    fontWeight: 600,
-                    transition: 'all var(--transition-fast)',
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = '#dc2626'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = '#ef4444'; }}
-                >
-                  删除
-                </button>
-                <button
-                  onClick={handleCancelDelete}
-                  style={{
-                    padding: '0.4vw 1vw',
-                    fontSize: '0.65vw',
-                    borderRadius: '0.4vw',
-                    border: '1px solid var(--border-color)',
-                    background: 'transparent',
-                    color: 'var(--text-secondary)',
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                    fontWeight: 500,
-                    transition: 'all var(--transition-fast)',
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--background-light)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                >
-                  取消
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+      {/* 删除页面确认：统一使用全局 ConfirmDialog（Aurora 风格 + danger 语义红渐变） */}
+      <ConfirmDialog
+        isOpen={!!pendingDelete}
+        title="确认删除"
+        message={
+          pendingDelete
+            ? `确定要删除页面「${pendingDelete.name}」吗？该页面中的所有网站图标也会被删除。`
+            : ''
+        }
+        confirmType="danger"
+        confirmText="删除"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </>
   );
 };

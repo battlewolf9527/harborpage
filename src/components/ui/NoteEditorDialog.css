@@ -1,0 +1,310 @@
+/* NoteEditorDialog.css － Aurora Dark Glass 统一外壳 + 内部便签色彩
+ * 外层：标准深色玻璃 / 遮罩 / 阴影 / 回弹动画
+ * 内层：保留 16 色便签的 accent+soft 语义，调整到适配深色背景
+ */
+
+/* ── Overlay：统一 overlay 深蓝遮罩+8px 模糊 ── */
+.note-editor-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-bg);
+  backdrop-filter: var(--overlay-blur);
+  -webkit-backdrop-filter: var(--overlay-blur);
+  z-index: 1020;
+  animation: fadeIn var(--motion-normal) both;
+}
+.note-editor-overlay.closing {
+  animation: fadeIn var(--motion-normal) both reverse;
+  pointer-events: none;
+}
+
+/* ── Dialog：深色玻璃外壳 / radius-lg / 标准阴影 / 极光弹簧动画 ── */
+.note-editor-dialog {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(380px, 46vw, 740px);
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 64px);
+  z-index: 1021;
+  display: flex;
+  flex-direction: column;
+  background: var(--glass-surface-700);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-glass-lg);
+  overflow: hidden;
+  font-family: inherit;
+  color: var(--text-primary);
+  animation: glass-modal-pop var(--motion-spring) both;
+}
+.note-editor-dialog.closing {
+  animation: glass-modal-pop var(--motion-normal) both reverse;
+  pointer-events: none;
+}
+
+/* ── 彩色顶条（每色变体不同） ── */
+.note-editor-dialog::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--note-accent, var(--aurora-gradient));
+  opacity: 0.95;
+}
+
+/* ── 16 色便签配色：改为适配深色玻璃的色阶
+      --note-accent = 400 档（明亮主色），用于色条/焦点环/主按钮
+      --note-soft   = 8% 透明度的 tint，用于 header 背景
+   ── 黄/橙系（4） ── */
+.note-editor-dialog.color-yellow { --note-accent: #facc15; --note-soft: rgba(250, 204, 21, 0.10); }
+.note-editor-dialog.color-amber  { --note-accent: #f59e0b; --note-soft: rgba(245, 158, 11, 0.10); }
+.note-editor-dialog.color-orange { --note-accent: #fb923c; --note-soft: rgba(251, 146, 60, 0.10); }
+.note-editor-dialog.color-coral  { --note-accent: #f97316; --note-soft: rgba(249, 115, 22, 0.10); }
+/* ── 粉/红系（3） ── */
+.note-editor-dialog.color-pink   { --note-accent: #f472b6; --note-soft: rgba(244, 114, 182, 0.10); }
+.note-editor-dialog.color-rose   { --note-accent: #e879f9; --note-soft: rgba(232, 121, 249, 0.10); }
+.note-editor-dialog.color-red    { --note-accent: #f87171; --note-soft: rgba(248, 113, 113, 0.10); }
+/* ── 绿/青系（5） ── */
+.note-editor-dialog.color-lime   { --note-accent: #a3e635; --note-soft: rgba(163, 230, 53, 0.10); }
+.note-editor-dialog.color-green  { --note-accent: #4ade80; --note-soft: rgba(74, 222, 128, 0.10); }
+.note-editor-dialog.color-emerald{ --note-accent: #34d399; --note-soft: rgba(52, 211, 153, 0.10); }
+.note-editor-dialog.color-teal   { --note-accent: #2dd4bf; --note-soft: rgba(45, 212, 191, 0.10); }
+.note-editor-dialog.color-cyan   { --note-accent: #22d3ee; --note-soft: rgba(34, 211, 238, 0.10); }
+/* ── 蓝/紫系（4） ── */
+.note-editor-dialog.color-sky    { --note-accent: #38bdf8; --note-soft: rgba(56, 189, 248, 0.10); }
+.note-editor-dialog.color-blue   { --note-accent: #60a5fa; --note-soft: rgba(96, 165, 250, 0.10); }
+.note-editor-dialog.color-indigo { --note-accent: #818cf8; --note-soft: rgba(129, 140, 248, 0.10); }
+.note-editor-dialog.color-purple { --note-accent: #c084fc; --note-soft: rgba(192, 132, 252, 0.10); }
+
+/* ── Header ── */
+.note-editor-header {
+  padding: clamp(14px, 1.1vw, 20px) clamp(18px, 1.4vw, 28px) clamp(10px, 0.8vw, 14px);
+  background: var(--note-soft, transparent);
+  border-bottom: var(--glass-border-subtle);
+}
+.note-editor-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: clamp(10px, 0.7vw, 14px);
+}
+.note-editor-title-row h2 {
+  margin: 0;
+  font-size: var(--font-lg);
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: var(--text-primary);
+}
+
+/* 关闭按钮：全站统一 32px / 10px 圆角 / hover 变红 */
+.note-editor-close {
+  width: var(--btn-close-size);
+  height: var(--btn-close-size);
+  border-radius: var(--btn-close-radius);
+  border: var(--glass-border);
+  background: var(--glass-surface-300);
+  color: var(--text-tertiary);
+  font-size: var(--font-md);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--motion-fast);
+  box-shadow: var(--glass-inner-hl);
+}
+.note-editor-close:hover {
+  background: var(--semantic-danger);
+  color: #fff;
+  border-color: var(--semantic-danger);
+  transform: translateY(-1px);
+}
+
+.note-editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.note-editor-color-palette {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.note-color-chip {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  outline: none;
+  cursor: pointer;
+  padding: 0;
+  transition: transform var(--motion-fast), box-shadow var(--motion-fast), border-color var(--motion-fast);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.4);
+}
+.note-color-chip:hover { transform: scale(1.15); }
+.note-color-chip.active {
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 20%, transparent);
+}
+/* ── 色盘 chip 16 色（深色背景上更亮、对比更强） ── */
+.note-color-chip.yellow  { background: #facc15; }
+.note-color-chip.amber   { background: #f59e0b; }
+.note-color-chip.orange  { background: #fb923c; }
+.note-color-chip.coral   { background: #f97316; }
+.note-color-chip.pink    { background: #f472b6; }
+.note-color-chip.rose    { background: #e879f9; }
+.note-color-chip.red     { background: #f87171; }
+.note-color-chip.lime    { background: #a3e635; }
+.note-color-chip.green   { background: #4ade80; }
+.note-color-chip.emerald { background: #34d399; }
+.note-color-chip.teal    { background: #2dd4bf; }
+.note-color-chip.cyan    { background: #22d3ee; }
+.note-color-chip.sky     { background: #38bdf8; }
+.note-color-chip.blue    { background: #60a5fa; }
+.note-color-chip.indigo  { background: #818cf8; }
+.note-color-chip.purple  { background: #c084fc; }
+
+/* ── Body ── */
+.note-editor-body {
+  padding: clamp(16px, 1.1vw, 22px) clamp(18px, 1.4vw, 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1;
+}
+.note-editor-title {
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  border-radius: var(--radius-sm);
+  padding: clamp(10px, 0.7vw, 14px) clamp(12px, 0.9vw, 16px);
+  font-size: var(--font-lg);
+  font-weight: 700;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast);
+  font-family: inherit;
+  box-shadow: var(--glass-inner-hl);
+}
+.note-editor-title:focus {
+  border-color: var(--note-accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--note-accent) 22%, transparent);
+  background: rgba(255, 255, 255, 0.075);
+}
+.note-editor-title::placeholder { color: var(--text-quaternary); font-weight: 500; }
+
+.note-editor-content {
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  border-radius: var(--radius-sm);
+  padding: clamp(12px, 0.8vw, 16px);
+  font-size: var(--font-md);
+  line-height: 1.7;
+  color: var(--text-secondary);
+  outline: none;
+  resize: vertical;
+  min-height: clamp(180px, 22vh, 280px);
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast);
+  font-family: inherit;
+  box-shadow: var(--glass-inner-hl);
+}
+.note-editor-content:focus {
+  border-color: var(--note-accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--note-accent) 20%, transparent);
+  background: rgba(255, 255, 255, 0.075);
+  color: var(--text-primary);
+}
+.note-editor-content::placeholder { color: var(--text-quaternary); }
+
+.note-editor-meta {
+  color: var(--text-quaternary);
+  font-size: var(--font-sm);
+}
+
+/* ── Footer ── */
+.note-editor-footer {
+  padding: clamp(12px, 0.9vw, 16px) clamp(18px, 1.4vw, 28px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: var(--glass-border-subtle);
+  background: var(--glass-surface-500);
+  backdrop-filter: var(--glass-blur-soft);
+  flex-wrap: wrap;
+}
+.note-editor-footer-left  { display: flex; align-items: center; gap: 10px; }
+.note-editor-footer-right { display: flex; align-items: center; gap: 10px; }
+
+.note-editor-btn {
+  padding: 0 var(--btn-pad-x);
+  min-height: var(--btn-h);
+  border-radius: var(--btn-radius);
+  border: 1px solid transparent;
+  font-size: var(--font-md);
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--motion-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1;
+}
+/* 幽灵按钮（取消）：统一到 ConfirmDialog.secondary 规格 */
+.note-editor-btn.ghost {
+  background: var(--glass-surface-300);
+  color: var(--text-secondary);
+  border-color: var(--glass-border);
+  box-shadow: var(--glass-inner-hl);
+}
+.note-editor-btn.ghost:hover {
+  background: var(--glass-surface-hover);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+/* 主按钮：随 note 色变化的渐变 + 统一白字（保持主色视觉权重 + 对比度达标） */
+.note-editor-btn.primary {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--note-accent) 88%, #fff),
+    color-mix(in srgb, var(--note-accent) 60%, #000));
+  color: var(--text-on-accent);
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--note-accent) 32%, transparent);
+  border: 0;
+}
+.note-editor-btn.primary:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 14px 28px color-mix(in srgb, var(--note-accent) 44%, transparent),
+    0 0 0 1px rgba(255, 255, 255, 0.14) inset;
+}
+/* 危险按钮：对齐 ConfirmDialog 辅助 danger 语义规格 */
+.note-editor-btn.danger {
+  background: transparent;
+  color: color-mix(in srgb, var(--semantic-danger) 86%, #fff);
+  border-color: color-mix(in srgb, var(--semantic-danger) 32%, transparent);
+}
+.note-editor-btn.danger:hover {
+  background: var(--semantic-danger);
+  color: #fff;
+  border-color: var(--semantic-danger);
+  box-shadow:
+    0 10px 28px color-mix(in srgb, var(--semantic-danger) 38%, transparent),
+    0 0 0 1px rgba(255, 255, 255, 0.14) inset;
+  transform: translateY(-1px);
+}
+
+/* ── 触控设备 ── */
+@media (hover: none) and (pointer: coarse) {
+  .note-color-chip { width: 28px; height: 28px; }
+  .note-editor-btn { min-height: 44px; padding: 0 18px; }
+  .note-editor-close { width: 40px; height: 40px; }
+}
