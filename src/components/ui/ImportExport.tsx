@@ -47,7 +47,7 @@ const ALL_SELECTED: DataSelection = {
 interface ImportPreview {
   raw: FullExportData;
   available: DataSelection;
-  counts: Record<CategoryKey, number | null>;
+  counts: Record<CategoryKey, number | null> & { pageSiteCount: number };
 }
 
 interface ToastState {
@@ -157,9 +157,10 @@ const ImportExport: React.FC = () => {
         notes: !!(raw.notes?.length),
         settings: !!raw.settings,
       };
-      const counts: Record<CategoryKey, number | null> = {
+      const counts: ImportPreview['counts'] = {
         searchEngines: raw.searchEngines?.length ?? null,
-        pages: raw.pages?.length ? `${raw.pages.length}页/${pageSiteCount}站` as unknown as number : null,
+        pages: raw.pages?.length ?? null,
+        pageSiteCount,
         websites: countWebsites(raw.websites) || null,
         todos: raw.todos?.length ?? null,
         notes: raw.notes?.length ?? null,
@@ -295,7 +296,8 @@ const ImportExport: React.FC = () => {
     }
     return {
       searchEngines: data.searchEngines?.length ?? 0,
-      pages: pageCount > 0 ? (`${pageCount}页/${pageSiteCount}站` as unknown as number) : 0,
+      pages: pageCount,
+      pageSiteCount,
       websites: countWebsites(data.websites),
       todos: data.todos?.length ?? 0,
       notes: data.notes?.length ?? 0,
@@ -379,7 +381,11 @@ const ImportExport: React.FC = () => {
                       <span className="ie-checkbox-custom" />
                       <span className="ie-checkbox-label">{label}</span>
                       {count !== null && count > 0 && (
-                        <span className="ie-checkbox-count">{count} 个</span>
+                        <span className="ie-checkbox-count">
+                          {key === 'pages'
+                            ? `${exportCounts.pages}页/${exportCounts.pageSiteCount}站`
+                            : `${count} 个`}
+                        </span>
                       )}
                     </label>
                   );
@@ -440,7 +446,11 @@ const ImportExport: React.FC = () => {
                       <span className="ie-checkbox-custom" />
                       <span className="ie-checkbox-label">{label}</span>
                       {count !== null && (
-                        <span className="ie-checkbox-count">{count} 个</span>
+                        <span className="ie-checkbox-count">
+                          {key === 'pages'
+                            ? `${importPreview.counts.pages}页/${importPreview.counts.pageSiteCount}站`
+                            : `${count} 个`}
+                        </span>
                       )}
                       {key === 'settings' && available && (
                         <span className="ie-checkbox-count">已包含</span>

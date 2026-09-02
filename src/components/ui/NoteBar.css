@@ -714,7 +714,8 @@
 .noteball.note.color-purple { --tint: #c084fc; }
 .noteball.note.color-purple:hover { --glow: rgba(192, 132, 252, 0.6); }
 
-/* 球首字：玻璃弹珠上的"贴纸字" */
+/* 球首字：玻璃弹珠上的"贴纸字"（全白字——统一玻璃质感；
+ * 便签球是亮彩芯，配深色投影保证白字在亮色球上不融底） */
 .noteball-glyph {
   font-size: calc(var(--ball-size) * 0.46);
   font-weight: 800;
@@ -724,11 +725,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #0f172a;
+  color: #fff;
   z-index: 4;
   text-shadow:
-    0 1px 0 rgba(255,255,255,0.75),
-    0 2px 5px rgba(15,23,42,0.28);
+    0 1px 1px rgba(15,23,42,0.55),
+    0 2px 8px rgba(15,23,42,0.4);
   letter-spacing: 0.5px;
 }
 
@@ -901,25 +902,41 @@
   from { opacity: 0; transform: scale(0.94); }
   to   { opacity: 1; transform: scale(1); }
 }
+/* 箭头：锐利等腰三角（clip-path），替代原 rotate45 方块——
+ * 原实现（旋转方块 + 只描两条边 + 独立 backdrop-filter）边缘发虚、
+ * 与气泡 1px 白框不连贯，像一块生硬贴上的菱形。
+ * 新方案：
+ *   · 双层三角：外层=略实的白描边（与气泡边框同质感），内层=气泡同底色；
+ *   · 顶边嵌入气泡 3px，遮住气泡底部圆角弧线 → 视觉上像气泡底部"长出的尖端"；
+ *   · drop-shadow 跟随三角形状，与气泡外投影同向，立体感统一。 */
 .noteball-tooltip-arrow {
   position: absolute;
   left: calc(50% + var(--tip-arrow-shift));
   bottom: -7px;
-  transform: translateX(-50%) rotate(45deg);
-  width: 12px; height: 12px;
+  width: 16px;
+  height: 10px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  filter: drop-shadow(0 4px 6px rgba(15,23,42,0.16));
+}
+.noteball-tooltip-arrow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.9);
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+}
+.noteball-tooltip-arrow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
   background: rgba(255,255,255,0.86);
-  border-right: 1px solid rgba(255,255,255,0.7);
-  border-bottom: 1px solid rgba(255,255,255,0.7);
-  border-radius: 2px;
-  backdrop-filter: blur(16px);
+  clip-path: polygon(50% calc(100% - 1.5px), 1.5px 1.5px, calc(100% - 1.5px) 1.5px);
 }
 .noteball-tooltip[data-place="below"] .noteball-tooltip-arrow {
   bottom: auto;
   top: -7px;
-  border-right: 0;
-  border-bottom: 0;
-  border-left: 1px solid rgba(255,255,255,0.7);
-  border-top: 1px solid rgba(255,255,255,0.7);
+  transform: translateX(-50%) scaleY(-1);
 }
 /* 缩略预览的 16 色身份色：--note-accent 与调色板 chip 色值 1:1 一致
    （此前缺失 → 所有预览都落到默认琥珀 #f59e0b，用户反馈"没体现笔记设置的颜色"）。
@@ -1079,27 +1096,39 @@
   pointer-events: auto;
   font-family: inherit;
 }
+/* 箭头：与 noteball-tooltip 相同的锐利等腰三角（clip-path），替代原 rotate45 方块。
+ * 配色适配深色玻璃气泡：外层描边 = 气泡底部 1px 边框同色（accent 混白），
+ * 内层 = 气泡同底色 + 同 blur；顶边嵌入气泡 3px 遮住圆角底弧，drop-shadow 与气泡外投影同向。 */
 .nb-bubble-tip-arrow {
   position: absolute;
   left: calc(50% + var(--tip-arrow-shift));
   bottom: -7px;
-  transform: translateX(-50%) rotate(45deg);
-  width: 12px; height: 12px;
+  width: 16px;
+  height: 10px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  filter: drop-shadow(0 4px 6px rgba(15,23,42,0.28));
+}
+.nb-bubble-tip-arrow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--tip-accent) 32%, var(--glass-border));
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+}
+.nb-bubble-tip-arrow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
   background: var(--glass-surface-700);
-  border-right: 1px solid color-mix(in srgb, var(--tip-accent) 28%, rgba(255,255,255,0.5));
-  border-bottom: 1px solid color-mix(in srgb, var(--tip-accent) 28%, rgba(255,255,255,0.5));
-  border-radius: 2px;
   backdrop-filter: blur(16px) saturate(160%);
   -webkit-backdrop-filter: blur(16px) saturate(160%);
-  pointer-events: none;
+  clip-path: polygon(50% calc(100% - 1.5px), 1.5px 1.5px, calc(100% - 1.5px) 1.5px);
 }
 .nb-bubble-tip[data-place="below"] .nb-bubble-tip-arrow {
   bottom: auto;
   top: -7px;
-  border-right: 0;
-  border-bottom: 0;
-  border-left: 1px solid color-mix(in srgb, var(--tip-accent) 28%, rgba(255,255,255,0.5));
-  border-top: 1px solid color-mix(in srgb, var(--tip-accent) 28%, rgba(255,255,255,0.5));
+  transform: translateX(-50%) scaleY(-1);
 }
 .nb-bubble-tip-title {
   font-size: var(--font-sm);
