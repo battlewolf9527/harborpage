@@ -1,9 +1,11 @@
-/* NoteBar.css － 底部"玻璃弹珠"风笔记栏
+/* NoteBar.css － 底部"水晶球"风笔记栏
  *
  * 设计主张：
  *  · 容器极透明（几乎"看不见一条栏"），把所有聚光灯让给"球"本身
- *  · 每颗球都是一颗玻璃弹珠（marble）：外层高斯辉光 + 内部多重焦散渐变 + 高光月牙 + 底部实心彩核 + 悬浮脉冲呼吸
- *  · 互动灵动：hover 弹跳 + 光晕弥散 + 色相抖动；入场 stagger 弹珠一颗一颗出现
+ *  · 每颗球都是一颗水晶球（参照 samples/CrystalBall.html）：同一元素上
+ *    六层渐变（月牙反光/主次高光/低透明内部色光/弥散光晕/深色玻璃底）+
+ *    边缘折射内辉 + 底部焦散光斑 + 低透明度"颜色浸在球里"的通透玻璃质感
+ *  · 互动灵动：hover 弹起 + 三层光晕展开 + 整体提亮；入场 stagger 一颗颗出现
  *  · 绝对不裁切：整栏 overflow:visible + 充足 padding-bottom，hover 放大/弹起永远露全
  */
 
@@ -375,6 +377,19 @@
      内部 .noteball 会 pointer-events:auto 覆盖。*/
   pointer-events: none;
 }
+/* Hover 悬浮：球弹跳到位后，让 wrapper 整体做轻柔的上下浮动（幅度 3px、周期 2.8s），
+ * hover 的球"悬浮呼吸"更灵动。动画只作用 wrapper 的合成层，不干扰球自身的
+ * 弹跳 transition / 辉光 / tooltip 定位；拖拽中的球暂停浮动。 */
+.noteball-wrapper:hover {
+  animation: nb-wrapper-float 2.8s ease-in-out infinite;
+}
+.noteball-wrapper:has(.noteball.dragging):hover {
+  animation: none;
+}
+@keyframes nb-wrapper-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
 
 /* 行容器：不再需要横向滚动（最多 8 球），彻底 visible 释放合成层 */
 .noteball-row {
@@ -393,13 +408,13 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
- *  弹珠球（noteball）-  核心玻璃弹珠质感
+ *  水晶球（noteball）-  核心水晶玻璃质感（参照 samples/CrystalBall.html）
  *
- *  层叠：
- *    [外环辉光 glow]  → box-shadow 外扩
- *    [实体球 body]    → 渐变叠层
- *    [月牙高光 ::after]
- *    [文字 glyph]
+ *  层叠（全在本体一个 background 内，先写在上层）：
+ *    [L6 底部月牙反光] → [L5 次高光] → [L4 主高光]
+ *    → [L3 内部颜色光] → [L2 弥散光晕] → [L1 深色玻璃底]
+ *  + 内壁折射辉（inset box-shadow）+ 外发光 + 底部焦散光斑（::after）
+ *  + 文字 glyph
  * ═══════════════════════════════════════════════════════════════ */
 .noteball {
   --ball-size: clamp(40px, 2.9vw, 50px);
@@ -426,96 +441,167 @@
      但球自身及其子节点必须能收到鼠标事件，显式写出来。 */
   pointer-events: auto;
 
-  /* 玻璃弹珠：通透版基础层叠 v3（平衡版）
-     关键 1：球体保持"玻璃体"——彩芯中等透明度（中心 62% → 66% 处全透明），
-     背景能透进来但不像 v2 那样空到失去球感。
-     关键 2：笔记/功能身份色由 ::after 糖芯用「正常混合」直接着色
-     （screen 混合只提亮、浅色背景会洗掉颜色 → v2 用户反馈"颜色表现不出来"）。
-     (a) 左上主高光（表面弧光）
-     (b) 底部暗影（更淡更散，透过彩芯的立体暗调）
-     (c) 通透彩芯（中心染色 → 边缘透明）
-     (d) 底部折射亮线（玻璃下缘反光）*/
-  --c-core-1: rgba(148, 163, 184, 0.55);   /* 核心近色 */
-  --c-core-2: rgba(71, 85, 105, 0.78);     /* 核心远色 */
-  --glow: rgba(99, 102, 241, 0);           /* 外发光：hover 时才显现 */
+  /* ── 水晶球视觉：完整按 samples/CrystalBall.html 注释版重建 ─────────────
+     不再沿用旧玻璃弹珠设计（实心彩核 / 伪元素再叠高光 / 呼吸动画）。
+     样例关键点（注释原文语义）：
+       · 六层渐变全部写在同一 background（先写的在上层）：
+         底部月牙反光 → 次高光 → 主高光 → 内部颜色光(≈0.4) → 弥散光晕 → 深色玻璃底。
+         高光/月牙如果再用 ::before 叠一遍，玻璃层会被重复增亮 → 质感发"假"。
+       · 内部颜色必须低透明度：看起来颜色"浸在球里"，透明度太高就成了塑料球。
+       · 深色玻璃底：中心 rgba(25,25,40,0.4) 微透 → 边缘 rgba(8,8,18,0.9) 厚重，
+         中心通透、边缘厚重是玻璃体积感的来源。
+    颜色/发光体系：样例 7 个变量由 --tint（note 16 色 / feature 身份色）统一派生。
+  */
+  --tint: #8b5cf6;   /* 兜底色（note/feature 各自覆盖） */
+  --ball-color:        color-mix(in srgb, var(--tint) 40%, transparent);  /* 内部颜色光 */
+  --ball-color-soft:   color-mix(in srgb, var(--tint) 15%, transparent);  /* 内部弥散光晕 */
+  --ball-glow:         color-mix(in srgb, var(--tint) 50%, transparent);  /* hover 核心光晕 */
+  --ball-glow-soft:    color-mix(in srgb, var(--tint) 20%, transparent);  /* hover 中层弥散 */
+  --ball-glow-ambient: color-mix(in srgb, var(--tint) 8%, transparent);   /* hover 环境光 */
+  --ball-glow-dim:     color-mix(in srgb, var(--tint) 18%, transparent);  /* idle 核心微光 */
+  --ball-glow-dim-soft: color-mix(in srgb, var(--tint) 8%, transparent);  /* idle 弥散微光 */
   background:
-    radial-gradient(circle at 30% 20%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 26%),
-    radial-gradient(circle at 50% 120%, rgba(15,23,42,0.3) 0%, rgba(15,23,42,0) 60%),
-    radial-gradient(circle at 50% 52%,
-      color-mix(in srgb, var(--c-core-1) 62%, transparent) 0%,
-      color-mix(in srgb, var(--c-core-2) 30%, transparent) 40%,
-      transparent 66%),
-    radial-gradient(circle at 50% 100%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 32%);
-  color: #0f172a;
+    /* 第 6 层（最表面）：底部月牙反光 */
+    radial-gradient(ellipse 70% 35% at 50% 95%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 55%),
+    /* 第 5 层：次高光（玻璃后表面的小圆斑反射） */
+    radial-gradient(circle at 30% 22%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.1) 5%, rgba(255,255,255,0) 10%),
+    /* 第 4 层：主高光（左上主光源的锐利光点） */
+    radial-gradient(circle at 22% 18%, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.3) 6%, rgba(255,255,255,0) 12%),
+    /* 第 3 层：内部颜色光（低透明 + 从中心渐淡 → 通透的关键） */
+    radial-gradient(circle at 50% 55%, var(--ball-color) 0%, transparent 65%),
+    /* 第 2 层：内部弥散光晕（更大更淡，让颜色自然衰减无硬边） */
+    radial-gradient(circle at 50% 50%, var(--ball-color-soft) 0%, transparent 70%),
+    /* 第 1 层（最底）：深色玻璃底（中心微透 → 边缘厚重） */
+    radial-gradient(circle at 50% 50%, rgba(25,25,40,0.4) 0%, rgba(8,8,18,0.9) 100%);
+  color: rgba(255,255,255,0.9);
 
-  /* 玻璃边缘：细黑边界定圆，不加硬白圈（用户反馈白色内缘反光突兀）。
-     用柔和的上缘内反光 + 下缘暗影表现球面曲率。 */
+  /* 样例 .ball 默认 box-shadow（参数照搬）：
+     · 内壁两层白辉 = 边缘折射（菲涅尔）——球体轮廓与壁厚全靠它，无需描边
+     · idle 微色光两档：给球体一丝生命感而非"死黑"
+     · 主投影：纯黑、不带颜色（样例注释：彩色阴影会很假）
+     · 最后一层向下色光：模拟桌面被球色染亮的氛围 */
   box-shadow:
-    0 0 0 1px rgba(15,23,42,0.22),                              /* 黑色细边（玻璃边缘折射） */
-    inset 0 -5px 8px rgba(15,23,42,0.18),                      /* 球底部阴影（淡：让背景透出来） */
-    inset 0 2px 4px rgba(255,255,255,0.55),                    /* 球顶部内反光（柔和弧光） */
-    0 0 0 0 var(--glow);                                       /* hover 外发光位 */
+    inset 0 0 12px 3px rgba(255,255,255,0.35),
+    inset 0 0 4px 1px rgba(255,255,255,0.55),
+    0 0 8px 1px var(--ball-glow-dim),
+    0 0 16px 3px var(--ball-glow-dim-soft),
+    0 10px 30px rgba(0,0,0,0.5),
+    0 12px 30px -8px var(--ball-glow-dim);
 }
-
-/* 小光点（玻璃反光的 highlight point） */
-.noteball::before {
-  content: '';
-  position: absolute;
-  left: 28%;
-  top: 22%;
-  width: 18%;
-  height: 9%;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.95);
-  filter: blur(0.6px);
-  transform: rotate(-20deg);
-  pointer-events: none;
-  z-index: 3;
-}
-/* 注意：不再有通用 .noteball::after —— 右下角白点反光会让球的下四分之一象限
-   出现一片说不清来源的浅色减淡区（用户反馈）。feature / note 球的 ::after
-   焦散层直接覆盖定义，无需这里的底稿。 */
 
 .noteball:focus-visible {
   box-shadow:
-    0 0 0 1px rgba(15,23,42,0.22),
-    0 0 0 6px rgba(99,102,241,0.3),
-    inset 0 -6px 10px rgba(15,23,42,0.28),
-    inset 0 2px 3px rgba(255,255,255,0.35);
+    inset 0 0 12px 3px rgba(255,255,255,0.35),
+    inset 0 0 4px 1px rgba(255,255,255,0.55),
+    0 0 8px 1px var(--ball-glow-dim),
+    0 0 16px 3px var(--ball-glow-dim-soft),
+    0 10px 30px rgba(0,0,0,0.5),
+    0 0 0 6px color-mix(in srgb, var(--tint) 45%, transparent);
 }
 
-/* Hover：弹跳 + 辉光 + 饱和度拉满
- * ⚠️ transform/filter/box-shadow 用 !important —— 这是为了在入场 keyframes
- *    fill-mode forwards 仍在作用的情况下，让 hover 声明依旧获胜（动画 > !important
- *    的旧说法已不再成立：现代浏览器中 declaration !important 高于 animation
- *    的普通 keyframe 声明）。实测必须，否则 hover 不动。
- *    同时入场动画改成 `animation-fill-mode: backwards`，仅保留 animation-delay 前的
- *    起始值填充，结束后立即归还控制权给 class 样式。 */
+/* Hover：按样例 .ball:hover —— 升起 + 放大 + 整体提亮（不再叠加
+ * saturate/rotate，那些是旧设计元素）。⚠️ transform/filter/box-shadow
+ * 用 !important —— 这是为了在入场 keyframes fill-mode forwards 仍在作用的
+ * 情况下，让 hover 声明依旧获胜（动画 > !important 的旧说法已不再成立：
+ * 现代浏览器中 declaration !important 高于 animation 的普通 keyframe 声明）。
+ * 实测必须，否则 hover 不动。同时入场动画已是 fill-mode: backwards，
+ * 结束后立即归还控制权给 class 样式。 */
 .noteball:hover {
-  transform: translateY(-8px) scale(1.18) rotate(-2deg) !important;
-  --glow: color-mix(in srgb, var(--c-core-1, #6366f1) 70%, transparent);
-  filter: saturate(1.45) brightness(1.04) !important;
+  transform: translateY(-10px) scale(1.18) !important;
+  filter: brightness(1.15) !important;
   box-shadow:
-    0 0 0 1px rgba(15,23,42,0.22),
-    inset 0 -6px 10px rgba(15,23,42,0.28),
-    inset 0 2px 3px rgba(255,255,255,0.35),
-    0 0 26px 0 var(--glow),
-    0 16px 32px rgba(15,23,42,0.22) !important;
+    /* 内壁折射增强（样例 0.45 / 0.65） */
+    inset 0 0 12px 3px rgba(255,255,255,0.45),
+    inset 0 0 4px 1px rgba(255,255,255,0.65),
+    /* 纯黑悬浮影保留 + 底部色光增强。
+       三层彩色外光晕移入 ::before 并在 hover 时呼吸（样例 @keyframes breathe） */
+    0 10px 30px rgba(0,0,0,0.5),
+    0 14px 40px -6px var(--ball-glow) !important;
   z-index: 20;
-}
-
-.noteball:hover::before {
-  animation: nb-highlight-wobble 1.2s ease-in-out infinite;
-}
-@keyframes nb-highlight-wobble {
-  0%, 100% { transform: rotate(-20deg) translateY(0); }
-  50%      { transform: rotate(-12deg) translateY(12%); opacity: 0.85; }
 }
 
 .noteball:active {
   transform: translateY(-2px) scale(1.02) !important;
-  filter: saturate(1.15) brightness(0.97) !important;
+  filter: brightness(0.95) !important;
   transition-duration: 80ms !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ *  底部聚光光斑（Caustics）—— 样例 .ball::after
+ *  球体底部"桌面被聚光染亮"的扁椭圆光斑；用 ::after 生成，不占 DOM。
+ *  默认很淡(opacity .35)，hover 变亮变大(opacity .55, scale 1.2)。
+ *  尺寸按样例 72px 球等比例换算到 --ball-size。
+ * ═══════════════════════════════════════════════════════════════ */
+.noteball::after {
+  content: '';
+  position: absolute;
+  bottom: calc(var(--ball-size) * -0.19);  /* 样例 -14px / 72px */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50%;
+  height: calc(var(--ball-size) * 0.17);   /* 样例 12px / 72px */
+  border-radius: 50%;
+  background: radial-gradient(ellipse, var(--ball-glow-dim) 0%, transparent 70%);
+  filter: blur(4px);                       /* 样例 blur(5px)，随球径等比 */
+  opacity: 0.35;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.noteball:hover::after {
+  background: radial-gradient(ellipse, var(--ball-glow) 0%, transparent 70%);
+  opacity: 0.55;
+  transform: translateX(-50%) scale(1.2);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ *  Hover 呼吸外辉光（参照样例 @keyframes breathe）
+ *
+ *  样例的做法：hover 时球本体 box-shadow 的三层彩色光晕在
+ *  0%(18/32/55px) ↔ 50%(24/50/80px) 之间"扩张↔回缩"。
+ *  我们这里不能直接在本体 animation 上做 —— 本体的 animation 被
+ *  入场 stagger（nb-ball-pop）占用，hover 改 animation 会在移开后
+ *  把入场动画重新触发（每移过一颗球重放一次）。
+ *
+ *  所以把"三层彩色外光晕"整体搬到 ::before：与球完全同尺寸(inset:0)的
+ *  透明圆盘，只画非 inset 的 box-shadow → 光晕起点永远钉在球体剪影边缘。
+ *  呼吸 = 像样例一样直接动画 box-shadow 各层的模糊/扩散值（不缩放光晕层，
+ *  否则光晕的起始边缘会跟着外移、和球之间露出一圈空隙）。
+ *  仅在 hover 期间运行，移开后立即归还。
+ * ═══════════════════════════════════════════════════════════════ */
+.noteball::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease, box-shadow 0.35s ease;
+  /* 基准光晕 = 样例 breathe 0% 相位（已按球径等比收敛） */
+  box-shadow:
+    0 0 14px 2px var(--ball-glow),
+    0 0 24px 5px var(--ball-glow-soft),
+    0 0 36px 9px var(--ball-glow-ambient);
+}
+.noteball:hover::before {
+  opacity: 1;
+  animation: nb-hover-breathe 2.5s ease-in-out infinite;
+}
+@keyframes nb-hover-breathe {
+  0%, 100% {
+    /* 回缩：光晕紧贴球缘（样例 breathe 0%） */
+    box-shadow:
+      0 0 14px 2px var(--ball-glow),
+      0 0 24px 5px var(--ball-glow-soft),
+      0 0 36px 9px var(--ball-glow-ambient);
+  }
+  50% {
+    /* 扩张：三层光晕模糊/扩散同步外扩（样例 18→24 / 32→50 / 55→80 等比收敛） */
+    box-shadow:
+      0 0 18px 3px var(--ball-glow),
+      0 0 34px 7px var(--ball-glow-soft),
+      0 0 50px 13px var(--ball-glow-ambient);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -552,31 +638,11 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
- *  功能球（+ 与 …）：使用玻璃球 + 功能色系，带专属辉光色
+ *  功能球（+ 与 ⚙︎）：与笔记球是同一颗水晶球，仅换身份色（--tint）。
+ *  质感层全部来自 .noteball 本体，不再为它们单独叠加色芯伪元素。
  * ═══════════════════════════════════════════════════════════════ */
-.noteball.feature.add {
-  /* 与 note 球同构：core-1 亮色 / core-2 深色，均不透明，
-     避免半透明 rgba 被底层白色高光洗淡 → 玻璃珠发灰、质感干 */
-  --c-core-1: #6ee7b7;   /* emerald-300 亮绿 */
-  --c-core-2: #10b981;   /* emerald-500 翠绿 */
-}
-.noteball.feature.add:hover {
-  --glow: rgba(16, 185, 129, 0.55);
-}
-.noteball.feature.more {
-  --c-core-1: #c4b5fd;   /* violet-300 亮紫 */
-  --c-core-2: #6d28d9;   /* violet-700 深紫 */
-}
-.noteball.feature.more:hover {
-  --glow: rgba(139, 92, 246, 0.55);
-}
-.noteball.feature .noteball-glyph {
-  color: #fff;
-  text-shadow:
-    0 1px 0 rgba(15,23,42,0.45),
-    0 2px 6px rgba(15,23,42,0.35);
-  z-index: 4;
-}
+.noteball.feature.add  { --tint: #34d399; }   /* 创建：翠绿 */
+.noteball.feature.more { --tint: #8b5cf6; }   /* 管理：violet-500（比 note 的浅紫/浅靛更深一档，避免与紫色笔记球混淆） */
 .noteball.feature.add .noteball-glyph {
   font-size: calc(var(--ball-size) * 0.6);
   font-weight: 300;
@@ -593,84 +659,17 @@
   justify-content: center;
 }
 
-/* 功能球：与笔记球相同的「焦散光斑」高光（之前只有 note 有，feature 仅有右下角次高光）
-   使用身份色 c-core-1 / c-core-2 生成，形状/尺寸/混合模式与 note::after 一致，
-   保证左侧 + / 右侧 ⚙︎ 两球的玻璃弹珠质感与中间彩色笔记球完全统一。 */
-.noteball.feature::after {
-  /* 焦散糖芯：正常混合直接着色——身份色清晰可见，又保留玻璃透光 */
-  background:
-    radial-gradient(ellipse at 50% 8%, rgba(255,255,255,0.35), rgba(255,255,255,0) 55%),
-    radial-gradient(circle at 50% 58%,
-      var(--c-core-1) 0%,
-      color-mix(in srgb, var(--c-core-1) 45%, transparent) 42%,
-      transparent 66%);
-  transform: none;
-  width: 74%;
-  height: 74%;
-  right: 0;
-  bottom: 0;
-  border-radius: 50%;
-  mix-blend-mode: normal;
-  filter: saturate(1.35) brightness(1.03);
-  opacity: 0.9;
-  animation: nb-caustic-breath 4.6s ease-in-out infinite alternate;
-  animation-play-state: paused; /* [性能] 未展开时不跑 CPU 动画 */
-}
-.notebar.is-open .noteball.feature::after {
-  animation: nb-caustic-breath 4.6s ease-in-out infinite;
-  animation-play-state: running;
-}
-.noteball.feature:hover::after {
-  animation-duration: 2.6s;
-  filter: saturate(1.3);
-}
-
 /* ═══════════════════════════════════════════════════════════════
- *  颜色便签球：用 --tint 覆盖核心色；呼吸效果放到 ::after 光斑上（避免破坏入场 stagger 动画）
+ *  颜色便签球：只用 --tint 覆盖本体颜色（内部颜色光 / 各档辉光都由
+ *  .noteball 的 7 变量从 --tint 统一派生）。
+ *  注意：不再用 ::after 画不透明的"色芯"——那层会把颜色糊在球表面，
+ *  正是"内部颜色 + 通透感"丢失、看起来像塑料的根因。
  * ═══════════════════════════════════════════════════════════════ */
-.noteball.note {
-  --tint: #fbbf24;
-  /* 身份色直接用于渲染：--c-core-1 用透明混合（不再掺白，避免球色被洗淡）
-     → 球显示的颜色 = 用户设定的 chip 色，所见即所得 */
-  --c-core-1: color-mix(in srgb, var(--tint) 80%, transparent);
-  --c-core-2: color-mix(in srgb, var(--tint) 90%, #000);
-}
-.noteball.note::after {
-  /* 便签球：焦散糖芯——用设定色直接着色（92% 不透明，所见即所得），保留玻璃透光 */
-  background:
-    radial-gradient(ellipse at 50% 8%, rgba(255,255,255,0.35), rgba(255,255,255,0) 55%),
-    radial-gradient(circle at 50% 58%,
-      color-mix(in srgb, var(--tint) 92%, transparent) 0%,
-      color-mix(in srgb, var(--tint) 45%, transparent) 42%,
-      transparent 66%);
-  transform: none;
-  width: 74%;
-  height: 74%;
-  right: 0;
-  bottom: 0;
-  border-radius: 50%;
-  mix-blend-mode: normal;
-  filter: saturate(1.35);
-  opacity: 0.9;
-  /* [性能] 默认暂停！
-   * 8 个球同时无限跑 5.8s 的 filter: saturate() 动画，每帧都要做像素着色，
-   * 静止时它是 CPU 占用最大头（经验 165594：持续 filter/transform 动画 + 壁纸层
-   * 合成 → 合成器每帧重采样）。只在 is-open、用户能看到球时才启动。 */
-  animation: nb-caustic-breath 5.8s ease-in-out infinite alternate;
-  animation-play-state: paused;
-}
-/* 只在展开时启动焦散光斑：用户看不见就绝不浪费 CPU */
-.notebar.is-open .noteball.note::after {
-  animation-play-state: running;
-}
-@keyframes nb-caustic-breath {
-  0%   { filter: saturate(1.2) brightness(1);    opacity: 0.78; transform: translate(0, 0) scale(1); }
-  50%  { filter: saturate(1.6) brightness(1.08); opacity: 0.92; transform: translate(2%, -2%) scale(1.03); }
-  100% { filter: saturate(1.4) brightness(1.04); opacity: 0.86; transform: translate(-1%, 1%) scale(1.01); }
-}
+.noteball.note { --tint: #fbbf24; }   /* 兜底（正常均被下方 color-* 覆盖） */
 
-/* 16 色便签球：每色提供 --tint（与调色盘 chip 小圆点的背景色 1:1 严格一致）
- * + --glow（hover 外发光 rgba，透明度统一 0.6 级，直接复用对应 tint 色值保证同色不偏）。
+/* 16 色便签球：只需提供 --tint（与调色盘 chip 小圆点的背景色 1:1 一致）；
+ *  内部颜色光 / idle / hover 各档辉光全部由 .noteball 的 7 变量从 --tint 派生，
+ *  每颗球的发光都与它自己的身份色严格同色、不再单写 hover rgba。
  *
  * 用户反馈「颜色过于一致」→ 针对之前 chip/ball 同色系档位重复做三类打散：
  *   · coral → orange-family (orange-400 #fb923c)，和红 #ef4444 / 深橘 #ea580c 三分橘区；
@@ -679,43 +678,27 @@
  * NoteColor 字面量 16 色全部覆盖。 */
 /* ——— 黄/橙系（4）：黄 400→琥珀 500→深橘 600→珊瑚橙 400（色相+亮度双变化） ——— */
 .noteball.note.color-yellow { --tint: #facc15; }
-.noteball.note.color-yellow:hover { --glow: rgba(250, 204, 21, 0.65); }
 .noteball.note.color-amber  { --tint: #f59e0b; }
-.noteball.note.color-amber:hover  { --glow: rgba(245, 158, 11, 0.6); }
 .noteball.note.color-orange { --tint: #fb923c; }
-.noteball.note.color-orange:hover { --glow: rgba(251, 146, 60, 0.62); }
 .noteball.note.color-coral  { --tint: #f97316; }
-.noteball.note.color-coral:hover  { --glow: rgba(249, 115, 22, 0.62); }
 /* ——— 粉/红系（3）：玫粉 400→品红 400→红 500（pink / fuchsia / red 三族分流） ——— */
 .noteball.note.color-pink   { --tint: #f472b6; }
-.noteball.note.color-pink:hover   { --glow: rgba(244, 114, 182, 0.6); }
 .noteball.note.color-rose   { --tint: #e879f9; }
-.noteball.note.color-rose:hover   { --glow: rgba(232, 121, 249, 0.6); }
 .noteball.note.color-red    { --tint: #f87171; }
-.noteball.note.color-red:hover    { --glow: rgba(248, 113, 113, 0.6); }
 /* ——— 绿/青系（5）：黄绿 400→草绿 400→森林 600→深青 600→湖蓝 400（深浅跳跃） ——— */
 .noteball.note.color-lime   { --tint: #a3e635; }
-.noteball.note.color-lime:hover   { --glow: rgba(163, 230, 53, 0.62); }
 .noteball.note.color-green  { --tint: #4ade80; }
-.noteball.note.color-green:hover  { --glow: rgba(74, 222, 128, 0.62); }
 .noteball.note.color-emerald{ --tint: #34d399; }
-.noteball.note.color-emerald:hover{ --glow: rgba(52, 211, 153, 0.6); }
 .noteball.note.color-teal   { --tint: #2dd4bf; }
-.noteball.note.color-teal:hover   { --glow: rgba(45, 212, 191, 0.6); }
 .noteball.note.color-cyan   { --tint: #22d3ee; }
-.noteball.note.color-cyan:hover   { --glow: rgba(34, 211, 238, 0.62); }
 /* ——— 蓝/紫系（4）：天蓝 400→钴蓝 500→靛蓝 500→紫 500（蓝族内升档→紫，紫比 fuchsia 更紫） ——— */
 .noteball.note.color-sky    { --tint: #38bdf8; }
-.noteball.note.color-sky:hover    { --glow: rgba(56, 189, 248, 0.65); }
 .noteball.note.color-blue   { --tint: #60a5fa; }
-.noteball.note.color-blue:hover   { --glow: rgba(96, 165, 250, 0.65); }
 .noteball.note.color-indigo { --tint: #818cf8; }
-.noteball.note.color-indigo:hover { --glow: rgba(129, 140, 248, 0.62); }
 .noteball.note.color-purple { --tint: #c084fc; }
-.noteball.note.color-purple:hover { --glow: rgba(192, 132, 252, 0.6); }
 
-/* 球首字：玻璃弹珠上的"贴纸字"（全白字——统一玻璃质感；
- * 便签球是亮彩芯，配深色投影保证白字在亮色球上不融底） */
+/* 球首字：白字"嵌入"深色玻璃球（样例 .ball span）——
+ * 四层 text-shadow：向下厚度影 + 球色微光两档 + 左上受光微亮 */
 .noteball-glyph {
   font-size: calc(var(--ball-size) * 0.46);
   font-weight: 800;
@@ -725,12 +708,23 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: rgba(255,255,255,0.95);
   z-index: 4;
   text-shadow:
-    0 1px 1px rgba(15,23,42,0.55),
-    0 2px 8px rgba(15,23,42,0.4);
+    0 1px 4px rgba(0,0,0,0.5),                               /* 向下投影：字"陷入"球面 */
+    0 0 6px var(--ball-glow-dim),                            /* 球色微光：与球体同源 */
+    0 0 10px var(--ball-glow-dim-soft),                      /* 弥散微光 */
+    -1px -1px 2px rgba(255,255,255,0.25);                    /* 左上受光：主光源方向 */
   letter-spacing: 0.5px;
+  transition: text-shadow 0.4s ease;
+}
+/* hover：文字发光随球体一起升级（样例 .ball:hover span） */
+.noteball:hover .noteball-glyph {
+  text-shadow:
+    0 1px 4px rgba(0,0,0,0.5),
+    0 0 10px var(--ball-glow),
+    0 0 16px var(--ball-glow-soft),
+    -1px -1px 2px rgba(255,255,255,0.3);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -788,12 +782,7 @@
   box-shadow:
     0 2px 6px rgba(220, 38, 38, 0.45),
     inset 0 -1px 1px rgba(127,29,29,0.35);
-  /* [性能] 同 pin-badge：隐藏态不跑 */
-  animation: nb-badge-float 3.2s ease-in-out infinite;
-  animation-delay: 0.6s;
-  animation-play-state: paused;
 }
-.notebar.is-open .noteball-more-badge { animation-play-state: running; }
 
 /* ═══════════════════════════════════════════════════════════════
  *  空态提示（独立声明，合并旧重复定义）

@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>水晶球笔记 — Crystal Notes</title>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   全局重置
+   清除浏览器默认的 margin 和 padding，让所有元素的尺寸
+   计算方式统一为 border-box（即 width/height 包含 padding
+   和 border），方便后续精确控制布局。
+   ═══════════════════════════════════════════════════════════ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   body 页面主体
+
+   min-height: 100vh — 确保页面至少占满一屏高度，内容
+   少时也不会出现空白断层。
+
+   display: flex + align-items/justify-content: center —
+   将内容在页面正中央垂直水平居中。
+
+   overflow: hidden — 禁止页面滚动，保持沉浸式的全屏
+   展示效果。
+
+   background — 初始背景渐变，后续会被 JS 动态覆盖。
+   ═══════════════════════════════════════════════════════════ */
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  overflow: hidden;
+  background: linear-gradient(180deg, #0d0d1a 0%, #12122b 50%, #0a0a1a 100%);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   .title 页面顶部标题
+
+   这是一个装饰性的标题文字，用半透明的白色和较大的
+   字间距营造轻盈感，不抢夺球体的视觉焦点。
+   ═══════════════════════════════════════════════════════════ */
+.title {
+  color: rgba(255,255,255,0.5);
+  font-size: 14px;
+  margin-bottom: 60px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   .ball-row 球体横向排列容器
+
+   display: flex — 让所有球体在一行内横向排列。
+   align-items: flex-end — 球体底部对齐，这样当某个
+   球体 hover 升起时，其他球体保持原位，形成"弹起"的
+   对比效果。
+   gap: 32px — 球体之间的水平间距，要足够大，避免相邻
+   球体的发光互相重叠干扰。
+   ═══════════════════════════════════════════════════════════ */
+.ball-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 32px;
+  padding: 40px 60px;
+  position: relative;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   背景颜色调节面板
+
+   固定在页面右下角，半透明玻璃拟态风格。
+   包含色相、饱和度、亮度三个滑块，以及预设按钮。
+   ═══════════════════════════════════════════════════════════ */
+.bg-panel {
+  /* 固定定位：始终停留在视口右下角 */
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  /* 面板宽度 */
+  width: 280px;
+  /* 玻璃拟态：半透明背景 + 背景模糊 */
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  /* 半透明边框 */
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 16px;
+  padding: 16px 20px;
+  /* 面板阴影 */
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  /* 确保面板在最上层 */
+  z-index: 100;
+}
+
+/* 面板标题栏 */
+.bg-panel-title {
+  color: rgba(255,255,255,0.8);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bg-panel-title span {
+  letter-spacing: 1px;
+}
+
+/* 面板折叠/展开按钮 */
+.bg-panel-toggle {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+  color: rgba(255,255,255,0.6);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bg-panel-toggle:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* 面板内容区（可折叠） */
+.bg-panel-content {
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  overflow: hidden;
+}
+
+/* 折叠状态下内容区隐藏 */
+.bg-panel.collapsed .bg-panel-content {
+  max-height: 0;
+  opacity: 0;
+}
+
+/* 滑块行容器 */
+.slider-row {
+  margin-bottom: 12px;
+}
+
+/* 最后一个滑块行去掉底部间距 */
+.slider-row:last-child {
+  margin-bottom: 0;
+}
+
+/* 滑块标签行 */
+.slider-label {
+  color: rgba(255,255,255,0.5);
+  font-size: 11px;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* 滑块数值显示 */
+.slider-label span:last-child {
+  color: rgba(255,255,255,0.7);
+  /* 等宽数字，防止数值变化时布局抖动 */
+  font-variant-numeric: tabular-nums;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   自定义 range 滑块样式
+
+   需要同时覆盖 -webkit- 和 -moz- 前缀以兼容不同浏览器。
+   ═══════════════════════════════════════════════════════════ */
+input[type="range"] {
+  /* 移除浏览器默认外观 */
+  -webkit-appearance: none;
+  appearance: none;
+  /* 滑块宽度占满容器 */
+  width: 100%;
+  /* 轨道高度 */
+  height: 6px;
+  border-radius: 3px;
+  /* 默认轨道背景色 */
+  background: rgba(255,255,255,0.1);
+  /* 移除聚焦时的轮廓线 */
+  outline: none;
+  cursor: pointer;
+}
+
+/* Webkit 浏览器（Chrome/Safari/Edge）的滑块拇指 */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  /* 拇指尺寸 */
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  /* 白色拇指 */
+  background: rgba(255,255,255,0.9);
+  /* 拇指阴影 */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+/* 拇指悬停时放大 */
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+/* Firefox 浏览器的滑块拇指 */
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  cursor: pointer;
+  border: none;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   色相滑块轨道：彩虹渐变
+
+   从红色(0°)到红(360°)的完整色相环，让用户直观看到
+   色相的连续变化。
+   ═══════════════════════════════════════════════════════════ */
+#hueSlider {
+  background: linear-gradient(to right,
+    hsl(0, 70%, 50%),
+    hsl(60, 70%, 50%),
+    hsl(120, 70%, 50%),
+    hsl(180, 70%, 50%),
+    hsl(240, 70%, 50%),
+    hsl(300, 70%, 50%),
+    hsl(360, 70%, 50%)
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   饱和度滑块轨道：从灰到彩色
+
+   左端是当前色相的完全去饱和版本（灰色），右端是完全
+   饱和版本（纯色）。这样用户能直观看到饱和度的变化。
+
+   使用 CSS 变量 --panel-hue 和 --panel-light 让轨道
+   颜色随当前设置实时变化。
+   ═══════════════════════════════════════════════════════════ */
+#satSlider {
+  background: linear-gradient(to right,
+    hsl(var(--panel-hue, 240), 0%, var(--panel-light, 15%)),
+    hsl(var(--panel-hue, 240), 100%, var(--panel-light, 15%))
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   亮度滑块轨道：从黑到白
+
+   左端是纯黑，中间是当前设置的中等亮度，右端是过曝的
+   白色。限制最大亮度为 50% 避免过亮。
+   ═══════════════════════════════════════════════════════════ */
+#lightSlider {
+  background: linear-gradient(to right,
+    hsl(var(--panel-hue, 240), var(--panel-sat, 40%), 0%),
+    hsl(var(--panel-hue, 240), var(--panel-sat, 40%), 50%),
+    hsl(var(--panel-hue, 240), var(--panel-sat, 40%), 100%)
+  );
+}
+
+/* 预设颜色按钮行 */
+.preset-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  /* 与上方滑块区用细线分隔 */
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+/* 单个预设按钮 */
+.preset-btn {
+  /* 均分宽度 */
+  flex: 1;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.15);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+  position: relative;
+}
+
+/* 预设按钮悬停效果 */
+.preset-btn:hover {
+  transform: scale(1.08);
+  border-color: rgba(255,255,255,0.5);
+}
+
+/* 当前激活的预设按钮外框 */
+.preset-btn.active::after {
+  content: '';
+  position: absolute;
+  /* 向外扩展 3px */
+  inset: -3px;
+  border-radius: 8px;
+  border: 2px solid rgba(255,255,255,0.6);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   水晶球本体 — .ball
+
+   这是整个设计的核心。水晶球不是"画"出来的，而是
+   用多层 radial-gradient（径向渐变）叠加出来的。
+   每一层都有明确的物理意义。
+   ═══════════════════════════════════════════════════════════ */
+.ball {
+  /* 球体尺寸：72x72 像素，圆形 */
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+
+  /* position: relative — 为内部的伪元素（::after 底部
+     光斑）和绝对定位的子元素（预览卡片）建立定位基准 */
+  position: relative;
+
+  /* cursor: pointer — 鼠标悬停时显示手型光标，提示可点击 */
+  cursor: pointer;
+
+  /* flex 居中：让球体内的文字在水平和垂直方向都居中 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* 文字样式：大号、粗体、白色 */
+  font-size: 28px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  letter-spacing: 2px;
+  text-indent: 2px;
+  user-select: none;
+
+  /* ═══════════════════════════════════════════════════════
+     transition 过渡动画
+
+     cubic-bezier(0.34, 1.56, 0.64, 1) — "过冲"贝塞尔曲线
+     球体升起时会先超过目标位置一点，再弹回来
+     模拟真实物体的弹性，比线性动画生动得多
+     ═══════════════════════════════════════════════════════ */
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+              filter 0.3s ease,
+              box-shadow 0.4s ease;
+
+  /* ═══════════════════════════════════════════════════════
+     背景渐变层（从顶层到底层）
+
+     注意：CSS 中 background 的写法是"先写的在上层"，
+     所以下面的列表是从"最表面"到"最深处"的顺序。
+     ═══════════════════════════════════════════════════════ */
+  background:
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       第6层（最表面）：底部月牙反光
+
+       模拟光线从球体底部边缘反射回来形成的一弯亮边。
+       这是水晶/玻璃材质的重要特征。
+       ellipse 70% 35%：压扁的椭圆，更像月牙
+       at 50% 95%：位置在球的底部
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    radial-gradient(ellipse 70% 35% at 50% 95%, rgba(255,255,255,0.4) 0%, transparent 55%),
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       第5层：次高光（小光斑）
+
+       真实玻璃球的高光通常不是单一光点，而是
+       主光源在玻璃前后表面各产生一次反射。
+       这个小的次高光在主高光右下方，模拟后表面的反射。
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    radial-gradient(circle at 30% 22%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.1) 5%, transparent 10%),
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       第4层：主高光（锐利）
+
+       这是球体最亮的光斑，模拟从左上打来的主光源。
+       at 22% 18%：偏左上，符合人眼习惯的光源方向
+       0% 到 6% 是极亮的白核
+       6% 到 12% 快速衰减到透明，形成"锐利"的边缘
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    radial-gradient(circle at 22% 18%, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.3) 6%, transparent 12%),
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       第3层：内部颜色光（核心）
+
+       这是球体"颜色"的主要来源。
+       关键：透明度只有 35-45%，不是实心的！
+       如果透明度太高，球就变成彩色塑料球了。
+       低透明度让背景色透过来，形成"颜色在球体内部"的错觉。
+
+       at 50% 55%：稍微偏下，模拟颜色在球体内部的沉淀感
+       var(--ball-color) — 由 HTML 行内 style 传入
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    radial-gradient(circle at 50% 55%, var(--ball-color) 0%, transparent 65%),
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       第2层：内部弥散光晕
+
+       比第3层更大、更淡、更透明。
+       作用是让颜色从中心向外自然衰减，
+       避免颜色层有一个生硬的边界。
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    radial-gradient(circle at 50% 50%, var(--ball-color-soft) 0%, transparent 70%),
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       第1层（最底层）：深色玻璃底色
+
+       球体的"底子"。如果没有这一层，球体中心会完全透明，
+       变成空心圆环，失去体积感。
+
+       rgba(25,25,40,0.4)：中心偏蓝灰，半透明
+       rgba(8,8,18,0.9)：边缘几乎不透明，深色
+       这个渐变让球体中心通透、边缘厚重，符合真实玻璃
+       的光学特性。
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    radial-gradient(circle at 50% 50%, rgba(25,25,40,0.4) 0%, rgba(8,8,18,0.9) 100%);
+
+  /* ═══════════════════════════════════════════════════════
+     box-shadow 发光层（默认状态：微光）
+
+     水晶球在静置时像暗室里的宝石，
+     只有边缘折射和极淡的光晕，不喧宾夺主。
+     ═══════════════════════════════════════════════════════ */
+  box-shadow:
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       内发光层 1：边缘折射（菲涅尔效应）—— 较宽较淡
+
+       inset 表示阴影向内，模拟光线从球体边缘折射进入
+       内部的效果。这是水晶球的本体特征，默认和 hover
+       都保留。
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    inset 0 0 12px 3px rgba(255,255,255,0.35),
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       内发光层 2：边缘折射—— 较窄较亮
+
+       在上一层的基础上加一条更锐利的边缘亮线，增强
+       玻璃边缘的厚度感。
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    inset 0 0 4px 1px rgba(255,255,255,0.55),
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       外部发光层 1：核心光晕（默认极弱）
+
+       球体向外发出的第一层光，紧贴球体表面。
+       0 0 8px 1px — 范围很小，几乎看不见
+       var(--ball-glow-dim) — 使用"微光版"变量，透明度
+       只有 0.15-0.20，非常淡
+       作用：让球体不是"死黑"的，有一丝生命感
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    0 0 8px 1px var(--ball-glow-dim),
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       外部发光层 2：中层弥散光（默认更弱）
+
+       比核心光晕更大、更柔和、更透明。
+       0 0 16px 3px — 范围稍大，但扩散很小
+       几乎融入背景，只提供极淡的氛围
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    0 0 16px 3px var(--ball-glow-dim-soft),
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       外部阴影：悬浮感
+
+       球体下方的主阴影，给它"离地"的感觉。
+       注意：这个阴影是纯黑色的，不是彩色的。
+       如果阴影也带颜色，会显得很假。
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    0 10px 30px rgba(0,0,0,0.5),
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       外部发光层 3：底部环境色光（默认减弱版）
+
+       球体放在桌面上，桌面会被球体颜色"染"亮。
+       这个阴影在球体正下方，颜色与球体一致，但位置
+       偏下（12px），模拟桌面反射。
+       -8px 表示阴影向上收缩，只在底部区域显现
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    0 12px 30px -8px var(--ball-glow-dim);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   .ball span 球体内的文字
+
+   每个球体显示笔记标题的第一个字。
+   position: relative + z-index: 2 确保文字在所有渐变
+   层之上，不会被高光遮挡。
+   ═══════════════════════════════════════════════════════════ */
+.ball span {
+  position: relative;
+  z-index: 2;
+
+  /* ═══════════════════════════════════════════════════════
+     text-shadow 文字发光效果（默认微光版）
+
+     第1层：0 1px 4px rgba(0,0,0,0.5)
+     向下偏移的深色阴影，模拟文字"陷入"球体表面，
+     球体曲面在字下方投下阴影
+
+     第2层：0 0 6px var(--ball-glow-dim)
+     球体颜色的微弱外发光，让文字和球体产生关联，
+     字不是孤立的
+
+     第3层：0 0 10px var(--ball-glow-dim-soft)
+     更弥散的外发光，扩大发光范围但保持极淡
+
+     第4层：-1px -1px 2px rgba(255,255,255,0.25)
+     左上微亮，模拟主光源从左上照来，文字左上角
+     被照亮
+     ═══════════════════════════════════════════════════════ */
+  text-shadow:
+    0 1px 4px rgba(0,0,0,0.5),
+    0 0 6px var(--ball-glow-dim),
+    0 0 10px var(--ball-glow-dim-soft),
+    -1px -1px 2px rgba(255,255,255,0.25);
+
+  /* transition 让文字发光在 hover 时平滑过渡 */
+  transition: text-shadow 0.4s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   .ball::after 底部聚光光斑（Caustics / 焦散）
+
+   水晶球放在光源下，底部会聚光形成一个亮斑。
+   这个伪元素 ::after 就是那个亮斑。
+   ═══════════════════════════════════════════════════════════ */
+.ball::after {
+  /* content 必须设置，否则伪元素不显示 */
+  content: '';
+
+  /* 绝对定位，相对于 .ball */
+  position: absolute;
+
+  /* 定位在球体正下方 */
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  /* 尺寸：比球体窄，压扁的椭圆 */
+  width: 50%;
+  height: 12px;
+  border-radius: 50%;
+
+  /* 颜色与球体一致，从中心向边缘衰减 */
+  background: radial-gradient(ellipse, var(--ball-glow-dim) 0%, transparent 70%);
+
+  /* 模糊处理，模拟光的散射 */
+  filter: blur(5px);
+
+  /* 默认状态很淡 */
+  opacity: 0.35;
+
+  /* 不阻挡鼠标事件，让点击穿透到球体 */
+  pointer-events: none;
+
+  /* 悬浮时亮斑会变大变亮 */
+  transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   【悬浮状态】光芒增强 + 呼吸动画
+
+   鼠标悬停时，球体从"微光"切换到"发光"状态。
+   同时启动 CSS animation 实现呼吸效果。
+   ═══════════════════════════════════════════════════════════ */
+.ball:hover {
+  /* 升起 18 像素，模拟被手指"托起" */
+  transform: translateY(-18px) scale(1.18);
+
+  /* 整体亮度提升 15%，让球体在 hover 时更醒目 */
+  filter: brightness(1.15);
+
+  /* 启动呼吸动画：2.5秒周期，缓入缓出，无限循环 */
+  animation: breathe 2.5s ease-in-out infinite;
+
+  /* 初始 box-shadow（动画第一帧会覆盖这个值） */
+  box-shadow:
+    inset 0 0 12px 3px rgba(255,255,255,0.45),
+    inset 0 0 4px 1px rgba(255,255,255,0.65),
+    0 0 18px 2px var(--ball-glow),
+    0 0 32px 6px var(--ball-glow-soft),
+    0 0 55px 12px var(--ball-glow-ambient),
+    0 10px 30px rgba(0,0,0,0.5),
+    0 14px 40px -6px var(--ball-glow);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   @keyframes breathe — 呼吸动画
+
+   光晕在 "收缩" 和 "扩张" 之间循环，模拟呼吸节奏。
+
+   0%   → 基准状态（正常光晕范围）
+   50%  → 扩张状态（光晕范围最大、最亮）
+   100% → 回到基准状态
+
+   注意：box-shadow 不支持在 keyframes 中直接渐变过渡，
+   所以这里使用多层 box-shadow 的叠加，通过改变每层
+   的模糊半径和扩散范围来实现呼吸效果。
+   ═══════════════════════════════════════════════════════════ */
+@keyframes breathe {
+  0% {
+    box-shadow:
+      /* 内发光层 1：基准 */
+      inset 0 0 12px 3px rgba(255,255,255,0.45),
+      /* 内发光层 2：基准 */
+      inset 0 0 4px 1px rgba(255,255,255,0.65),
+      /* 核心光晕：基准（模糊18px 扩散2px） */
+      0 0 18px 2px var(--ball-glow),
+      /* 中层弥散：基准（模糊32px 扩散6px） */
+      0 0 32px 6px var(--ball-glow-soft),
+      /* 环境光晕：基准（模糊55px 扩散12px） */
+      0 0 55px 12px var(--ball-glow-ambient),
+      /* 悬浮阴影 */
+      0 10px 30px rgba(0,0,0,0.5),
+      /* 底部环境色光 */
+      0 14px 40px -6px var(--ball-glow);
+  }
+  50% {
+    box-shadow:
+      /* 内发光层 1：稍微增强 */
+      inset 0 0 12px 3px rgba(255,255,255,0.5),
+      /* 内发光层 2：稍微增强 */
+      inset 0 0 4px 1px rgba(255,255,255,0.75),
+      /* 核心光晕：扩张（模糊+6px→24px，扩散+2px→4px） */
+      0 0 24px 4px var(--ball-glow),
+      /* 中层弥散：扩张（模糊+18px→50px，扩散+4px→10px） */
+      0 0 50px 10px var(--ball-glow-soft),
+      /* 环境光晕：扩张（模糊+25px→80px，扩散+8px→20px） */
+      0 0 80px 20px var(--ball-glow-ambient),
+      /* 悬浮阴影保留 */
+      0 10px 30px rgba(0,0,0,0.5),
+      /* 底部环境色光保留 */
+      0 14px 40px -6px var(--ball-glow);
+  }
+  100% {
+    box-shadow:
+      /* 回到基准状态，与 0% 完全一致 */
+      inset 0 0 12px 3px rgba(255,255,255,0.45),
+      inset 0 0 4px 1px rgba(255,255,255,0.65),
+      0 0 18px 2px var(--ball-glow),
+      0 0 32px 6px var(--ball-glow-soft),
+      0 0 55px 12px var(--ball-glow-ambient),
+      0 10px 30px rgba(0,0,0,0.5),
+      0 14px 40px -6px var(--ball-glow);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   .ball:hover span 悬浮时文字发光增强
+   ═══════════════════════════════════════════════════════════ */
+.ball:hover span {
+  text-shadow:
+    /* 内部厚度阴影保留 */
+    0 1px 4px rgba(0,0,0,0.5),
+    /* 文字核心发光：从默认的 6px 升级到 10px */
+    0 0 10px var(--ball-glow),
+    /* 文字弥散发光：从默认的 10px 升级到 16px */
+    0 0 16px var(--ball-glow-soft),
+    /* 顶部微亮保留 */
+    -1px -1px 2px rgba(255,255,255,0.3);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   .ball:hover::after 悬浮时底部光斑增强
+   ═══════════════════════════════════════════════════════════ */
+.ball:hover::after {
+  /* 切换到正常发光变量 */
+  background: radial-gradient(ellipse, var(--ball-glow) 0%, transparent 70%);
+  /* 从默认的 0.35 提升到 0.55 */
+  opacity: 0.55;
+  /* 从默认大小放大到 1.2 倍 */
+  transform: translateX(-50%) scale(1.2);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   特殊球体：创建按钮
+   ═══════════════════════════════════════════════════════════ */
+.ball-add {
+  font-size: 32px;
+  font-weight: 300;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   特殊球体：管理按钮（齿轮图标）
+   ═══════════════════════════════════════════════════════════ */
+.ball-gear .gear-icon {
+  width: 28px;
+  height: 28px;
+  fill: rgba(255,255,255,0.9);
+  /* 
+   * SVG 的 drop-shadow 滤镜：
+   * 第1层：黑色投影，给图标厚度
+   * 第2层：球体颜色的微弱发光，默认状态
+   */
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5))
+          drop-shadow(0 0 6px var(--ball-glow-dim));
+  transition: filter 0.4s ease;
+}
+
+/* 悬浮时齿轮图标发光也增强 */
+.ball-gear:hover .gear-icon {
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5))
+          drop-shadow(0 0 8px var(--ball-glow));
+}
+
+/* ═══════════════════════════════════════════════════════════
+   .more-badge 更多笔记角标
+
+   显示在管理按钮右上角的小红点，表示还有更多笔记
+   在管理面板中未显示在球体栏里。
+   ═══════════════════════════════════════════════════════════ */
+.more-badge {
+  /* 绝对定位，相对于 .ball-gear */
+  position: absolute;
+  top: -4px;
+  right: -6px;
+
+  /* 红色渐变背景 */
+  background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+
+  /* flex 居中 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* 红色发光阴影 */
+  box-shadow: 0 2px 10px rgba(255,80,80,0.6);
+
+  /* 确保角标在最上层 */
+  z-index: 10;
+
+  /* 取消父级的 text-indent 影响 */
+  text-indent: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   .preview-card 预览卡片
+
+   鼠标悬浮在球体上时，从球体上方弹出的内容卡片。
+   显示笔记的完整标题、摘要、更新时间和编辑按钮。
+   ═══════════════════════════════════════════════════════════ */
+.preview-card {
+  /* 绝对定位，相对于 .ball */
+  position: absolute;
+
+  /* 定位在球体上方 */
+  bottom: 110px;
+  left: 50%;
+
+  /* 初始状态：向下偏移 10px，用于动画 */
+  transform: translateX(-50%) translateY(10px);
+
+  width: 260px;
+
+  /* 玻璃拟态（Glassmorphism）：半透明背景 + 背景模糊 */
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+
+  /* 半透明边框 */
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+  padding: 18px 20px;
+
+  /* 默认隐藏 */
+  opacity: 0;
+  pointer-events: none;
+
+  /* 弹出动画 */
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* 卡片阴影 + 默认微光光晕 */
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4),
+              0 0 20px var(--ball-glow-dim-soft);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   .preview-card::after 卡片下方的小三角箭头
+
+   用 CSS 的 border 技巧做一个向下的小三角，
+   让卡片看起来是从球体"长"出来的。
+   ═══════════════════════════════════════════════════════════ */
+.preview-card::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 16px;
+  height: 16px;
+
+  /* 与卡片背景一致的颜色 */
+  background: rgba(255,255,255,0.06);
+
+  /* 只显示右边和下边的边框，形成三角 */
+  border-right: 1px solid rgba(255,255,255,0.12);
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   .ball:hover .preview-card 悬浮时卡片弹出显示
+   ═══════════════════════════════════════════════════════════ */
+.ball:hover .preview-card {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+
+  /* 悬浮时卡片光晕也增强 */
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4),
+              0 0 24px var(--ball-glow-soft);
+}
+
+/* 卡片标题 */
+.preview-title {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+/* 卡片内容摘要 */
+.preview-body {
+  color: rgba(255,255,255,0.55);
+  font-size: 12px;
+  line-height: 1.6;
+  /* 限制最多显示 3 行，超出截断 */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 卡片底部元信息区 */
+.preview-meta {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 更新时间 */
+.preview-time {
+  color: rgba(255,255,255,0.35);
+  font-size: 11px;
+}
+
+/* 编辑按钮 */
+.preview-edit {
+  background: linear-gradient(135deg, #a8e063, #56ab2f);
+  color: #fff;
+  border: none;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(86,171,47,0.4);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   .divider 分隔线
+
+   位于"创建"按钮和笔记球之间、以及笔记球和"管理"按钮
+   之间。用极淡的竖线区分功能区域，不抢视觉焦点。
+   ═══════════════════════════════════════════════════════════ */
+.divider {
+  width: 1px;
+  height: 50px;
+  background: rgba(255,255,255,0.06);
+  margin: 0 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   .bg-glow 背景装饰：模糊光晕
+
+   两个巨大的彩色模糊圆球，固定在页面角落。
+   作用：
+   1. 打破纯黑背景的单调
+   2. 给页面增加空间深度
+   3. 让水晶球的发光效果更有"环境氛围"
+
+   注意：opacity 只有 0.12，非常淡，不能喧宾夺主。
+   ═══════════════════════════════════════════════════════════ */
+.bg-glow {
+  position: fixed;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+/* 左上角：蓝紫色光晕 */
+.bg-glow-1 {
+  top: -150px;
+  left: -150px;
+  background: #667eea;
+}
+
+/* 右下角：紫色光晕 */
+.bg-glow-2 {
+  bottom: -200px;
+  right: -150px;
+  background: #764ba2;
+}
+
+</style>
+</head>
+<body>
+
+<!-- 背景装饰光晕 -->
+<div class="bg-glow bg-glow-1"></div>
+<div class="bg-glow bg-glow-2"></div>
+
+<!-- 页面标题 -->
+<div class="title">Crystal Notes</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     球体排列
+
+     每个球体通过 style 属性传入 7 个 CSS 自定义属性（变量）：
+
+     --ball-color          : 内部颜色光（较实，透明度 35-45%）
+     --ball-color-soft     : 内部弥散光晕（更淡，透明度 13-18%）
+     --ball-glow           : hover 核心光晕（透明度 45-55%）
+     --ball-glow-soft      : hover 中层弥散光（透明度 18-22%）
+     --ball-glow-ambient   : hover 环境光晕（透明度 7-10%）
+     --ball-glow-dim       : 默认微光核心（透明度 15-20%）
+     --ball-glow-dim-soft  : 默认微光弥散（透明度 6-9%）
+
+     这 7 个变量构成了一个完整的"发光体系"，
+     从球体核心到最外层氛围，层层递减。
+     ═══════════════════════════════════════════════════════════ -->
+<div class="ball-row">
+
+  <!-- ════════════════════════════════════════════════════════
+       创建按钮：青绿色系
+       第一个球体，用 "+" 表示创建新笔记的功能。
+       ════════════════════════════════════════════════════════ -->
+  <div class="ball ball-add" style="
+    --ball-color: rgba(100,220,170,0.4);
+    --ball-color-soft: rgba(100,220,170,0.15);
+    --ball-glow: rgba(100,220,170,0.5);
+    --ball-glow-soft: rgba(100,220,170,0.2);
+    --ball-glow-ambient: rgba(100,220,170,0.08);
+    --ball-glow-dim: rgba(100,220,170,0.18);
+    --ball-glow-dim-soft: rgba(100,220,170,0.08);
+  ">
+    <span>+</span>
+  </div>
+
+  <!-- 分隔线 -->
+  <div class="divider"></div>
+
+  <!-- ════════════════════════════════════════════════════════
+       笔记1：仰 — 黄绿色系
+       标题首字"仰"，颜色为黄绿色。
+       ════════════════════════════════════════════════════════ -->
+  <div class="ball" style="
+    --ball-color: rgba(160,220,100,0.42);
+    --ball-color-soft: rgba(160,220,100,0.18);
+    --ball-glow: rgba(160,220,100,0.55);
+    --ball-glow-soft: rgba(160,220,100,0.22);
+    --ball-glow-ambient: rgba(160,220,100,0.1);
+    --ball-glow-dim: rgba(160,220,100,0.2);
+    --ball-glow-dim-soft: rgba(160,220,100,0.09);
+  ">
+    <span>仰</span>
+    <div class="preview-card">
+      <div class="preview-title">仰望星空的夜晚</div>
+      <div class="preview-body">今晚的星空格外清澈，猎户座的腰带清晰可见。想起了小时候躺在院子里数星星的日子，那时候总觉得银河是一条真的河流。</div>
+      <div class="preview-meta">
+        <span class="preview-time">更新于 2026/9/1</span>
+        <button class="preview-edit">编辑</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       笔记2：童 — 粉紫色系
+       ════════════════════════════════════════════════════════ -->
+  <div class="ball" style="
+    --ball-color: rgba(220,130,200,0.38);
+    --ball-color-soft: rgba(220,130,200,0.15);
+    --ball-glow: rgba(220,130,200,0.5);
+    --ball-glow-soft: rgba(220,130,200,0.2);
+    --ball-glow-ambient: rgba(220,130,200,0.08);
+    --ball-glow-dim: rgba(220,130,200,0.18);
+    --ball-glow-dim-soft: rgba(220,130,200,0.07);
+  ">
+    <span>童</span>
+    <div class="preview-card">
+      <div class="preview-title">童年的纸飞机</div>
+      <div class="preview-body">整理旧物时翻出一叠泛黄的作业本，里面夹着各种折纸。纸飞机的折痕已经软化，但机翼上铅笔写的"飞得远"三个字依然清晰。</div>
+      <div class="preview-meta">
+        <span class="preview-time">更新于 2026/9/1</span>
+        <button class="preview-edit">编辑</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       笔记3：城 — 红色系
+       ════════════════════════════════════════════════════════ -->
+  <div class="ball" style="
+    --ball-color: rgba(230,100,100,0.36);
+    --ball-color-soft: rgba(230,100,100,0.14);
+    --ball-glow: rgba(230,100,100,0.5);
+    --ball-glow-soft: rgba(230,100,100,0.2);
+    --ball-glow-ambient: rgba(230,100,100,0.08);
+    --ball-glow-dim: rgba(230,100,100,0.17);
+    --ball-glow-dim-soft: rgba(230,100,100,0.07);
+  ">
+    <span>城</span>
+    <div class="preview-card">
+      <div class="preview-title">城市漫步指南</div>
+      <div class="preview-body">老城区的新开了一家独立书店，藏在梧桐树的阴影里。店主是个沉默寡言的中年人，店里只卖诗集和植物图鉴。</div>
+      <div class="preview-meta">
+        <span class="preview-time">更新于 2026/9/2</span>
+        <button class="preview-edit">编辑</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       笔记4：雨 — 黄色系
+       ════════════════════════════════════════════════════════ -->
+  <div class="ball" style="
+    --ball-color: rgba(230,200,80,0.4);
+    --ball-color-soft: rgba(230,200,80,0.16);
+    --ball-glow: rgba(230,200,80,0.55);
+    --ball-glow-soft: rgba(230,200,80,0.22);
+    --ball-glow-ambient: rgba(230,200,80,0.1);
+    --ball-glow-dim: rgba(230,200,80,0.2);
+    --ball-glow-dim-soft: rgba(230,200,80,0.09);
+  ">
+    <span>雨</span>
+    <div class="preview-card">
+      <div class="preview-title">雨天的咖啡馆</div>
+      <div class="preview-body">窗外下着细雨，玻璃上凝结的水珠把街灯折射成模糊的光斑。咖啡机的蒸汽声和雨声混在一起，成了最好的白噪音。</div>
+      <div class="preview-meta">
+        <span class="preview-time">更新于 2026/9/2</span>
+        <button class="preview-edit">编辑</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       笔记5：咖 — 青绿色系
+       ════════════════════════════════════════════════════════ -->
+  <div class="ball" style="
+    --ball-color: rgba(80,200,180,0.42);
+    --ball-color-soft: rgba(80,200,180,0.18);
+    --ball-glow: rgba(80,200,180,0.55);
+    --ball-glow-soft: rgba(80,200,180,0.22);
+    --ball-glow-ambient: rgba(80,200,180,0.1);
+    --ball-glow-dim: rgba(80,200,180,0.2);
+    --ball-glow-dim-soft: rgba(80,200,180,0.09);
+  ">
+    <span>咖</span>
+    <div class="preview-card">
+      <div class="preview-title">咖啡烘焙笔记</div>
+      <div class="preview-body">浅烘的耶加雪菲有明显的柑橘调性，中温时茉莉花香开始浮现。下次试试把烘焙时间延长15秒，看看body会不会更厚实。</div>
+      <div class="preview-meta">
+        <span class="preview-time">更新于 2026/9/2</span>
+        <button class="preview-edit">编辑</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       笔记6：旧 — 蓝色系
+       ════════════════════════════════════════════════════════ -->
+  <div class="ball" style="
+    --ball-color: rgba(100,170,230,0.38);
+    --ball-color-soft: rgba(100,170,230,0.15);
+    --ball-glow: rgba(100,170,230,0.5);
+    --ball-glow-soft: rgba(100,170,230,0.2);
+    --ball-glow-ambient: rgba(100,170,230,0.08);
+    --ball-glow-dim: rgba(100,170,230,0.18);
+    --ball-glow-dim-soft: rgba(100,170,230,0.07);
+  ">
+    <span>旧</span>
+    <div class="preview-card">
+      <div class="preview-title">旧物改造计划</div>
+      <div class="preview-body">把坏了的机械键盘拆了，轴体还能用。打算做成一个复古风格的USB小键盘，专门用来放快捷键。外壳用胡桃木应该不错。</div>
+      <div class="preview-meta">
+        <span class="preview-time">更新于 2026/9/2</span>
+        <button class="preview-edit">编辑</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       笔记7：雨 — 紫色系（重复首字测试）
+
+       这个球和上面的"雨"（黄色）首字相同，但颜色完全不
+       同（紫 vs 黄），用来验证"首字重复时用颜色区分"
+       的方案是否有效。
+       ════════════════════════════════════════════════════════ -->
+  <div class="ball" style="
+    --ball-color: rgba(190,140,230,0.36);
+    --ball-color-soft: rgba(190,140,230,0.14);
+    --ball-glow: rgba(190,140,230,0.5);
+    --ball-glow-soft: rgba(190,140,230,0.2);
+    --ball-glow-ambient: rgba(190,140,230,0.08);
+    --ball-glow-dim: rgba(190,140,230,0.17);
+    --ball-glow-dim-soft: rgba(190,140,230,0.07);
+  ">
+    <span>雨</span>
+    <div class="preview-card">
+      <div class="preview-title">雨季不再来</div>
+      <div class="preview-body">三毛笔下的撒哈拉在雨季会变成另一种模样。我读她的书时总在想，那些看似随意的文字背后，藏着多少无法言说的孤独。</div>
+      <div class="preview-meta">
+        <span class="preview-time">更新于 2026/9/2</span>
+        <button class="preview-edit">编辑</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 分隔线 -->
+  <div class="divider"></div>
+
+  <!-- ════════════════════════════════════════════════════════
+       管理按钮：淡紫色系
+       最后一个球体，用齿轮图标表示管理笔记面板。
+       position: relative 为右上角的 more-badge 角标
+       建立定位基准。
+       ════════════════════════════════════════════════════════ -->
+  <div class="ball ball-gear" style="
+    --ball-color: rgba(180,160,220,0.35);
+    --ball-color-soft: rgba(180,160,220,0.13);
+    --ball-glow: rgba(180,160,220,0.45);
+    --ball-glow-soft: rgba(180,160,220,0.18);
+    --ball-glow-ambient: rgba(180,160,220,0.07);
+    --ball-glow-dim: rgba(180,160,220,0.15);
+    --ball-glow-dim-soft: rgba(180,160,220,0.06);
+    position: relative;
+  ">
+    <!-- SVG 齿轮图标 -->
+    <svg class="gear-icon" viewBox="0 0 24 24">
+      <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65A.488.488 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1 0 .33.03.66.07 1l-2.11 1.63c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.08.73 1.69.98l.38 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.63Z"/>
+    </svg>
+    <!-- +2 角标：表示还有 2 篇笔记在管理面板中 -->
+    <div class="more-badge">+2</div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     背景颜色调节面板
+
+     固定在页面右下角，包含 HSL 三个滑块和预设按钮。
+     用户可以通过色相、饱和度、亮度任意调节背景颜色。
+     ═══════════════════════════════════════════════════════════ -->
+<div class="bg-panel" id="bgPanel">
+  <div class="bg-panel-title">
+    <span>背景颜色</span>
+    <button class="bg-panel-toggle" id="panelToggle" title="折叠/展开">−</button>
+  </div>
+  <div class="bg-panel-content" id="panelContent">
+    <!-- 色相滑块 -->
+    <div class="slider-row">
+      <div class="slider-label">
+        <span>色相</span>
+        <span id="hueValue">240°</span>
+      </div>
+      <input type="range" id="hueSlider" min="0" max="360" value="240">
+    </div>
+    <!-- 饱和度滑块 -->
+    <div class="slider-row">
+      <div class="slider-label">
+        <span>饱和度</span>
+        <span id="satValue">40%</span>
+      </div>
+      <input type="range" id="satSlider" min="0" max="100" value="40">
+    </div>
+    <!-- 亮度滑块 -->
+    <div class="slider-row">
+      <div class="slider-label">
+        <span>亮度</span>
+        <span id="lightValue">8%</span>
+      </div>
+      <input type="range" id="lightSlider" min="0" max="50" value="8">
+    </div>
+    <!-- 预设颜色按钮 -->
+    <div class="preset-row">
+      <button class="preset-btn active" data-h="240" data-s="40" data-l="8" style="background: linear-gradient(180deg, hsl(240,40%,12%) 0%, hsl(240,40%,6%) 100%)" title="深蓝紫（默认）"></button>
+      <button class="preset-btn" data-h="200" data-s="50" data-l="8" style="background: linear-gradient(180deg, hsl(200,50%,12%) 0%, hsl(200,50%,6%) 100%)" title="深青蓝"></button>
+      <button class="preset-btn" data-h="280" data-s="35" data-l="8" style="background: linear-gradient(180deg, hsl(280,35%,12%) 0%, hsl(280,35%,6%) 100%)" title="深紫"></button>
+      <button class="preset-btn" data-h="0" data-s="0" data-l="10" style="background: linear-gradient(180deg, hsl(0,0%,14%) 0%, hsl(0,0%,8%) 100%)" title="深灰"></button>
+      <button class="preset-btn" data-h="30" data-s="60" data-l="10" style="background: linear-gradient(180deg, hsl(30,60%,14%) 0%, hsl(30,60%,8%) 100%)" title="深棕"></button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// 背景颜色调节逻辑
+// 
+// 使用 HSL 颜色模型：色相(Hue)、饱和度(Saturation)、亮度(Lightness)
+// 这样用户可以通过三个直观的滑块任意调节背景颜色。
+// 背景是一个线性渐变，从顶部（稍亮）到底部（稍暗）。
+// ═══════════════════════════════════════════════════════════
+
+// 获取 DOM 元素
+const body = document.body;
+const hueSlider = document.getElementById('hueSlider');
+const satSlider = document.getElementById('satSlider');
+const lightSlider = document.getElementById('lightSlider');
+const hueValue = document.getElementById('hueValue');
+const satValue = document.getElementById('satValue');
+const lightValue = document.getElementById('lightValue');
+const panelToggle = document.getElementById('panelToggle');
+const bgPanel = document.getElementById('bgPanel');
+const presetBtns = document.querySelectorAll('.preset-btn');
+
+// 当前 HSL 值（初始值与 HTML 中滑块的默认值一致）
+let hue = 240;
+let sat = 40;
+let light = 8;
+
+// ═══════════════════════════════════════════════════════════
+// updateBackground() — 根据当前 HSL 值更新页面背景
+// 
+// 背景是一个线性渐变：
+// - 顶部：hsl(h, s, l+4%) 稍亮
+// - 中部：hsl(h, s, l) 基准色
+// - 底部：hsl(h, s, l-2%) 稍暗
+// 
+// 这样即使亮度很低，也能保持微妙的渐变层次。
+// ═══════════════════════════════════════════════════════════
+function updateBackground() {
+  // 顶部比基准亮度高 4%，但不超过 50%
+  const topLight = Math.min(light + 4, 50);
+  // 底部比基准亮度低 2%，但不低于 0%
+  const bottomLight = Math.max(light - 2, 0);
+
+  // 设置 body 的背景为 HSL 渐变
+  body.style.background = `linear-gradient(
+    180deg,
+    hsl(${hue}, ${sat}%, ${topLight}%) 0%,
+    hsl(${hue}, ${sat}%, ${light}%) 50%,
+    hsl(${hue}, ${sat}%, ${bottomLight}%) 100%
+  )`;
+
+  // 更新数值显示文本
+  hueValue.textContent = hue + '°';
+  satValue.textContent = sat + '%';
+  lightValue.textContent = light + '%';
+
+  // 更新面板 CSS 变量，让饱和度和亮度滑块的轨道颜色实时变化
+  // 这样滑块轨道会随当前设置动态更新，提供视觉反馈
+  bgPanel.style.setProperty('--panel-hue', hue);
+  bgPanel.style.setProperty('--panel-sat', sat);
+  bgPanel.style.setProperty('--panel-light', light);
+}
+
+// ═══════════════════════════════════════════════════════════
+// 滑块事件监听
+// 每个滑块变化时，更新对应的 HSL 值并重新渲染背景。
+// 使用 input 事件（而非 change）实现实时拖动反馈。
+// ═══════════════════════════════════════════════════════════
+
+// 色相滑块：0°~360°
+hueSlider.addEventListener('input', (e) => {
+  hue = parseInt(e.target.value);
+  updateBackground();
+  clearPresetActive();
+});
+
+// 饱和度滑块：0%~100%
+satSlider.addEventListener('input', (e) => {
+  sat = parseInt(e.target.value);
+  updateBackground();
+  clearPresetActive();
+});
+
+// 亮度滑块：0%~50%（限制最大亮度避免过曝）
+lightSlider.addEventListener('input', (e) => {
+  light = parseInt(e.target.value);
+  updateBackground();
+  clearPresetActive();
+});
+
+// ═══════════════════════════════════════════════════════════
+// 预设按钮事件
+// 点击预设按钮时，一键切换到预设的 HSL 组合。
+// ═══════════════════════════════════════════════════════════
+presetBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    // 从按钮的 data 属性读取预设 HSL 值
+    hue = parseInt(btn.dataset.h);
+    sat = parseInt(btn.dataset.s);
+    light = parseInt(btn.dataset.l);
+
+    // 同步滑块位置到新的值
+    hueSlider.value = hue;
+    satSlider.value = sat;
+    lightSlider.value = light;
+
+    // 立即更新背景
+    updateBackground();
+
+    // 高亮当前预设按钮，移除其他按钮的高亮
+    presetBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// 清除所有预设按钮的高亮状态
+// 在用户手动拖动滑块时调用，因为手动调节不再是预设值
+function clearPresetActive() {
+  presetBtns.forEach(b => b.classList.remove('active'));
+}
+
+// ═══════════════════════════════════════════════════════════
+// 面板折叠/展开功能
+// 点击标题栏的按钮可以折叠面板，节省空间。
+// ═══════════════════════════════════════════════════════════
+let panelCollapsed = false;
+panelToggle.addEventListener('click', () => {
+  panelCollapsed = !panelCollapsed;
+  // 切换 collapsed 类来控制内容区的显示/隐藏
+  bgPanel.classList.toggle('collapsed', panelCollapsed);
+  // 切换按钮图标：折叠时显示 +，展开时显示 −
+  panelToggle.textContent = panelCollapsed ? '+' : '−';
+});
+
+// 初始化：应用默认背景
+updateBackground();
+
+</script>
+
+</body>
+</html>

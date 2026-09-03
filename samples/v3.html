@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>水晶球笔记 — Crystal Notes（文字在球内部版）</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  overflow: hidden;
+  background: linear-gradient(180deg, #0d0d1a 0%, #12122b 50%, #0a0a1a 100%);
+}
+
+.title {
+  color: rgba(255,255,255,0.5);
+  font-size: 14px;
+  margin-bottom: 60px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+}
+
+.ball-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 32px;
+  padding: 40px 60px;
+  position: relative;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   背景颜色调节面板
+   ═══════════════════════════════════════════════════════════ */
+.bg-panel {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 280px;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 16px;
+  padding: 16px 20px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  z-index: 100;
+}
+
+.bg-panel-title {
+  color: rgba(255,255,255,0.8);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bg-panel-title span { letter-spacing: 1px; }
+
+.bg-panel-toggle {
+  width: 20px; height: 20px;
+  border: none;
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+  color: rgba(255,255,255,0.6);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bg-panel-toggle:hover { background: rgba(255,255,255,0.2); }
+
+.bg-panel-content {
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  overflow: hidden;
+}
+
+.bg-panel.collapsed .bg-panel-content { max-height: 0; opacity: 0; }
+
+.slider-row { margin-bottom: 12px; }
+.slider-row:last-child { margin-bottom: 0; }
+
+.slider-label {
+  color: rgba(255,255,255,0.5);
+  font-size: 11px;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.slider-label span:last-child {
+  color: rgba(255,255,255,0.7);
+  font-variant-numeric: tabular-nums;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.1);
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+input[type="range"]::-moz-range-thumb {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  cursor: pointer;
+  border: none;
+}
+
+#hueSlider {
+  background: linear-gradient(to right,
+    hsl(0,70%,50%), hsl(60,70%,50%), hsl(120,70%,50%),
+    hsl(180,70%,50%), hsl(240,70%,50%), hsl(300,70%,50%), hsl(360,70%,50%)
+  );
+}
+
+#satSlider {
+  background: linear-gradient(to right,
+    hsl(var(--panel-hue,240), 0%, var(--panel-light,15%)),
+    hsl(var(--panel-hue,240), 100%, var(--panel-light,15%))
+  );
+}
+
+#lightSlider {
+  background: linear-gradient(to right,
+    hsl(var(--panel-hue,240), var(--panel-sat,40%), 0%),
+    hsl(var(--panel-hue,240), var(--panel-sat,40%), 50%),
+    hsl(var(--panel-hue,240), var(--panel-sat,40%), 100%)
+  );
+}
+
+.preset-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.preset-btn {
+  flex: 1; height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.15);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+  position: relative;
+}
+
+.preset-btn:hover {
+  transform: scale(1.08);
+  border-color: rgba(255,255,255,0.5);
+}
+
+.preset-btn.active::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 8px;
+  border: 2px solid rgba(255,255,255,0.6);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   水晶球本体 — 文字在球内部版本
+
+   核心思路：把文字放在球体"内部"，而不是表面。
+   实现方式：
+   1. 球体背景渐变中，文字所在区域（中心偏下）使用
+      较深的颜色层，文字用白色+内部阴影，模拟字刻在
+      球内壁的效果。
+   2. 文字上方（球体前表面）叠加高光层，让文字看起来
+      被玻璃覆盖在下方。
+   3. 文字本身降低不透明度，模拟光线穿过玻璃后的衰减。
+   ═══════════════════════════════════════════════════════════ */
+.ball {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 700;
+  /* 文字颜色：不是纯白，而是半透明白，模拟光线穿过玻璃 */
+  color: rgba(255,255,255,0.75);
+  letter-spacing: 2px;
+  text-indent: 2px;
+  user-select: none;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+              filter 0.3s ease,
+              box-shadow 0.4s ease;
+
+  /* ═══════════════════════════════════════════════════════
+     背景渐变层（重新排列，让文字在"内部"）
+
+     关键变化：把文字区域（中心）的背景变深，这样白色
+     文字在深背景上清晰可见，同时前表面的高光层覆盖
+     在文字上方，形成"字在玻璃下面"的错觉。
+     ═══════════════════════════════════════════════════════ */
+  background:
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       第7层（最表面）：前表面高光覆盖层
+
+       这层覆盖在整个球体表面，包括文字区域上方。
+       使用径向渐变，中心较亮、边缘较暗，模拟玻璃球
+       前表面的反光。文字在这层"下面"，所以看起来
+       被玻璃覆盖。
+
+       透明度很低（0.15-0.25），不能遮挡文字太多。
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    radial-gradient(circle at 35% 25%, rgba(255,255,255,0.25) 0%, transparent 40%),
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       第6层：底部月牙反光（保持原有）
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    radial-gradient(ellipse 70% 35% at 50% 95%, rgba(255,255,255,0.4) 0%, transparent 55%),
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       第5层：次高光（保持原有）
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    radial-gradient(circle at 30% 22%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.1) 5%, transparent 10%),
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       第4层：主高光（保持原有）
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    radial-gradient(circle at 22% 18%, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.3) 6%, transparent 12%),
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       第3层：文字所在区域的深色背景
+
+       这层是文字"坐"的地方。使用较深的颜色（透明度比
+       原来高），让白色文字有足够的对比度。
+
+       at 50% 55% — 中心偏下，文字通常在这个位置
+       var(--ball-color) — 球体主色，但透明度提高到
+       0.55-0.65（原来只有 0.35-0.45），让背景更实
+
+       注意：这层在文字下方，但在前表面高光（第7层）
+       下方，所以文字看起来在"玻璃内部"。
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    radial-gradient(circle at 50% 55%, var(--ball-color-inner) 0%, transparent 60%),
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       第2层：内部弥散光晕（保持原有）
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    radial-gradient(circle at 50% 50%, var(--ball-color-soft) 0%, transparent 70%),
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       第1层（最底层）：深色玻璃底色（保持原有）
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    radial-gradient(circle at 50% 50%, rgba(25,25,40,0.4) 0%, rgba(8,8,18,0.9) 100%);
+
+  box-shadow:
+    inset 0 0 12px 3px rgba(255,255,255,0.35),
+    inset 0 0 4px 1px rgba(255,255,255,0.55),
+    0 0 8px 1px var(--ball-glow-dim),
+    0 0 16px 3px var(--ball-glow-dim-soft),
+    0 10px 30px rgba(0,0,0,0.5),
+    0 12px 30px -8px var(--ball-glow-dim);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   .ball span 球体内的文字 —— "在内部"效果
+
+   核心设计：
+   1. 文字颜色半透明（rgba(255,255,255,0.75)），不是纯白，
+      模拟光线穿过玻璃后的衰减。
+   2. 文字有"内凹"阴影：下方深色阴影模拟字刻在球内壁
+      的凹陷，上方微亮模拟内部光线从字边缘反射。
+   3. 文字没有外发光（因为字在内部，不应该向外发光）。
+   4. 字的后方有一层球体色光晕，模拟字被球体材质包围。
+   ═══════════════════════════════════════════════════════════ */
+.ball span {
+  position: relative;
+  z-index: 2;
+
+  /* ═══════════════════════════════════════════════════════
+     text-shadow —— 模拟字刻在球内壁的效果
+
+     第1层：下方深阴影 —— 字在球内壁，下方球壁遮挡光线
+     0 2px 2px rgba(0,0,0,0.8) — 锐利深色，内凹感核心
+
+     第2层：下方柔和阴影 —— 球壁曲面的漫反射阴影
+     0 3px 5px rgba(0,0,0,0.5) — 更大更柔和
+
+     第3层：顶部微亮 —— 内部光线从字的上边缘反射
+     0 -1px 1px rgba(255,255,255,0.3) — 向上偏移，白色
+
+     第4层：球体颜色从字后方透出 —— 字被有色玻璃包围
+     0 0 4px var(--ball-glow-dim) — 极淡的球体色光晕
+
+     第5层：整体微弱提亮 —— 避免字太"死"
+     0 0 2px rgba(255,255,255,0.1) — 几乎看不见
+
+     注意：没有外发光！字在内部，不应该像霓虹灯一样
+     向外发光。所有阴影都是"向内"的。
+     ═══════════════════════════════════════════════════════ */
+  text-shadow:
+    /* 下方深阴影（内凹核心） */
+    0 2px 2px rgba(0,0,0,0.8),
+    0 3px 5px rgba(0,0,0,0.5),
+    /* 顶部微亮（内部反射） */
+    0 -1px 1px rgba(255,255,255,0.3),
+    /* 球体色后方透出 */
+    0 0 4px var(--ball-glow-dim),
+    /* 整体微弱提亮 */
+    0 0 2px rgba(255,255,255,0.1);
+
+  transition: text-shadow 0.4s ease, color 0.4s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   伪元素：文字后方的球体色光晕
+
+   这层在文字正后方，模拟字被球体有色材质包围时，
+   材质颜色从字边缘透出的效果。
+
+   使用 data-text 属性复制文字内容，但颜色透明，
+   只保留模糊的球体色发光。
+   ═══════════════════════════════════════════════════════════ */
+.ball span::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: transparent;
+  /* 只有球体色的模糊光晕 */
+  text-shadow:
+    0 0 8px var(--ball-glow-dim),
+    0 0 16px var(--ball-glow-dim-soft);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.ball::after {
+  content: '';
+  position: absolute;
+  bottom: -14px; left: 50%;
+  transform: translateX(-50%);
+  width: 50%; height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, var(--ball-glow-dim) 0%, transparent 70%);
+  filter: blur(5px);
+  opacity: 0.35;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   【悬浮状态】
+   ═══════════════════════════════════════════════════════════ */
+.ball:hover {
+  transform: translateY(-18px) scale(1.18);
+  filter: brightness(1.15);
+  animation: breathe 2.5s ease-in-out infinite;
+  box-shadow:
+    inset 0 0 12px 3px rgba(255,255,255,0.45),
+    inset 0 0 4px 1px rgba(255,255,255,0.65),
+    0 0 18px 2px var(--ball-glow),
+    0 0 32px 6px var(--ball-glow-soft),
+    0 0 55px 12px var(--ball-glow-ambient),
+    0 10px 30px rgba(0,0,0,0.5),
+    0 14px 40px -6px var(--ball-glow);
+}
+
+@keyframes breathe {
+  0% {
+    box-shadow:
+      inset 0 0 12px 3px rgba(255,255,255,0.45),
+      inset 0 0 4px 1px rgba(255,255,255,0.65),
+      0 0 18px 2px var(--ball-glow),
+      0 0 32px 6px var(--ball-glow-soft),
+      0 0 55px 12px var(--ball-glow-ambient),
+      0 10px 30px rgba(0,0,0,0.5),
+      0 14px 40px -6px var(--ball-glow);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 12px 3px rgba(255,255,255,0.5),
+      inset 0 0 4px 1px rgba(255,255,255,0.75),
+      0 0 24px 4px var(--ball-glow),
+      0 0 50px 10px var(--ball-glow-soft),
+      0 0 80px 20px var(--ball-glow-ambient),
+      0 10px 30px rgba(0,0,0,0.5),
+      0 14px 40px -6px var(--ball-glow);
+  }
+  100% {
+    box-shadow:
+      inset 0 0 12px 3px rgba(255,255,255,0.45),
+      inset 0 0 4px 1px rgba(255,255,255,0.65),
+      0 0 18px 2px var(--ball-glow),
+      0 0 32px 6px var(--ball-glow-soft),
+      0 0 55px 12px var(--ball-glow-ambient),
+      0 10px 30px rgba(0,0,0,0.5),
+      0 14px 40px -6px var(--ball-glow);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   .ball:hover span 悬浮时文字效果
+
+   hover 时球体更亮，内部光线更强，所以：
+   1. 文字亮度提升（从 0.75 到 0.9）
+   2. 下方阴影加深（内部更亮，阴影对比更强）
+   3. 顶部高光增强（更多内部光线反射）
+
+   但依然保持"在内部"的感觉，没有外发光。
+   ═══════════════════════════════════════════════════════════ */
+.ball:hover span {
+  /* 悬浮时文字更亮，因为球体内部更亮 */
+  color: rgba(255,255,255,0.9);
+
+  text-shadow:
+    /* 下方阴影加深 */
+    0 2px 3px rgba(0,0,0,0.9),
+    0 3px 6px rgba(0,0,0,0.6),
+    /* 顶部高光增强 */
+    0 -1px 2px rgba(255,255,255,0.5),
+    /* 球体色后方透出增强 */
+    0 0 6px var(--ball-glow),
+    0 0 10px var(--ball-glow-soft),
+    /* 整体提亮 */
+    0 0 3px rgba(255,255,255,0.2);
+}
+
+.ball:hover::after {
+  background: radial-gradient(ellipse, var(--ball-glow) 0%, transparent 70%);
+  opacity: 0.55;
+  transform: translateX(-50%) scale(1.2);
+}
+
+.ball-add { font-size: 32px; font-weight: 300; }
+
+.ball-gear .gear-icon {
+  width: 28px; height: 28px;
+  fill: rgba(255,255,255,0.75);
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6))
+          drop-shadow(0 0 4px var(--ball-glow-dim));
+  transition: filter 0.4s ease;
+}
+
+.ball-gear:hover .gear-icon {
+  fill: rgba(255,255,255,0.9);
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.7))
+          drop-shadow(0 0 6px var(--ball-glow));
+}
+
+.more-badge {
+  position: absolute;
+  top: -4px; right: -6px;
+  background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(255,80,80,0.6);
+  z-index: 10;
+  text-indent: 0;
+}
+
+.preview-card {
+  position: absolute;
+  bottom: 110px; left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  width: 260px;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+  padding: 18px 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4),
+              0 0 20px var(--ball-glow-dim-soft);
+}
+
+.preview-card::after {
+  content: '';
+  position: absolute;
+  bottom: -8px; left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 16px; height: 16px;
+  background: rgba(255,255,255,0.06);
+  border-right: 1px solid rgba(255,255,255,0.12);
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+}
+
+.ball:hover .preview-card {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4),
+              0 0 24px var(--ball-glow-soft);
+}
+
+.preview-title {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.preview-body {
+  color: rgba(255,255,255,0.55);
+  font-size: 12px;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.preview-meta {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.preview-time {
+  color: rgba(255,255,255,0.35);
+  font-size: 11px;
+}
+
+.preview-edit {
+  background: linear-gradient(135deg, #a8e063, #56ab2f);
+  color: #fff;
+  border: none;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(86,171,47,0.4);
+}
+
+.divider {
+  width: 1px; height: 50px;
+  background: rgba(255,255,255,0.06);
+  margin: 0 4px;
+}
+
+.bg-glow {
+  position: fixed;
+  width: 500px; height: 500px;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.12;
+  pointer-events: none;
+}
+.bg-glow-1 { top: -150px; left: -150px; background: #667eea; }
+.bg-glow-2 { bottom: -200px; right: -150px; background: #764ba2; }
+
+</style>
+</head>
+<body>
+
+<div class="bg-glow bg-glow-1"></div>
+<div class="bg-glow bg-glow-2"></div>
+
+<div class="title">Crystal Notes</div>
+
+<div class="ball-row">
+
+  <!-- ════════════════════════════════════════════════════════
+       创建按钮
+
+       新增变量 --ball-color-inner：文字所在区域的背景色，
+       透明度比 --ball-color 更高（0.55 vs 0.4），让文字
+       区域的背景更实，确保白色文字有足够的对比度。
+       ════════════════════════════════════════════════════════ -->
+  <div class="ball ball-add" style="
+    --ball-color: rgba(100,220,170,0.4);
+    --ball-color-inner: rgba(100,220,170,0.55);
+    --ball-color-soft: rgba(100,220,170,0.15);
+    --ball-glow: rgba(100,220,170,0.5);
+    --ball-glow-soft: rgba(100,220,170,0.2);
+    --ball-glow-ambient: rgba(100,220,170,0.08);
+    --ball-glow-dim: rgba(100,220,170,0.18);
+    --ball-glow-dim-soft: rgba(100,220,170,0.08);
+  "><span data-text="+">+</span></div>
+
+  <div class="divider"></div>
+
+  <div class="ball" style="
+    --ball-color: rgba(160,220,100,0.42);
+    --ball-color-inner: rgba(160,220,100,0.58);
+    --ball-color-soft: rgba(160,220,100,0.18);
+    --ball-glow: rgba(160,220,100,0.55);
+    --ball-glow-soft: rgba(160,220,100,0.22);
+    --ball-glow-ambient: rgba(160,220,100,0.1);
+    --ball-glow-dim: rgba(160,220,100,0.2);
+    --ball-glow-dim-soft: rgba(160,220,100,0.09);
+  "><span data-text="仰">仰</span>
+    <div class="preview-card">
+      <div class="preview-title">仰望星空的夜晚</div>
+      <div class="preview-body">今晚的星空格外清澈，猎户座的腰带清晰可见。想起了小时候躺在院子里数星星的日子，那时候总觉得银河是一条真的河流。</div>
+      <div class="preview-meta">
+        <span class="preview-time">更新于 2026/9/1</span>
+        <button class="preview-edit">编辑</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ball" style="
+    --ball-color: rgba(220,130,200,0.38);
+    --ball-color-inner: rgba(220,130,200,0.52);
+    --ball-color-soft: rgba(220,130,200,0.15);
+    --ball-glow: rgba(220,130,200,0.5);
+    --ball-glow-soft: rgba(220,130,200,0.2);
+    --ball-glow-ambient: rgba(220,130,200,0.08);
+    --ball-glow-dim: rgba(220,130,200,0.18);
+    --ball-glow-dim-soft: rgba(220,130,200,0.07);
+  "><span data-text="童">童</span>
+    <div class="preview-card">
+      <div class="preview-title">童年的纸飞机</div>
+      <div class="preview-body">整理旧物时翻出一叠泛黄的作业本，里面夹着各种折纸。纸飞机的折痕已经软化，但机翼上铅笔写的"飞得远"三个字依然清晰。</div>
+      <div class="preview-meta">
+        <span class="preview-time">更新于 2026/9/1</span>
+        <button class="preview-edit">编辑</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ball" style="
+    --ball-color: rgba(230,100,100,0.36);
+    --ball-color-inner: rgba(230,100,100,0.50);
+    --ball-color-soft: rgba(230,100,100,0.14);
+    --ball-glow: rgba(230,100,100,0.5);
+    --ball-glow-soft: rgba(230,100,100,0.2);
+    --ball-glow-ambient: rgba(230,100,100,0.08);
+    --ball-glow-dim: rgba(230,100,100,0.17);
+    --ball-glow-dim-soft: rgba(230,100,100,0.07);
+  "><span data-text="城">城</span>
+    <div class="preview-card">
+      <div class="preview-title">城市漫步指南</div>
+      <div class="preview-body">老城区的新开了一家独立书店，藏在梧桐树的阴影里。店主是个沉默寡言的中年人，店里只卖诗集和植物图鉴。</div>
+      <div class="preview-meta">
+        <span class="preview-time">更新于 2026/9/2</span>
+        <button class="preview-edit">编辑</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ball" style="
+    --ball-color: rgba(230,200,80,0.4);
+    --ball-color-inner: rgba(230,200,80,0.55);
+    --ball-color-soft: rgba(230,200,80,0.16);
+    --ball-glow: rgba(230,200,80,0.55);
+    --ball-glow-soft: rgba(230,200,80,0.22);
+    --ball-glow-ambient: rgba(230,200,80,0.1);
+    --ball-glow-dim: rgba(230,200,80,0.2);
+    --ball-glow-dim-soft: rgba(230,200,80,0.09);
+  "><span data-text="雨">雨</span>
+    <div class="preview-card">
+      <div class="preview-title">雨天的咖啡馆</div>
+      <div class="preview-body">窗外下着细雨，玻璃上凝结的水珠把街灯折射成模糊的光斑。咖啡机的蒸汽声和雨声混在一起，成了最好的白噪音。</div>
+      <div class="preview-meta">
+        <span class="preview-time">更新于 2026/9/2</span>
+        <button class="preview-edit">编辑</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ball" style="
+    --ball-color: rgba(80,200,180,0.42);
+    --ball-color-inner: rgba(80,200,180,0.58);
+    --ball-color-soft: rgba(80,200,180,0.18);
+    --ball-glow: rgba(80,200,180,0.55);
+    --ball-glow-soft: rgba(80,200,180,0.22);
+    --ball-glow-ambient: rgba(80,200,180,0.1);
+    --ball-glow-dim: rgba(80,200,180,0.2);
+    --ball-glow-dim-soft: rgba(80,200,180,0.09);
+  "><span data-text="咖">咖</span>
+    <div class="preview-card">
+      <div class="preview-title">咖啡烘焙笔记</div>
+      <div class="preview-body">浅烘的耶加雪菲有明显的柑橘调性，中温时茉莉花香开始浮现。下次试试把烘焙时间延长15秒，看看body会不会更厚实。</div>
+      <div class="preview-meta">
+        <span class="preview-time">更新于 2026/9/2</span>
+        <button class="preview-edit">编辑</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ball" style="
+    --ball-color: rgba(100,170,230,0.38);
+    --ball-color-inner: rgba(100,170,230,0.52);
+    --ball-color-soft: rgba(100,170,230,0.15);
+    --ball-glow: rgba(100,170,230,0.5);
+    --ball-glow-soft: rgba(100,170,230,0.2);
+    --ball-glow-ambient: rgba(100,170,230,0.08);
+    --ball-glow-dim: rgba(100,170,230,0.18);
+    --ball-glow-dim-soft: rgba(100,170,230,0.07);
+  "><span data-text="旧">旧</span>
+    <div class="preview-card">
+      <div class="preview-title">旧物改造计划</div>
+      <div class="preview-body">把坏了的机械键盘拆了，轴体还能用。打算做成一个复古风格的USB小键盘，专门用来放快捷键。外壳用胡桃木应该不错。</div>
+      <div class="preview-meta">
+        <span class="preview-time">更新于 2026/9/2</span>
+        <button class="preview-edit">编辑</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ball" style="
+    --ball-color: rgba(190,140,230,0.36);
+    --ball-color-inner: rgba(190,140,230,0.50);
+    --ball-color-soft: rgba(190,140,230,0.14);
+    --ball-glow: rgba(190,140,230,0.5);
+    --ball-glow-soft: rgba(190,140,230,0.2);
+    --ball-glow-ambient: rgba(190,140,230,0.08);
+    --ball-glow-dim: rgba(190,140,230,0.17);
+    --ball-glow-dim-soft: rgba(190,140,230,0.07);
+  "><span data-text="雨">雨</span>
+    <div class="preview-card">
+      <div class="preview-title">雨季不再来</div>
+      <div class="preview-body">三毛笔下的撒哈拉在雨季会变成另一种模样。我读她的书时总在想，那些看似随意的文字背后，藏着多少无法言说的孤独。</div>
+      <div class="preview-meta">
+        <span class="preview-time">更新于 2026/9/2</span>
+        <button class="preview-edit">编辑</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="ball ball-gear" style="
+    --ball-color: rgba(180,160,220,0.35);
+    --ball-color-inner: rgba(180,160,220,0.48);
+    --ball-color-soft: rgba(180,160,220,0.13);
+    --ball-glow: rgba(180,160,220,0.45);
+    --ball-glow-soft: rgba(180,160,220,0.18);
+    --ball-glow-ambient: rgba(180,160,220,0.07);
+    --ball-glow-dim: rgba(180,160,220,0.15);
+    --ball-glow-dim-soft: rgba(180,160,220,0.06);
+    position: relative;
+  ">
+    <svg class="gear-icon" viewBox="0 0 24 24">
+      <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65A.488.488 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1 0 .33.03.66.07 1l-2.11 1.63c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.08.73 1.69.98l.38 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.63Z"/>
+    </svg>
+    <div class="more-badge">+2</div>
+  </div>
+
+</div>
+
+<!-- 背景颜色调节面板 -->
+<div class="bg-panel" id="bgPanel">
+  <div class="bg-panel-title">
+    <span>背景颜色</span>
+    <button class="bg-panel-toggle" id="panelToggle" title="折叠/展开">−</button>
+  </div>
+  <div class="bg-panel-content" id="panelContent">
+    <div class="slider-row">
+      <div class="slider-label"><span>色相</span><span id="hueValue">240°</span></div>
+      <input type="range" id="hueSlider" min="0" max="360" value="240">
+    </div>
+    <div class="slider-row">
+      <div class="slider-label"><span>饱和度</span><span id="satValue">40%</span></div>
+      <input type="range" id="satSlider" min="0" max="100" value="40">
+    </div>
+    <div class="slider-row">
+      <div class="slider-label"><span>亮度</span><span id="lightValue">8%</span></div>
+      <input type="range" id="lightSlider" min="0" max="50" value="8">
+    </div>
+    <div class="preset-row">
+      <button class="preset-btn active" data-h="240" data-s="40" data-l="8" style="background: linear-gradient(180deg, hsl(240,40%,12%) 0%, hsl(240,40%,6%) 100%)" title="深蓝紫（默认）"></button>
+      <button class="preset-btn" data-h="200" data-s="50" data-l="8" style="background: linear-gradient(180deg, hsl(200,50%,12%) 0%, hsl(200,50%,6%) 100%)" title="深青蓝"></button>
+      <button class="preset-btn" data-h="280" data-s="35" data-l="8" style="background: linear-gradient(180deg, hsl(280,35%,12%) 0%, hsl(280,35%,6%) 100%)" title="深紫"></button>
+      <button class="preset-btn" data-h="0" data-s="0" data-l="10" style="background: linear-gradient(180deg, hsl(0,0%,14%) 0%, hsl(0,0%,8%) 100%)" title="深灰"></button>
+      <button class="preset-btn" data-h="30" data-s="60" data-l="10" style="background: linear-gradient(180deg, hsl(30,60%,14%) 0%, hsl(30,60%,8%) 100%)" title="深棕"></button>
+    </div>
+  </div>
+</div>
+
+<script>
+const body = document.body;
+const hueSlider = document.getElementById('hueSlider');
+const satSlider = document.getElementById('satSlider');
+const lightSlider = document.getElementById('lightSlider');
+const hueValue = document.getElementById('hueValue');
+const satValue = document.getElementById('satValue');
+const lightValue = document.getElementById('lightValue');
+const panelToggle = document.getElementById('panelToggle');
+const bgPanel = document.getElementById('bgPanel');
+const presetBtns = document.querySelectorAll('.preset-btn');
+
+let hue = 240, sat = 40, light = 8;
+
+function updateBackground() {
+  const topLight = Math.min(light + 4, 50);
+  const bottomLight = Math.max(light - 2, 0);
+  body.style.background = `linear-gradient(180deg, hsl(${hue}, ${sat}%, ${topLight}%) 0%, hsl(${hue}, ${sat}%, ${light}%) 50%, hsl(${hue}, ${sat}%, ${bottomLight}%) 100%)`;
+  hueValue.textContent = hue + '°';
+  satValue.textContent = sat + '%';
+  lightValue.textContent = light + '%';
+  bgPanel.style.setProperty('--panel-hue', hue);
+  bgPanel.style.setProperty('--panel-sat', sat);
+  bgPanel.style.setProperty('--panel-light', light);
+}
+
+hueSlider.addEventListener('input', (e) => { hue = parseInt(e.target.value); updateBackground(); clearPresetActive(); });
+satSlider.addEventListener('input', (e) => { sat = parseInt(e.target.value); updateBackground(); clearPresetActive(); });
+lightSlider.addEventListener('input', (e) => { light = parseInt(e.target.value); updateBackground(); clearPresetActive(); });
+
+presetBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    hue = parseInt(btn.dataset.h);
+    sat = parseInt(btn.dataset.s);
+    light = parseInt(btn.dataset.l);
+    hueSlider.value = hue;
+    satSlider.value = sat;
+    lightSlider.value = light;
+    updateBackground();
+    presetBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+function clearPresetActive() { presetBtns.forEach(b => b.classList.remove('active')); }
+
+let panelCollapsed = false;
+panelToggle.addEventListener('click', () => {
+  panelCollapsed = !panelCollapsed;
+  bgPanel.classList.toggle('collapsed', panelCollapsed);
+  panelToggle.textContent = panelCollapsed ? '+' : '−';
+});
+
+updateBackground();
+</script>
+
+</body>
+</html>
