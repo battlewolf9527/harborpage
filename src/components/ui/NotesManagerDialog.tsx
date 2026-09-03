@@ -130,8 +130,8 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
 
   const handleDragLeave = useCallback(
     (e: React.DragEvent<HTMLElement>, index: number) => {
-      const related = e.relatedTarget as Node | null;
-      if (related && e.currentTarget.contains(related)) return;
+      const related = e.relatedTarget;
+      if (related instanceof Node && e.currentTarget.contains(related)) return;
       if (dragOverIndex === index) setDragOverIndex(null);
     },
     [dragOverIndex],

@@ -165,8 +165,8 @@ const PagesSidebar: React.FC = () => {
 
   const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>, index: number) => {
     // 只在离开当前目标本身时清空（避免子元素冒泡误触发）
-    const related = e.relatedTarget as Node | null;
-    if (related && e.currentTarget.contains(related)) return;
+    const related = e.relatedTarget;
+    if (related instanceof Node && e.currentTarget.contains(related)) return;
     if (dragOverIndex === index) {
       setDragOverIndex(null);
     }

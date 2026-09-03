@@ -39,15 +39,24 @@
   pointer-events: none;
 }
 
-/* 圆形图标按钮 - 左侧（完全对齐 NoteBar peek-ball 玻璃弹珠风格）
-   —— 身份色保留 emerald→amber，但加上 4 层 radial-gradient 玻璃质感、
-      外白环+内高光 3 层 box-shadow 堆叠、hover 时才显形放大。
+/* 圆形图标按钮 - 左侧（完全对齐 NoteBar peek-ball 水晶球风格）
+   —— 身份色保留 emerald→amber，但用水晶球六层渐变 + 内壁折射 + 底部色光
+      （samples/CrystalBall.html 方法，与 .noteball / notebar-peek-ball 同一套）。
    关键：本容器是 <.pages-sidebar> 的 DOM 兄弟节点，CSS 变量不会跨兄弟继承 →
         必须在本容器自己的 scope 上重新声明 --page-primary-color / --page-secondary-color，
         否则 identity gradient / box-shadow 的 color-mix 会因变量 undefined 整行失效 → 球全透明连外框都没 */
 .pages-sidebar-icon {
   --page-primary-color: #10b981;
   --page-secondary-color: #f59e0b;
+  --tint: var(--page-primary-color);      /* 主身份色：翠绿 */
+  --tint-2: var(--page-secondary-color);  /* 次身份色：琥珀（底部氛围光） */
+  --ball-color:         color-mix(in srgb, var(--tint) 40%, transparent);
+  --ball-color-soft:    color-mix(in srgb, var(--tint) 15%, transparent);
+  --ball-glow:          color-mix(in srgb, var(--tint) 50%, transparent);
+  --ball-glow-soft:     color-mix(in srgb, var(--tint) 20%, transparent);
+  --ball-glow-ambient:  color-mix(in srgb, var(--tint) 8%, transparent);
+  --ball-glow-dim:      color-mix(in srgb, var(--tint) 18%, transparent);
+  --ball-glow-dim-soft: color-mix(in srgb, var(--tint) 8%, transparent);
   position: fixed;
   left: calc(var(--sidebar-toggle-size) / 2 * -1 + 2px);
   top: 50%;
@@ -98,22 +107,23 @@
   filter: none;
   isolation: isolate;
   overflow: visible;
-  /* 4 层 radial-gradient 玻璃弹珠：外层高光 + 内层暗部 + 身份色核心
-     渐变色饱和度加深：身份色 90% 混白（原 82% 太淡呈半透明感） */
+  /* ── 水晶球（samples/CrystalBall.html 六层渐变 + 内壁折射 + 底部色光）──
+     —— 与 NoteBar.peek-ball / 笔记球 .noteball 同一套视觉方法 */
   background:
-    radial-gradient(circle at 30% 22%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 36%),
-    radial-gradient(circle at 68% 70%, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 40%),
-    radial-gradient(circle at 50% 120%, rgba(15,23,42,0.32) 0%, rgba(15,23,42,0) 55%),
-    radial-gradient(circle at 50% 45%,
-      color-mix(in srgb, var(--page-primary-color) 90%, #fff) 0%,
-      color-mix(in srgb, var(--page-secondary-color) 92%, #000) 76%);
-  /* 3 层内外描边：外环白 3px + 内暗环 1px + 内侧高光 + 底部阴影 + 身份色 glow */
+    radial-gradient(ellipse 70% 35% at 50% 95%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 55%),
+    radial-gradient(circle at 30% 22%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.1) 5%, rgba(255,255,255,0) 10%),
+    radial-gradient(circle at 22% 18%, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.3) 6%, rgba(255,255,255,0) 12%),
+    radial-gradient(circle at 50% 55%, var(--ball-color) 0%, transparent 65%),
+    radial-gradient(circle at 50% 50%, var(--ball-color-soft) 0%, transparent 70%),
+    radial-gradient(circle at 50% 50%, rgba(25,25,40,0.4) 0%, rgba(8,8,18,0.9) 100%);
+  /* 内壁折射 + 底部氛围光（无白色描边环，避免塑料感） */
   box-shadow:
-    0 0 0 1px rgba(15,23,42,0.28),
-    0 0 0 3px rgba(255,255,255,0.82),
-    inset 0 0 0 1px rgba(255,255,255,0.62),
-    inset 0 -6px 12px rgba(15,23,42,0.32),
-    0 8px 20px color-mix(in srgb, var(--page-primary-color) 32%, transparent);
+    inset 0 0 12px 3px rgba(255,255,255,0.35),
+    inset 0 0 4px 1px rgba(255,255,255,0.55),
+    0 0 8px 1px var(--ball-glow-dim),
+    0 0 16px 3px var(--ball-glow-dim-soft),
+    0 10px 30px rgba(0,0,0,0.5),
+    0 12px 30px -8px color-mix(in srgb, var(--tint-2) 22%, transparent);
   /* 呼吸动画（默认暂停，仅 hover 用户看时跑，防 CPU 空转） */
   animation: pages-peek-breath 4.6s ease-in-out infinite;
   animation-play-state: paused;
@@ -129,23 +139,8 @@
 .pages-sidebar-icon:focus-visible .pages-icon-container {
   opacity: 1;
   transform: translateY(-2px) scale(1.06);
-  filter: saturate(1.25);
+  filter: brightness(1.12);   /* 水晶球 hover 提亮（不再 saturate 增色） */
   outline: none;
-}
-
-/* 高光小光点（玻璃反光） */
-.pages-icon-container::after {
-  content: '';
-  position: absolute;
-  left: 28%;
-  top: 20%;
-  width: 18%;
-  height: 10%;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.9);
-  filter: blur(1px);
-  transform: rotate(-22deg);
-  pointer-events: none;
 }
 
 .pages-icon-container svg {
@@ -153,10 +148,10 @@
   width: clamp(16px, 0.9vw, 20px);
   height: clamp(16px, 0.9vw, 20px);
   transition: transform var(--motion-fast);
-  /* 图标阴影：白底 + 暗底双 drop-shadow，与 NoteBar peek-ball emoji 阴影一致 */
+  /* 水晶球为深色玻璃，白图标配暗投影 + 身份色微光（与 NoteBar.peek-ball emoji 阴影一致） */
   filter:
-    drop-shadow(0 1px 0 rgba(255,255,255,0.7))
-    drop-shadow(0 2px 4px rgba(15,23,42,0.25));
+    drop-shadow(0 1px 4px rgba(0,0,0,0.5))
+    drop-shadow(0 0 8px var(--ball-glow));
   position: relative;
   z-index: 2;
 }
@@ -202,25 +197,27 @@
   visibility: visible;
 }
 
-/* 呼吸动画：与 NoteBar.nb-peek-breath 相同 timing + box-shadow 堆叠，
-   身份色替换为 Pages 绿-金系 */
+/* 呼吸动画：与 NoteBar.nb-peek-breath 同方法 —— 直接在球体自身 box-shadow 上做
+   光晕扩张↔回缩，光晕钉在球缘不会与球脱开；身份色替换为 Pages 绿-金系 */
 @keyframes pages-peek-breath {
   0%, 100% {
     box-shadow:
-      0 0 0 1px rgba(15,23,42,0.18),
-      0 0 0 3px rgba(255,255,255,0.72),
-      inset 0 0 0 1px rgba(255,255,255,0.55),
-      inset 0 -6px 12px rgba(15,23,42,0.25),
-      0 8px 18px color-mix(in srgb, var(--page-primary-color) 22%, transparent);
+      inset 0 0 12px 3px rgba(255,255,255,0.35),
+      inset 0 0 4px 1px rgba(255,255,255,0.55),
+      0 0 8px 1px var(--ball-glow-dim),
+      0 0 16px 3px var(--ball-glow-dim-soft),
+      0 10px 30px rgba(0,0,0,0.5),
+      0 12px 30px -8px color-mix(in srgb, var(--tint-2) 22%, transparent);
   }
   50% {
     box-shadow:
-      0 0 0 1px rgba(15,23,42,0.18),
-      0 0 0 4px rgba(255,255,255,0.7),
-      0 0 0 10px color-mix(in srgb, var(--page-primary-color) 6%, transparent),
-      inset 0 0 0 1px rgba(255,255,255,0.6),
-      inset 0 -6px 12px rgba(15,23,42,0.25),
-      0 10px 22px color-mix(in srgb, var(--page-secondary-color) 18%, transparent);
+      inset 0 0 12px 3px rgba(255,255,255,0.45),
+      inset 0 0 4px 1px rgba(255,255,255,0.65),
+      0 0 14px 2px var(--ball-glow),
+      0 0 24px 5px var(--ball-glow-soft),
+      0 0 36px 9px var(--ball-glow-ambient),
+      0 10px 30px rgba(0,0,0,0.5),
+      0 14px 40px -6px color-mix(in srgb, var(--tint-2) 35%, transparent);
   }
 }
 

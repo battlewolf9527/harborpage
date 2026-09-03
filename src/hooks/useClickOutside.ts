@@ -28,8 +28,10 @@ export const useClickOutside = <T extends HTMLElement>(
     if (!enabled || !ref.current) return;
 
     const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      if (!ref.current?.contains(target)) {
+      const target = event.target;
+      // contains 参数必须是真 Node：非 Node 目标（异常穿越对象）视为"点在外部"
+      const node = target instanceof Node ? target : null;
+      if (!ref.current || !node || !ref.current.contains(node)) {
         handlerRef.current(event);
       }
     };

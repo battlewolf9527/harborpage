@@ -180,8 +180,8 @@ export const useDragAndDrop = ({
     // 这里用 relatedTarget 判断：如果下一个即将被悬停的节点仍然在
     // 本次 leave 目标（wrapper）的 DOM 内部，就忽略这次 leave。
     const wrapper = e.currentTarget as HTMLElement | null;
-    const next = e.relatedTarget as Node | null;
-    if (wrapper && next && wrapper.contains(next)) {
+    const next = e.relatedTarget;
+    if (wrapper && next instanceof Node && wrapper.contains(next)) {
       return;
     }
 

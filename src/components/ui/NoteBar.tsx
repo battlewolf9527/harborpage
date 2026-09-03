@@ -120,10 +120,12 @@ const NoteBar: React.FC = () => {
   }, [cancelClose]);
 
   const handleBarLeave = useCallback((e: React.MouseEvent) => {
-    const related = e.relatedTarget as Node | null;
+    const related = e.relatedTarget;
     // relatedTarget 仍在 notebar 子树内 → 是子元素间穿越（球→分隔条→tooltip 等）；
     // relatedTarget 落在 portal 出去的气泡上 → 视为"仍在栏内"，不触发 scheduleClose。
-    if (related) {
+    // instanceof Node 守卫：鼠标甩出到浏览器 UI（React 会把 body/html 映射为 window）时
+    // contains(window) 会抛 TypeError 且中断 scheduleClose → 栏被卡开；非 Node 一律按已离开处理。
+    if (related instanceof Node) {
       if (e.currentTarget.contains(related)) return;
       if (portalRootRef.current && portalRootRef.current.contains(related)) return;
     }
@@ -300,8 +302,8 @@ const NoteBar: React.FC = () => {
   }, [dragIndex]);
 
   const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>, ballIndex: number) => {
-    const related = e.relatedTarget as Node | null;
-    if (related && e.currentTarget.contains(related)) return;
+    const related = e.relatedTarget;
+    if (related instanceof Node && e.currentTarget.contains(related)) return;
     if (dragOverIndex === ballIndex) setDragOverIndex(null);
   }, [dragOverIndex]);
 
@@ -371,9 +373,9 @@ const NoteBar: React.FC = () => {
 
   /** 统一：synthetic id 激活 → 对应的 tooltip hide 处理；relatedTarget 仍在 tooltip 上不关闭。 */
   const handleSynthLeave = useCallback((synthId: string, e: React.MouseEvent | React.FocusEvent) => {
-    const related = (e as React.MouseEvent).relatedTarget as Node | null;
+    const related = (e as React.MouseEvent).relatedTarget;
     const tipEl = tooltipRefs.current.get(synthId);
-    if (tipEl && related && (tipEl === related || tipEl.contains(related))) return;
+    if (tipEl && related instanceof Node && (tipEl === related || tipEl.contains(related))) return;
     scheduleTooltipHide();
   }, [scheduleTooltipHide]);
 
