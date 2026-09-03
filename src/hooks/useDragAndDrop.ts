@@ -327,7 +327,7 @@ export const useDragAndDrop = ({
       onIconsChange(newIcons);
       setDraggedIcon(null);
     }
-  }, [draggedIcon, icons, allowFolderCreation, onHandleDrop, onIconsChange, setDraggedIcon]);
+  }, [draggedIcon, icons, allowFolderCreation, commitDragOverState, onHandleDrop, onIconsChange, setDraggedIcon]);
 
   const isDragging = useCallback((iconId: string) => {
     return draggedIcon?.id === iconId;
