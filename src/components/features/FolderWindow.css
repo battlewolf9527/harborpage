@@ -415,7 +415,19 @@
   background: hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) + 12%), 0.48);
 }
 
-.folder-icons-grid { width: 100%; }
+/* 空文件夹保底高度：至少留出一行图标的空间（图标圆形 + 上下间距 + 单行标签 + wrapper 纵向内边距），
+   避免空文件夹打开后窗口塌成一条细带、无法查看与拖入操作。
+   口径与 IconItem.css 的 .icon-circle / .icon-wrapper gap / .icon-label 的 clamp 保持一致 */
+.folder-icons-grid {
+  width: 100%;
+  min-height: calc(
+    clamp(56px, 10vw, 120px)     /* 图标圆形直径 */
+    + clamp(6px, 0.6vw, 10px)    /* 圆形与标签间距（icon-wrapper gap） */
+    + clamp(18px, 1.75vw, 25px)  /* 单行标签行高（~13~18px × line-height 1.35） */
+    + clamp(8px, 1vw, 16px)      /* wrapper 顶部内边距 */
+    + clamp(4px, 0.5vw, 8px)     /* wrapper 底部内边距 */
+  );
+}
 .folder-icons-grid.dragging-out { opacity: 0.5; }
 
 .folder-icon-item {

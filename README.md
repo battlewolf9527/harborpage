@@ -19,6 +19,7 @@
 - 拖拽排序和移动图标
 - 右键菜单快速操作
 - 长按进入编辑模式
+- 图标 / 文件夹图标以「水晶方块」玻璃质感呈现，可用全局调色板 16 色或自定义颜色着色（详见下方「配色体系」）
 
 ### 📁 文件夹功能
 - 拖拽图标到另一个图标上创建文件夹
@@ -26,7 +27,19 @@
 - 支持文件夹名称修改
 - 拖拽图标移入/移出文件夹
 - 空文件夹显示📁图标
+- 文件夹窗口整体配色随文件夹当前颜色联动（半透明材质分层染色，头部/内容区/底部各有层次，保留玻璃质感）
+- 文件夹窗口空白处右键可直接添加网站到当前文件夹
+- 空文件夹内容区至少保留一行图标高度，方便查看与拖入操作
 - 支持整文件夹在页面之间移动（包含内部所有子网站）
+
+### 🎨 配色体系：全局调色板与取色器
+- **16 个全局调色板槽**：位置固定（`palette-1 … palette-16`，只表位置、不含颜色语义），出厂默认 16 色（白色置首，其余按色相渐变），槽位颜色可在设置面板中随时重设
+- **取色器窗口**：在 16 个系统预设色 + 「自定义」之间取色（彩虹渐变 + 原生取色器）；修改槽位时可「恢复默认」还原出厂色
+- **选择模式（给元素设色）**：网站、文件夹、笔记的颜色选择共用同一调色板——点槽即选中该槽颜色；再次点击已选中的槽位或「自定义」按钮会弹出取色器
+- **设置模式（设置面板）**：点击任意槽直接弹取色器改色，绑定该槽位的图标、文件夹、笔记实时联动变色
+- **自然换行布局**：16 槽与自定义按钮处于同一 flex-wrap 流，按所在容器宽度自然排列（如笔记编辑窗一行铺开、修改站点弹窗自动折行、文件夹设色 4×4、设置侧栏 2×8）
+- **友好的颜色提示**：出厂预设槽提示中文色名（白色、黄色、蓝色…），自定义颜色提示十六进制值
+- **平滑兼容**：旧数据中的颜色名 / 快照色照常显示并在读取后自动升级为槽位引用；调色板改动参与云端同步与导入导出
 
 ### 🗂️ 多页面功能
 - 页面级隔离：每个页面拥有独立的网站和文件夹集合
@@ -67,6 +80,7 @@
 - 笔记球支持拖拽排序；点击任意球直接打开编辑器（全文查看、修改标题/颜色/内容、保存或删除）
 - 左侧「+」新建笔记（点「保存」才真正创建）、右侧「⚙︎」打开笔记管理器（查看全部、批量重排、重命名、调色、删除），超过 8 篇时叠加 +N 徽章
 - 支持标题和内容、创建与更新时间记录
+- 笔记颜色取自全局调色板（16 槽 + 自定义），与网站/文件夹颜色体系统一联动
 
 ### 🎨 壁纸管理
 - Bing每日壁纸
@@ -78,8 +92,8 @@
 - 自动定时更换壁纸
 
 ### 📤 数据导入导出
-- 分类导出：搜索引擎、网站、待办列表、笔记、其它设置
-- 分类导入：勾选需要导入的数据类别
+- 分类导出：搜索引擎、页面（含网站）、网站（旧格式）、待办列表、笔记、其它设置、调色板
+- 分类导入：勾选需要导入的数据类别（调色板仅在被改动过时提供，按槽位合并）
 - 导入时自动检测文件中不存在的数据并禁用选择
 - 导入进度条显示当前进度及任务内容
 - 导入时遮罩层禁止用户操作
@@ -94,16 +108,11 @@
 - 敏感信息存储在 Cloudflare Secrets
 - 构建产物自动清理 .dev.vars 机密文件
 
-### ⚙️ 设置面板
-- 图标行列数设置
-- 壁纸设置
-- 搜索引擎管理（弹出式对话框 + 拖拽排序）
-- 图标源管理（自定义 Favicon 源配置）
-- 待办事项管理
-- 笔记管理
-- 预设站点导入
-- 数据导入导出
-- 自动保存设置
+### ⚙️ 设置面板（右侧抽屉式，分组管理）
+- **个性化**：网站标题、更改壁纸、桌面图标设置（行列数）、管理图标源、调色板管理（2×8 设置模式，点击任意槽改色，使用该颜色的元素自动更新）
+- **偏好设置**：管理搜索引擎、自动保存设置
+- **数据管理**：从云端加载数据、导入预设站点、数据导入/导出、清空所有站点
+- **账户与关于**：注销登录、关于 HarborPage
 
 ### 💾 自动保存
 - 未保存变更检测与提示
@@ -213,15 +222,17 @@ npm run deploy
 2. **切换页面**：点击屏幕左缘的翠绿→琥珀「水晶球」开关滑出 PagesSidebar，点击页面切换；拖拽手柄可重新排序
 3. **新建页面**：PagesSidebar 顶部「+ 新建页面」按钮
 4. **重命名/删除页面**：页面项右侧铅笔图标重命名（Enter 提交 / Esc 取消）、垃圾桶图标删除（需二次确认，至少保留一页）
-5. **添加网站**：右键点击空白处进入编辑模式，点击"+"按钮添加新网站
+5. **添加网站**：右键页面空白处直接打开「新增网站」窗口；长按空白进入编辑模式后点击「+」也可新增。文件夹窗口内右键空白处添加的站点会进入当前文件夹
 6. **修改网站**：右键点击网站图标，选择"修改"
 7. **删除网站**：右键点击网站图标，选择"删除"
-8. **创建文件夹**：拖拽一个网站图标到另一个网站图标上
-9. **移动图标**：拖拽网站图标到文件夹图标上移入文件夹
-10. **移出文件夹**：在文件夹中拖拽图标到文件夹窗口外
-11. **跨页移动网站/文件夹**：右键点击网站或文件夹 → 「移动到页面…」→ 选择「仅移动」或「移动并跳转」
-12. **打开待办**：点击屏幕右缘的靛蓝→品红「水晶球」开关滑出待办侧边栏，左上角徽章实时显示未完成数量
-13. **打开笔记栏**：鼠标悬停屏幕底部中央的 📝「水晶球」便签球即整栏展开——悬停笔记球看缩略预览、点击球打开编辑器、拖拽球排序、右侧「⚙︎」管理全部笔记
+8. **给元素设置颜色**：网站/文件夹的编辑弹窗与笔记编辑器共用同一套调色板——点选 16 个槽位之一即上色；点「自定义」或再次点击已选中的槽位会弹出取色器
+9. **管理调色板**：设置 → 个性化 → 调色板，点击任意色块重设该槽颜色，使用该槽的图标、文件夹、笔记实时联动
+10. **创建文件夹**：拖拽一个网站图标到另一个网站图标上
+11. **移动图标**：拖拽网站图标到文件夹图标上移入文件夹
+12. **移出文件夹**：在文件夹中拖拽图标到文件夹窗口外
+13. **跨页移动网站/文件夹**：右键点击网站或文件夹 → 「移动到页面…」→ 选择「仅移动」或「移动并跳转」
+14. **打开待办**：点击屏幕右缘的靛蓝→品红「水晶球」开关滑出待办侧边栏，左上角徽章实时显示未完成数量
+15. **打开笔记栏**：鼠标悬停屏幕底部中央的 📝「水晶球」便签球即整栏展开——悬停笔记球看缩略预览、点击球打开编辑器、拖拽球排序、右侧「⚙︎」管理全部笔记
 
 ### 图标设置
 - **留空**：自动获取网站 favicon
@@ -254,133 +265,101 @@ npm run deploy
 
 ```
 harborpage/
-├── src/                              # 前端源代码
-│   ├── components/                   # React组件
-│   │   ├── common/                   # 通用组件
-│   │   │   ├── AutoFetchDialog.tsx   # 智能获取图标对话框
-│   │   │   ├── ConfirmDialog.tsx     # 确认对话框
-│   │   │   ├── DraggableIconWrapper.tsx
-│   │   │   ├── EditWebsite.tsx       # 网站编辑表单
-│   │   │   ├── ErrorBoundary.tsx     # 错误边界
-│   │   │   ├── FolderItem.tsx        # 文件夹项
-│   │   │   ├── FolderNameDialog.tsx  # 文件夹命名对话框
-│   │   │   ├── IconGrid.tsx          # 图标网格
-│   │   │   ├── IconItem.tsx          # 图标项
+├── shared/                          # 前后端共享代码
+│   └── constants.ts                 # TRACKED_KEYS 持久化追踪键（含 palette）
+├── public/                          # 静态资源
+├── screenshots/                     # 界面预览截图
+├── samples/                         # 设计参考样例（纯 HTML）
+│   ├── CrystalBall.html             # 水晶球画法参考（边缘开关球 / 笔记球）
+│   ├── Crystal_block.html           # 水晶方块（图标）边缘内高光参考
+│   ├── New.html / v3.html           # 界面版式参考
+├── src/                             # 前端源代码
+│   ├── assets/                      # 静态资源
+│   ├── components/                  # React 组件（样式为同文件名 .css）
+│   │   ├── common/                  # 通用组件
+│   │   │   ├── AboutDialog.tsx      # 「关于」弹窗
+│   │   │   ├── AutoFetchDialog.tsx  # 智能获取图标对话框
+│   │   │   ├── ColorPickerWindow.tsx# 取色器窗口（16 预设 + 自定义 + 恢复默认）
+│   │   │   ├── ConfirmDialog.tsx    # 确认对话框
+│   │   │   ├── CrystalShell.tsx     # 水晶图标光效层集合（站点/文件夹图标共用）
+│   │   │   ├── DraggableIconWrapper.tsx # 拖拽包装层
+│   │   │   ├── EditWebsite.tsx      # 网站/文件夹编辑表单（含调色板）
+│   │   │   ├── ErrorBoundary.tsx    # 错误边界
+│   │   │   ├── FolderItem.tsx       # 文件夹图标
+│   │   │   ├── FolderNameDialog.tsx # 文件夹命名对话框
+│   │   │   ├── IconGrid.tsx         # 图标网格
+│   │   │   ├── IconItem.tsx         # 图标项（水晶方块）
 │   │   │   ├── ImportProgressOverlay.tsx # 导入进度遮罩
-│   │   │   ├── LoginModal.tsx        # 登录弹窗
-│   │   │   ├── MoveToPageDialog.tsx  # 跨页移动对话框
-│   │   │   ├── Notes.tsx             # 笔记组件
-│   │   │   ├── SavePrompt.tsx        # 保存提示组件
-│   │   │   ├── SaveProgressIndicator.tsx
-│   │   │   ├── SaveTooltip.tsx
-│   │   │   ├── Toast.tsx             # 轻提示组件
-│   │   │   ├── TodoList.tsx          # 待办列表
-│   │   │   ├── TreeSelector.tsx      # 树形选择器
-│   │   │   └── WebsiteItem.tsx       # 网站项
-│   │   ├── features/                 # 功能组件
-│   │   │   ├── FolderWindow.tsx      # 文件夹窗口
-│   │   │   ├── PagesSidebar.tsx      # 页面侧边栏（多页面切换、排序、重命名、删除）
-│   │   │   ├── Search.tsx            # 搜索栏
-│   │   │   ├── SearchManager.tsx     # 搜索引擎管理
-│   │   │   ├── TodoSidebar.tsx       # 待办侧边栏
-│   │   │   ├── WallpaperManager.tsx  # 壁纸管理
-│   │   │   └── Weather.tsx           # 天气显示
-│   │   ├── layout/                   # 布局组件
-│   │   │   ├── Background.tsx        # 背景层
-│   │   │   └── IconsContainer.tsx    # 图标容器
-│   │   └── ui/                       # UI组件
-│   │       ├── FaviconSettings.tsx   # 图标源设置
-│   │       ├── ImportExport.tsx      # 导入导出
+│   │   │   ├── LoginModal.tsx       # 登录弹窗
+│   │   │   ├── MoveToPageDialog.tsx # 跨页移动对话框
+│   │   │   ├── Notes.tsx            # 笔记组件
+│   │   │   ├── PalettePicker.tsx    # 调色板（选择/设置模式，flex-wrap 自然换行）
+│   │   │   ├── SaveProgressIndicator.tsx / SavePrompt.tsx / SaveTooltip.tsx  # 保存反馈
+│   │   │   ├── Toast.tsx            # 轻提示
+│   │   │   ├── TodoList.tsx         # 待办列表
+│   │   │   ├── TreeSelector.tsx     # 树形选择器
+│   │   │   └── WebsiteItem.tsx      # 网站项（含右键菜单）
+│   │   ├── features/                # 功能组件
+│   │   │   ├── FolderWindow.tsx     # 文件夹窗口（配色随文件夹颜色）
+│   │   │   ├── PagesSidebar.tsx     # 页面侧边栏（多页面切换/排序/重命名/删除）
+│   │   │   ├── Search.tsx           # 搜索栏
+│   │   │   ├── SearchManager.tsx    # 搜索引擎管理
+│   │   │   ├── TodoSidebar.tsx      # 待办侧边栏
+│   │   │   ├── WallpaperManager.tsx # 壁纸管理
+│   │   │   └── Weather.tsx          # 天气显示
+│   │   ├── layout/                  # 布局组件
+│   │   │   ├── Background.tsx       # 背景层
+│   │   │   └── IconsContainer.tsx   # 图标容器
+│   │   └── ui/                      # UI 组件
+│   │       ├── AutoSaveSettings.tsx # 自动保存设置
+│   │       ├── FaviconSettings.tsx  # 图标源设置
+│   │       ├── IconSettings.tsx     # 桌面图标设置
+│   │       ├── ImportExport.tsx     # 数据导入导出（含调色板类别）
 │   │       ├── ImportPresetDialog.tsx # 预设站点导入
-│   │       ├── Settings.tsx          # 设置面板
-│   │       └── SettingsWindow.tsx    # 设置窗口
-│   ├── data/                         # 数据文件
-│   │   └── presetSites.json          # 预设站点数据
-│   ├── hooks/                        # 自定义Hooks
-│   │   ├── useAddWebsiteShortcut.ts  # 添加网站快捷键
-│   │   ├── useAuth.ts                # 认证
-│   │   ├── useAutoSave.ts            # 自动保存
-│   │   ├── useAutoSaveSettings.ts    # 自动保存设置
-│   │   ├── useClickOutside.ts        # 点击外部检测
-│   │   ├── useDataInitialization.ts  # 数据初始化
-│   │   ├── useDeleteIcon.ts          # 删除图标
-│   │   ├── useDragAndDrop.ts         # 拖拽
-│   │   ├── useIconDropHandler.ts     # 图标拖放处理
-│   │   ├── useImport.ts              # 导入
-│   │   ├── useLongPress.ts           # 长按
-│   │   ├── useTreeSelection.ts       # 树形选择
-│   │   ├── useWallpaperInit.ts       # 壁纸初始化
-│   │   ├── useWeather.ts             # 天气
-│   │   ├── useWeatherLocation.ts     # 天气定位
-│   │   └── useWeatherLunar.ts        # 农历
-│   ├── services/                     # 服务层
-│   │   ├── AuthService.ts            # 认证服务
-│   │   ├── autoFetchService.ts       # 智能获取图标服务
-│   │   ├── ChangeTracker.ts          # 变更追踪
-│   │   ├── ConfigService.ts          # 配置服务
-│   │   ├── DataManager.ts            # 数据管理
-│   │   ├── DataRepository.ts         # 数据仓库（统一持久化层）
-│   │   ├── FaviconConfigService.ts   # Favicon源配置服务
-│   │   ├── IconDownloadQueue.ts      # 图标下载队列（信号量并发）
-│   │   ├── IconManager.ts            # 图标管理器
-│   │   ├── iconUtils.ts              # 图标工具
-│   │   ├── serviceContainer.ts       # 服务容器
-│   │   ├── Services.ts               # 服务接口
-│   │   └── storeInitializer.ts       # Store初始化
-│   ├── store/                        # 状态管理（Zustand）
-│   │   ├── index.ts
-│   │   ├── persistence.ts            # 持久化
-│   │   ├── selectors.ts              # 选择器
-│   │   ├── useIconsStore.ts          # 图标状态（派生自 usePagesStore.currentPage）
-│   │   ├── useIconsUIStore.ts        # 图标UI状态
-│   │   ├── useImportStore.ts         # 导入状态
-│   │   ├── useNotesStore.ts          # 笔记状态
-│   │   ├── usePagesStore.ts          # 页面状态（多页面 + 页面级网站集合 + 跨页移动）
-│   │   ├── useSearchStore.ts         # 搜索状态
-│   │   ├── useSettingsStore.ts       # 设置状态
-│   │   ├── useTodoStore.ts           # 待办状态
-│   │   └── useWallpaperStore.ts      # 壁纸状态
-│   ├── types/                        # 类型定义
-│   │   └── index.ts
-│   ├── utils/                        # 工具函数
-│   │   ├── deviceUtils.ts            # 设备工具
-│   │   ├── idUtils.ts                # ID生成
-│   │   ├── importExportUtils.ts      # 导入导出工具
-│   │   ├── logger.ts                 # 日志
-│   │   └── wallpaperStorage.ts       # 壁纸存储
-│   ├── App.tsx                       # 主应用组件
-│   ├── main.tsx                      # 应用入口
-│   └── index.css                     # 全局样式
-├── worker/                           # Cloudflare Workers代码
-│   ├── middleware/                   # 中间件
-│   │   └── auth.ts                   # 认证中间件
-│   ├── routes/                       # API路由
-│   │   ├── auth.ts                   # 认证接口
-│   │   ├── bing.ts                   # Bing壁纸接口
-│   │   ├── data.ts                   # 数据接口
-│   │   ├── icon.ts                   # 图标接口
-│   │   ├── icon-cleanup.ts           # 图标清理
-│   │   ├── icon-upload.ts            # 图标上传
-│   │   ├── title.ts                  # 标题获取
-│   │   ├── wallpaper.ts              # 壁纸代理
-│   │   ├── wallpaper-upload.ts       # 壁纸上传
-│   │   └── weather.ts                # 天气接口
-│   ├── utils/                        # Worker工具函数
-│   │   ├── constants.ts              # 常量
-│   │   ├── crypto.ts                 # 加密工具
-│   │   ├── icon.ts                   # 图标处理
-│   │   ├── md5.ts                    # MD5哈希
-│   │   └── streamLimit.ts            # 流限制
-│   ├── index.ts                      # Worker入口文件
-│   └── types.ts                      # Worker类型定义
-├── public/                           # 静态资源
-├── samples/                          # 设计参考样例
-│   └── CrystalBall.html              # 水晶球视觉画法参考（六层渐变 + 呼吸辉光）
-├── .dev.vars.sample                  # 本地环境变量示例
-├── .env.sample                       # 前端构建变量示例
-├── wrangler.sample.jsonc             # Wrangler配置示例
-├── vite.config.ts                    # Vite配置
-└── package.json                      # 项目配置
+│   │       ├── NoteBar.tsx          # 底部水晶便签栏（peek 展开）
+│   │       ├── NoteEditorDialog.tsx # 笔记编辑器（含调色板取色）
+│   │       ├── NotesManagerDialog.tsx # 笔记管理器
+│   │       ├── Settings.tsx         # 设置面板（含调色板管理）
+│   │       └── SettingsWindow.tsx   # 设置窗口外壳
+│   ├── data/                        # 数据文件
+│   │   └── presetSites.json         # 预设站点数据
+│   ├── hooks/                       # 自定义 Hooks
+│   │   ├── useAuth / useAutoSave / useAutoSaveSettings / useClickOutside
+│   │   ├── useDataInitialization / useDeleteIcon / useDragAndDrop / useIconDropHandler
+│   │   ├── useImport / useLongPress / useAddWebsiteShortcut / useTreeSelection
+│   │   └── useWallpaperInit / useWeather / useWeatherLocation / useWeatherLunar
+│   ├── services/                    # 服务层
+│   │   ├── AuthService / ConfigService / FaviconConfigService / ChangeTracker
+│   │   ├── DataRepository           # 统一持久化层
+│   │   ├── DataManager / storeInitializer
+│   │   ├── IconManager / IconDownloadQueue / autoFetchService / iconUtils
+│   │   └── Services / serviceContainer
+│   ├── store/                       # 状态管理（Zustand）
+│   │   ├── usePagesStore.ts         # 页面 + 页面级网站集合（真源）
+│   │   ├── useIconsStore.ts         # 当前页图标视图（派生）
+│   │   ├── usePaletteStore.ts       # 全局调色板（16 槽）
+│   │   ├── useNotesStore / useTodoStore / useSearchStore / useSettingsStore
+│   │   ├── useWallpaperStore / useImportStore / useIconsUIStore
+│   │   └── index.ts / persistence.ts / selectors.ts
+│   ├── types/index.ts               # 类型定义（含 palette-1…16 槽位说明）
+│   ├── utils/                       # 工具函数
+│   │   ├── paletteColors.ts         # 调色板核心（槽位归一化/色名描述/选择构造）
+│   │   ├── noteColors.ts            # 笔记预设色
+│   │   ├── colorUtils.ts            # 颜色换算（hex/hsl 等）
+│   │   └── deviceUtils / idUtils / importExportUtils / logger / wallpaperStorage
+│   ├── App.tsx / main.tsx / constants.ts / index.css / App.css
+├── worker/                          # Cloudflare Workers 代码
+│   ├── middleware/
+│   │   └── auth.ts                  # 认证中间件
+│   ├── routes/                      # API 路由（auth/data/icon/icon-upload/icon-cleanup/title/bing/wallpaper/wallpaper-upload/weather）
+│   ├── utils/                       # constants/crypto/icon/md5/streamLimit
+│   ├── index.ts                     # Worker 入口
+│   └── types.ts                     # Worker 类型
+├── .dev.vars.sample                 # 本地环境变量示例
+├── .env.sample                      # 前端构建变量示例
+├── wrangler.sample.jsonc            # Wrangler 配置示例
+├── vite.config.ts / package.json / tsconfig*.json
+└── LICENSE
 ```
 
 ## 🔧 API 接口
@@ -460,6 +439,8 @@ harborpage/
 - 每颗球在自己的作用域声明 `--tint` / `--tint-2` 身份色与 7 个 `--ball-*` 派生变量（`color-mix` 生成）；CSS 变量不跨兄弟节点继承，兄弟节点（如侧边栏开关球）需本地重建颜色体系
 - 呼吸辉光直接动画元素自身 box-shadow（模糊/扩散值扩张↔回缩），光晕钉在球缘、不产生 O 型环空隙；hover 提亮用 `filter: brightness(1.12)` 而非 saturate
 - 呼吸动画默认 `paused`（避免静止时持续 raster 占用 CPU），仅在 hover / 展开时运行
+- 网站 / 文件夹图标为「水晶方块」玻璃质感：由 `CrystalShell` 提供光效层、IconItem.css 的 `.icon-circle > .cc-*` 驱动，按 `samples/Crystal_block.html` 增加 inset 边缘内高光（玻璃厚度感），颜色以 `--c-hue/--c-sat/--c-lit` HSL 变量驱动并随调色板联动，hover 内光增强
+- 文件夹窗口配色随文件夹当前颜色（`--fc-hue/--fc-sat/--fc-lit`）做分层材质染色（顶部受光 / 中部透明 / 底部回光），仍保留半透明玻璃质感
 
 ### 交互健壮性
 - 所有 `Node.contains()` 调用前先做 `relatedTarget instanceof Node` 守卫：鼠标快速甩出窗口时浏览器会把 relatedTarget 映射为 `window`，未守卫的 `contains(window)` 会抛 `TypeError` 并中断后续逻辑（曾导致笔记栏 hover 收起被卡死）
@@ -477,8 +458,9 @@ harborpage/
 - `DataManager` 使用不可变更新（`this.data = { ...this.data, ... }`）
 - localStorage 键统一使用 `harborpage_` 前缀
 - 数据加载优先级：先读 localStorage，命中则直接返回不再请求 KV；localStorage 为空才走 Cloudflare KV API
-- 持久化追踪键（TRACKED_KEYS）：`settings / websites / searchEngines / todos / todoList / notes / wallpaper / pages`
+- 持久化追踪键（TRACKED_KEYS）：`settings / websites / searchEngines / todos / todoList / notes / wallpaper / pages / palette`
   - `pages` 取代根级 `websites` 作为网站/文件夹的唯一真源，根级 `websites` 在 persist 时被清空
+  - `palette` 仅保存用户改过的槽位（≠ 出厂默认 16 色的槽），读取与导入时统一归一化补齐
   - `currentPageId` **不被持久化**，刷新页面永远显示第一页（导入旧数据触发切默认页的特殊路径除外）
 - `saveToLocal` 默认 500ms 防抖写 localStorage；关键原子操作（如跨页移动）使用 `DataRepository.flushLocal` 立即写入，避免用户立刻刷新读到旧值
 

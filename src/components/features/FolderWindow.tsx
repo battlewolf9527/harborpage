@@ -26,6 +26,8 @@ interface FolderWindowProps {
   onFolderColorChange?: (sel: ColorSelection) => void;
   onEditIcon?: (icon: Website) => void;
   onDeleteIcon?: (iconId: string) => void;
+  /** 空白区域右键：唤出「添加网站」（新增图标将插入当前文件夹） */
+  onAddSite?: () => void;
   onDisbandFolder?: () => void;
   onDeleteFolder?: () => void;
   onMoveToPage?: (icon: Website) => void;
@@ -296,6 +298,7 @@ const FolderWindow: React.FC<FolderWindowProps> = memo(({
   onFolderColorChange,
   onEditIcon,
   onDeleteIcon,
+  onAddSite,
   onDisbandFolder,
   onDeleteFolder,
   onMoveToPage,
@@ -361,6 +364,17 @@ const FolderWindow: React.FC<FolderWindowProps> = memo(({
   const handleColorChange = useCallback((sel: ColorSelection) => {
     onFolderColorChange?.(sel);
   }, [onFolderColorChange]);
+
+  // 内容区空白右键 → 唤出「添加网站」（空文件夹无图标可点时尤为重要）。
+  // 图标（data-icon-id）与按钮/输入等交互控件上的右键不拦截，保持原有行为。
+  const handleContentContextMenu = useCallback((e: React.MouseEvent) => {
+    if (!onAddSite) return;
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-icon-id], button, a, input, textarea, select')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    onAddSite();
+  }, [onAddSite]);
 
   const handleToggleColorMenu = useCallback(() => {
     setShowColorMenu((prev) => !prev);
@@ -575,7 +589,7 @@ const FolderWindow: React.FC<FolderWindowProps> = memo(({
             />
           }
         />
-        <div className="folder-content">
+        <div className="folder-content" onContextMenu={handleContentContextMenu}>
           <div
             className={`folder-icons-grid ${isDraggingOut ? 'dragging-out' : ''}`}
           >

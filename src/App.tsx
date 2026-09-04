@@ -107,6 +107,11 @@ function App() {
     onTrigger: handleShortcutTrigger,
   });
 
+  // 文件夹窗口空白处右键 → 打开「新增网站」（提交后由 handleAddIcon 插入当前文件夹）
+  const handleOpenAddSiteFromFolder = useCallback(() => {
+    setShowAddIcon(true);
+  }, [setShowAddIcon]);
+
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     if (isClickOnEmptyArea(e.target as HTMLElement)) {
@@ -242,6 +247,7 @@ function App() {
         onFolderColorChange={changeFolderColor}
         onEditIcon={handleEditIcon}
         onDeleteIcon={handleDeleteIcon}
+        onAddSite={handleOpenAddSiteFromFolder}
         onDisbandFolder={disbandFolder}
         onDeleteFolder={deleteFolder}
         onMoveToPage={handleOpenMoveDialog}
