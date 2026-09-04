@@ -5,6 +5,7 @@ import { useWallpaperStore } from '../store/useWallpaperStore';
 import { useSearchStore } from '../store/useSearchStore';
 import { useTodoStore } from '../store/useTodoStore';
 import { useNotesStore } from '../store/useNotesStore';
+import { usePaletteStore } from '../store/usePaletteStore';
 import { usePagesStore } from '../store/usePagesStore';
 import { getServices } from './serviceContainer';
 import createLogger from '../utils/logger';
@@ -71,6 +72,10 @@ function syncToDataManager(): void {
     dataManager.updateNotes(ns);
   });
 
+  safeSync('palette', () => {
+    dataManager.updatePalette(usePaletteStore.getState().slots);
+  });
+
   safeSync('pages', () => {
     const ps: Page[] = usePagesStore.getState().pages ?? [];
     dataManager.updatePages(ps);
@@ -111,6 +116,7 @@ export function initializeAllStores(data: UserData): void {
   safeInit('search', () => useSearchStore.getState().initialize(data.searchEngines, data.settings?.defaultSearchEngineId));
   safeInit('todos', () => useTodoStore.getState().initialize(data.todos ?? data.todoList ?? []));
   safeInit('notes', () => useNotesStore.getState().initialize(data.notes));
+  safeInit('palette', () => usePaletteStore.getState().initialize(data.palette));
 
   const failedStores = Object.entries(initResults)
     .filter(([, success]) => !success)
@@ -150,6 +156,7 @@ export async function initializeAllStoresAsync(
     ['search', 65, '正在初始化搜索引擎...', () => useSearchStore.getState().initialize(data.searchEngines, data.settings?.defaultSearchEngineId)],
     ['todos', 77, '正在初始化待办列表...', () => useTodoStore.getState().initialize(data.todos ?? data.todoList ?? [])],
     ['notes', 87, '正在初始化笔记...', () => useNotesStore.getState().initialize(data.notes)],
+    ['palette', 92, '正在初始化调色板...', () => usePaletteStore.getState().initialize(data.palette)],
   ];
 
   for (const [name, percent, task, fn] of steps) {

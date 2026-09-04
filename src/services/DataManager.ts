@@ -1,9 +1,10 @@
-import type { UserData, Website, SearchEngine, Todo, Note, Settings, WallpaperType, Page } from '../types';
+import type { UserData, Website, SearchEngine, Todo, Note, Settings, WallpaperType, Page, PaletteHexMap } from '../types';
 import ChangeTracker from './ChangeTracker';
 import DataRepository from './DataRepository';
 import { STORAGE_KEYS } from '../constants';
 import { mergeById } from '../utils/importExportUtils';
 import { generateId } from '../utils/idUtils';
+import { normalizePaletteMap } from '../utils/paletteColors';
 import { DEFAULT_PAGE_NAME } from '../store/usePagesStore';
 import createLogger from '../utils/logger';
 
@@ -169,6 +170,8 @@ class DataManager {
         searchEngines: mergeById(current.searchEngines, normalizedImported.searchEngines ?? []),
         todos: mergeById(current.todos ?? current.todoList, normalizedImported.todos ?? []),
         notes: mergeById(current.notes, normalizedImported.notes ?? []),
+        // 调色板字段级合并：导入覆盖、未导入保留；key 统一归一化为 palette-N
+        palette: normalizePaletteMap({ ...(current.palette ?? {}), ...(normalizedImported.palette ?? {}) }),
       };
       // 设置项字段级合并：导入字段覆盖，未导入字段保留
       if (normalizedImported.settings) {
@@ -204,6 +207,9 @@ class DataManager {
     ChangeTracker.markChanged('searchEngines');
     ChangeTracker.markChanged('todos');
     ChangeTracker.markChanged('notes');
+    if (normalizedImported.palette) {
+      ChangeTracker.markChanged('palette');
+    }
 
     return merged;
   }
@@ -328,6 +334,12 @@ class DataManager {
   public updateNotes(notes: Note[]): void {
     this.updateData('notes', () => {
       this.data = { ...this.data, notes: notes };
+    });
+  }
+
+  public updatePalette(palette: PaletteHexMap): void {
+    this.updateData('palette', () => {
+      this.data = { ...this.data, palette };
     });
   }
 

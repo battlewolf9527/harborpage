@@ -1,9 +1,9 @@
-/* 文件夹图标网格样式 */
+/* 文件夹图标网格样式
+   注意：不能设 overflow: hidden —— .icon-circle 的玻璃/光效子层
+   （cc-aura 呼吸发光会延伸到壳外）会被裁剪，破坏水晶效果。
+   预览内容已在内部用 padding + 子项圆角保证不出圆角壳。 */
 .folder-icon-grid {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  display: block;
 }
 
 /* 文件夹预览网格 - 田字形排列 */

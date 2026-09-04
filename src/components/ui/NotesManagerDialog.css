@@ -243,23 +243,8 @@
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.32);
 }
 
-/* 16 色便签卡片：与 editor 对齐 — 全部 400 档亮色 + 14% tint */
-.notes-mgr-item.color-yellow { --note-accent: #facc15; --note-soft: rgba(250,204,21,0.14);  border-left-color: var(--note-accent); }
-.notes-mgr-item.color-amber  { --note-accent: #f59e0b; --note-soft: rgba(245,158,11,0.14);  border-left-color: var(--note-accent); }
-.notes-mgr-item.color-orange { --note-accent: #fb923c; --note-soft: rgba(251,146,60,0.14);  border-left-color: var(--note-accent); }
-.notes-mgr-item.color-coral  { --note-accent: #f97316; --note-soft: rgba(249,115,22,0.14);  border-left-color: var(--note-accent); }
-.notes-mgr-item.color-pink   { --note-accent: #f472b6; --note-soft: rgba(244,114,182,0.14); border-left-color: var(--note-accent); }
-.notes-mgr-item.color-rose   { --note-accent: #e879f9; --note-soft: rgba(232,121,249,0.14); border-left-color: var(--note-accent); }
-.notes-mgr-item.color-red    { --note-accent: #f87171; --note-soft: rgba(248,113,113,0.14); border-left-color: var(--note-accent); }
-.notes-mgr-item.color-lime   { --note-accent: #a3e635; --note-soft: rgba(163,230,53,0.14);  border-left-color: var(--note-accent); }
-.notes-mgr-item.color-green  { --note-accent: #4ade80; --note-soft: rgba(74,222,128,0.14);  border-left-color: var(--note-accent); }
-.notes-mgr-item.color-emerald{ --note-accent: #34d399; --note-soft: rgba(52,211,153,0.14);  border-left-color: var(--note-accent); }
-.notes-mgr-item.color-teal   { --note-accent: #2dd4bf; --note-soft: rgba(45,212,191,0.14);  border-left-color: var(--note-accent); }
-.notes-mgr-item.color-cyan   { --note-accent: #22d3ee; --note-soft: rgba(34,211,238,0.14);  border-left-color: var(--note-accent); }
-.notes-mgr-item.color-sky    { --note-accent: #38bdf8; --note-soft: rgba(56,189,248,0.14);  border-left-color: var(--note-accent); }
-.notes-mgr-item.color-blue   { --note-accent: #60a5fa; --note-soft: rgba(96,165,250,0.14);  border-left-color: var(--note-accent); }
-.notes-mgr-item.color-indigo { --note-accent: #818cf8; --note-soft: rgba(129,140,248,0.14); border-left-color: var(--note-accent); }
-.notes-mgr-item.color-purple { --note-accent: #c084fc; --note-soft: rgba(192,132,252,0.14); border-left-color: var(--note-accent); }
+/* 便签主题色由内联 style 注入 --note-accent / --note-soft（16 槽调色板当前色或自定义色），
+   卡片左边条颜色即 border-left: 4px solid var(--note-accent) */
 
 /* 拖拽指示（上/下 蓝色描边） */
 .notes-mgr-item.drop-top {

@@ -1,12 +1,19 @@
 import React, { useState, useRef, useEffect, useMemo, memo, useCallback } from 'react';
 import './FolderWindow.css';
 import IconGrid from '../common/IconGrid';
+import { Palette } from '../common/PalettePicker';
 import type { Website } from '../../types';
 import { useDragAndDrop } from '../../hooks/useDragAndDrop';
 import { useClickOutside } from '../../hooks/useClickOutside';
+import { usePaletteStore } from '../../store/usePaletteStore';
+import { resolveColorHex, type ColorSelection } from '../../utils/paletteColors';
 
 interface FolderWindowProps {
   folderName: string;
+  /** 文件夹水晶材质色快照/静态色（未设置时为空串，展示用缺省色） */
+  folderColor?: string;
+  /** 绑定的全局调色板槽 id（跟随槽位当前色；旧数据无此字段） */
+  folderColorSlot?: string;
   icons: Website[];
   isOpen: boolean;
   onClose: () => void;
@@ -14,6 +21,8 @@ interface FolderWindowProps {
   onIconDragOut: (icon: Website) => void;
   onIconsChange: (icons: Website[]) => void;
   onFolderNameChange: (newName: string) => void;
+  /** 修改文件夹水晶材质色：空选择（{}）= 恢复缺省色 */
+  onFolderColorChange?: (sel: ColorSelection) => void;
   onEditIcon?: (icon: Website) => void;
   onDeleteIcon?: (iconId: string) => void;
   onDisbandFolder?: () => void;
@@ -29,6 +38,8 @@ interface FolderHeaderProps {
   onMouseEnter: () => void;
   onMouseLeave: () => void;
   onClose: () => void;
+  /** 关闭按钮左侧的可选控件（如颜色选择） */
+  headerActions?: React.ReactNode;
 }
 
 const FolderHeader: React.FC<FolderHeaderProps> = memo(({
@@ -38,6 +49,7 @@ const FolderHeader: React.FC<FolderHeaderProps> = memo(({
   onMouseEnter,
   onMouseLeave,
   onClose,
+  headerActions,
 }) => (
   <div className="folder-header">
     <div className="folder-name-container">
@@ -61,13 +73,77 @@ const FolderHeader: React.FC<FolderHeaderProps> = memo(({
         )}
       </div>
     </div>
-    <button className="folder-close-btn" onClick={onClose}>
-      ✕
-    </button>
+    <div className="folder-header-actions">
+      {headerActions}
+      <button className="folder-close-btn" onClick={onClose}>
+        ✕
+      </button>
+    </div>
   </div>
 ));
 
 FolderHeader.displayName = 'FolderHeader';
+
+/* ── 文件夹水晶材质色 ──
+   取色走共享 Palette（选择模式，4×4 自动换行）：点槽选中；再点已选槽或「自定义颜色」弹取色器；
+   缺省色对齐 IconItem.css 的默认晶蓝 #9aa7ff */
+const DEFAULT_FOLDER_COLOR = '#9aa7ff';
+
+interface FolderColorControlProps {
+  /** 颜色球展示色：未设置时由调用方传入缺省色 */
+  displayColor: string;
+  /** 当前颜色选择（color=快照/静态 hex，colorSlot=绑定槽 id） */
+  value: ColorSelection;
+  open: boolean;
+  onToggle: () => void;
+  onChange: (sel: ColorSelection) => void;
+}
+
+const FolderColorControl: React.FC<FolderColorControlProps> = memo(({ displayColor, value, open, onToggle, onChange }) => {
+  const controlRef = useRef<HTMLDivElement>(null);
+
+  const handleClose = useCallback(() => {
+    if (open) onToggle();
+  }, [open, onToggle]);
+
+  useClickOutside(controlRef, {
+    handler: handleClose,
+    enabled: open,
+  });
+
+  return (
+    <div ref={controlRef} className={`folder-color-control ${open ? 'open' : ''}`}>
+      <button
+        type="button"
+        className="folder-color-btn"
+        onClick={onToggle}
+        aria-label="设置文件夹颜色"
+        aria-expanded={open}
+        title="文件夹颜色"
+      >
+        <span className="folder-color-ball" style={{ background: displayColor }} />
+      </button>
+      {open && (
+        <div className="folder-color-popover" role="dialog" aria-label="选择文件夹颜色">
+          <p className="folder-color-popover-title">文件夹颜色</p>
+          <Palette value={value} onChange={onChange} />
+          <div className="folder-color-popover-footer">
+            <button
+              type="button"
+              className="folder-color-reset-btn"
+              title="恢复为默认水晶蓝"
+              onClick={() => onChange({})}
+            >
+              恢复默认
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+});
+
+FolderColorControl.displayName = 'FolderColorControl';
 
 interface FolderActionsProps {
   iconsCount: number;
@@ -207,6 +283,8 @@ FolderRenameDialog.displayName = 'FolderRenameDialog';
 
 const FolderWindow: React.FC<FolderWindowProps> = memo(({
   folderName,
+  folderColor = '',
+  folderColorSlot,
   icons,
   isOpen,
   onClose,
@@ -214,6 +292,7 @@ const FolderWindow: React.FC<FolderWindowProps> = memo(({
   onIconDragOut,
   onIconsChange,
   onFolderNameChange,
+  onFolderColorChange,
   onEditIcon,
   onDeleteIcon,
   onDisbandFolder,
@@ -235,6 +314,7 @@ const FolderWindow: React.FC<FolderWindowProps> = memo(({
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [confirmAction, setConfirmAction] = useState<'disband' | 'delete' | null>(null);
   const [isClosing, setIsClosing] = useState(false);
+  const [showColorMenu, setShowColorMenu] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -252,6 +332,27 @@ const FolderWindow: React.FC<FolderWindowProps> = memo(({
     if (isEditingName) return editingName;
     return folderName;
   }, [folderName, editingName, isEditingName]);
+
+  const slots = usePaletteStore((s) => s.slots);
+
+  // 当前颜色选择：绑定槽 + 快照（跟随槽位当前色），否则静态色；均无 = 未设置
+  const folderSelection: ColorSelection = useMemo(() => {
+    const sel: ColorSelection = {};
+    if (folderColor) sel.color = folderColor;
+    if (folderColorSlot) sel.colorSlot = folderColorSlot;
+    return sel;
+  }, [folderColor, folderColorSlot]);
+
+  // 颜色球展示的有效色：绑定槽→槽当前色；静态→解析快照；未设置（空串）→缺省水晶蓝
+  const effectiveFolderColor = resolveColorHex(folderSelection, slots) || DEFAULT_FOLDER_COLOR;
+
+  const handleColorChange = useCallback((sel: ColorSelection) => {
+    onFolderColorChange?.(sel);
+  }, [onFolderColorChange]);
+
+  const handleToggleColorMenu = useCallback(() => {
+    setShowColorMenu((prev) => !prev);
+  }, []);
 
   const {
     draggedIcon,
@@ -452,6 +553,15 @@ const FolderWindow: React.FC<FolderWindowProps> = memo(({
           onMouseEnter={() => setShowEditButton(true)}
           onMouseLeave={() => setShowEditButton(false)}
           onClose={handleClose}
+          headerActions={
+            <FolderColorControl
+              displayColor={effectiveFolderColor}
+              value={folderSelection}
+              open={showColorMenu}
+              onToggle={handleToggleColorMenu}
+              onChange={handleColorChange}
+            />
+          }
         />
         <div className="folder-content">
           <div

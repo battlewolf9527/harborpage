@@ -1,0 +1,132 @@
+/* ════════════════════════════════════════════════════════════════
+   PalettePicker.css — 通用调色板组件（Palette）视觉
+   结构：
+   .palette                容器（palette-select / palette-settings）
+   └ .palette-grid         16 槽色块 + 自定义按钮（选择模式），flex-wrap 自然换行
+       ├ .palette-cell     圆形色块（active 选中环 / modified 已改标记）
+       └ .palette-custom-btn（选择模式）自定义颜色按钮，随宽度自动同行/折行
+   ════════════════════════════════════════════════════════════════ */
+
+.palette {
+  --palette-cell: 24px;
+  --palette-gap: 8px;
+}
+
+/* 16 槽 + 自定义按钮：同一 flex-wrap 流，不刻意换行；各行居中，由容器宽度自然决定每行个数 */
+.palette-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--palette-gap);
+}
+
+/* ── 圆形色块 ── */
+.palette-cell {
+  position: relative;
+  width: var(--palette-cell);
+  height: var(--palette-cell);
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  background-clip: padding-box;
+  cursor: pointer;
+  flex-shrink: 0;
+  line-height: 1;
+  transition: transform var(--motion-fast), border-color var(--motion-fast),
+    box-shadow var(--motion-fast);
+}
+.palette-cell:hover {
+  transform: scale(1.14);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+.palette-cell:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 1px;
+}
+.palette-cell.active {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+/* 选中对勾：加投影保证在白色/浅色槽上也可见 */
+.palette-cell-check {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.75), 0 0 4px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+.palette-cell-check::before {
+  content: '✓';
+}
+
+/* 设置模式：已修改槽位的右上角小圆点提示 */
+.palette-cell.modified::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+
+/* ── 自定义颜色按钮（选择模式）：作为 flex-wrap 的一员随宽度自然同行/折行 ── */
+.palette-custom-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 11px;
+  min-height: 0;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.11));
+  border-radius: var(--radius-sm, 10px);
+  background: color-mix(in srgb, var(--glass-surface-300, rgba(17, 20, 34, 0.78)) 55%, transparent);
+  color: var(--text-tertiary, rgba(203, 213, 225, 0.65));
+  font-size: var(--font-xs, 12px);
+  font-weight: 500;
+  font-family: inherit;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: all var(--motion-fast, 0.2s ease);
+}
+.palette-custom-btn:hover,
+.palette-custom-btn.active {
+  color: var(--text-primary, #fff);
+  border-color: color-mix(in srgb, var(--aurora-2, #8aa9ff) 55%, rgba(255, 255, 255, 0.11));
+  background: color-mix(in srgb, var(--aurora-2, #8aa9ff) 14%, transparent);
+}
+
+/* 自定义取色圆点：未选自定义色时显示彩虹渐变，选中后显示当前自定义色 */
+.palette-custom-swatch {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background: conic-gradient(
+    #ffffff, #facc15, #f59e0b, #fb923c,
+    #f472b6, #e879f9, #f87171,
+    #4ade80, #a3e635, #34d399, #2dd4bf, #22d3ee,
+    #60a5fa, #38bdf8, #c084fc, #818cf8,
+    #ffffff
+  );
+  transition: border-color var(--motion-fast, 0.2s ease);
+}
+.palette-custom-btn.active .palette-custom-swatch {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
+}

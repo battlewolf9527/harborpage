@@ -7,26 +7,23 @@ import { getFaviconUrl, isPrivateNetworkAddress, isUrlLike, generateColoredTextS
 import { preloadIconForUrl } from '../../services/iconUtils';
 import DataRepository from '../../services/DataRepository';
 import Toast from './Toast';
+import { Palette } from './PalettePicker';
 import { generateId } from '../../utils/idUtils';
 import createLogger from '../../utils/logger';
+import { usePaletteStore } from '../../store/usePaletteStore';
+import { canonicalSlotId, resolveColorHex, type ColorSelection } from '../../utils/paletteColors';
 
 const logger = createLogger('EditWebsite');
 
-// 图标颜色预设：透明 + 9 种主题色，最后一项为自定义（彩虹渐变标记）
-const ICON_COLOR_PRESETS = [
-  '',          // 透明
-  '#EF4444',   // 红
-  '#F97316',   // 橙
-  '#EAB308',   // 黄
-  '#22C55E',   // 绿
-  '#14B8A6',   // 青
-  '#3B82F6',   // 蓝
-  '#6366F1',   // 靛
-  '#A855F7',   // 紫
-  '#EC4899',   // 粉
-];
-
-// 自定义颜色：不在预设中的颜色由 color picker 提供，彩虹渐变按钮表示
+/** 图标编辑草稿：iconColor=当前色快照/静态色，colorSlot=绑定的调色板槽 id（可选） */
+interface IconDraft {
+  id: string;
+  name: string;
+  url: string;
+  icon: string;
+  iconColor: string;
+  colorSlot?: string;
+}
 
 function getInitialIcon(icon: string | undefined): string {
   if (!icon) return '';
@@ -60,8 +57,9 @@ interface EditWebsiteProps {
 const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, initialUrl }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const urlInputRef = useRef<HTMLInputElement>(null);
-  const colorInputRef = useRef<HTMLInputElement>(null);
   const { authService, iconManager } = getServices();
+  // 全局 16 槽当前色：预览文字图标 / 取色器高亮都跟随槽位实时色
+  const slots = usePaletteStore((s) => s.slots);
 
   // 计算初始URL状态：编辑时从 icon.url 拆分，新增时从 initialUrl 拆分
   const [initialUrlState] = useState(() => {
@@ -69,12 +67,14 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
     return splitUrl(sourceUrl);
   });
 
-  const [newIcon, setNewIcon] = useState({
+  const [newIcon, setNewIcon] = useState<IconDraft>({
     id: icon?.id || generateId(),
     name: icon?.name || '',
     url: initialUrlState.urlWithoutProtocol,
     icon: getInitialIcon(icon?.icon),
     iconColor: icon?.iconColor || '',
+    // 编辑旧数据时归一化槽位 id（旧预设名 → palette-N，保存即升级）
+    ...(canonicalSlotId(icon?.colorSlot) ? { colorSlot: canonicalSlotId(icon?.colorSlot) } : {}),
   });
 
   // URL协议选择（默认https://）
@@ -198,8 +198,8 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
     const newValue = before + urlWithoutProtocol + after;
 
     setProtocol(detectedProtocol);
-    setNewIcon({ ...newIcon, url: newValue });
-    if (errors.url) setErrors({ ...errors, url: '' });
+    setNewIcon((prev) => ({ ...prev, url: newValue }));
+    setErrors((prev) => (prev.url ? { ...prev, url: '' } : prev));
 
     if (urlTimeoutRef.current) clearTimeout(urlTimeoutRef.current);
     urlTimeoutRef.current = setTimeout(() => {
@@ -212,7 +212,7 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
         input.setSelectionRange(newCursorPos, newCursorPos);
       }
     });
-  }, [newIcon.url, errors.url]);
+  }, [newIcon.url]);
 
   /**
    * 复制处理：自动将协议附加到剪贴板
@@ -278,6 +278,27 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  /**
+   * 颜色选择回调：选中槽→记录快照色并绑定 colorSlot；
+   * 自定义/清除→只写 color（静态），不绑定槽位
+   */
+  const handleColorChange = useCallback((sel: ColorSelection) => {
+    setNewIcon((prev) => {
+      const next: IconDraft = { ...prev };
+      if (sel.colorSlot) {
+        next.iconColor = sel.color || '';
+        next.colorSlot = sel.colorSlot;
+      } else if (sel.color) {
+        next.iconColor = sel.color;
+        delete next.colorSlot;
+      } else {
+        next.iconColor = '';
+        delete next.colorSlot;
+      }
+      return next;
+    });
+  }, []);
+
   const handleAutoFetchSelect = useCallback((iconDataUrl: string | null, r2Url?: string) => {
     if (r2Url) {
       // 使用R2缓存的图标
@@ -316,6 +337,7 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
       };
       if (iconInput) baseIconData.icon = iconInput;
       if (currentIcon.iconColor) baseIconData.iconColor = currentIcon.iconColor;
+      if (currentIcon.colorSlot) baseIconData.colorSlot = currentIcon.colorSlot;
       if (icon?.isFolder !== undefined) baseIconData.isFolder = icon.isFolder;
       if (icon?.children !== undefined) baseIconData.children = icon.children;
       onSubmit(baseIconData);
@@ -333,11 +355,13 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
   }, [handleAddIconSubmit, onClose]);
 
   const iconPreview = useMemo(() => {
+    // 当前草稿的最终显示色（绑定槽→槽当前色；hex/旧名→静态解析；空→缺省）
+    const resolvedTextColor = resolveColorHex(newIcon, slots);
     // 如果用户输入了自定义图标
     if (newIcon.icon && !newIcon.icon.startsWith('/api/icon') && !newIcon.icon.startsWith('/api/favicon')) {
       // 非URL格式的文本（如 "Ba"），生成透明背景的SVG预览，文字颜色由 iconColor 决定
       if (!isUrlLike(newIcon.icon) && !newIcon.icon.startsWith('data:')) {
-        return generateColoredTextSvg(newIcon.icon, newIcon.iconColor);
+        return generateColoredTextSvg(newIcon.icon, resolvedTextColor);
       }
       return newIcon.icon;
     }
@@ -370,7 +394,7 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
     }
     
     return '';
-  }, [newIcon.icon, newIcon.iconColor, debouncedUrl, validateUrl, icon, protocol]);
+  }, [newIcon, slots, debouncedUrl, validateUrl, icon, protocol]);
 
   // iconPreview 变化时重置预览错误状态
   useEffect(() => {
@@ -436,6 +460,7 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
         url: urlWithoutProtocol,
         icon: getInitialIcon(icon.icon),
         iconColor: icon.iconColor || '',
+        ...(icon.colorSlot ? { colorSlot: icon.colorSlot } : {}),
       });
       setDebouncedUrl(urlWithoutProtocol);
       setErrors({ name: '', url: '' });
@@ -451,11 +476,6 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
     };
   }, []);
 
-  // 预览图标的背景色：文字图标的 iconColor 已作为文字颜色，不再设背景；
-  // URL 图片图标用 iconColor 作为 img 背景色（透明 favicon 会显示彩色底）
-  const isTextIconPreview = !!newIcon.icon && !isUrlLike(newIcon.icon) && !newIcon.icon.startsWith('data:');
-  const previewImgStyle = newIcon.iconColor && !isTextIconPreview ? { background: newIcon.iconColor } : undefined;
-
   return (
     <div className="edit-website-container">      
       <div className="edit-website-form">
@@ -465,7 +485,6 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
               src={iconPreview}
               alt="图标预览"
               className="edit-website-preview-image"
-              style={previewImgStyle}
               referrerPolicy="no-referrer"
               onError={() => setPreviewError(true)}
             />
@@ -598,7 +617,7 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
               className="edit-website-button edit-website-button-save-r2"
               title="将当前预览图标保存到R2并自动设置图标URL"
             >
-              {savingToR2 ? '保存中...' : '保存到R2'}
+              {savingToR2 ? '保存中...' : '保存'}
             </button>
           </div>
           {(uploading || savingToR2) && (
@@ -614,44 +633,13 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
 
         <div className="edit-website-input-group">
           <label className="edit-website-label">图标颜色</label>
-          <div className="edit-website-color-picker">
-            {ICON_COLOR_PRESETS.map((color) => {
-              const isActive = newIcon.iconColor === color;
-              const isTransparent = color === '';
-              return (
-                <div
-                  key={color || 'transparent'}
-                  role="button"
-                  tabIndex={5}
-                  title={isTransparent ? '透明' : color}
-                  aria-label={isTransparent ? '透明' : `颜色 ${color}`}
-                  aria-pressed={isActive}
-                  className={`edit-website-color-swatch ${isActive ? 'active' : ''} ${isTransparent ? 'transparent' : ''}`}
-                  style={isTransparent ? undefined : { background: color }}
-                  onClick={() => setNewIcon({ ...newIcon, iconColor: color })}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setNewIcon({ ...newIcon, iconColor: color }); } }}
-                />
-              );
-            })}
-            {/* 自定义颜色按钮：彩虹渐变背景，选中时显示对勾 */}
-            <div
-              role="button"
-              tabIndex={6}
-              className={`edit-website-color-custom ${(!!newIcon.iconColor && !ICON_COLOR_PRESETS.includes(newIcon.iconColor)) ? 'active' : ''}`}
-              title="自定义颜色"
-              onClick={() => colorInputRef.current?.click()}
-            />
-            {/* 隐藏的原生颜色选择器 */}
-            <input
-              ref={colorInputRef}
-              type="color"
-              tabIndex={-1}
-              aria-label="自定义颜色"
-              className="edit-website-color-hidden"
-              value={newIcon.iconColor && /^#[0-9A-Fa-f]{6}$/.test(newIcon.iconColor) ? newIcon.iconColor : '#3B82F6'}
-              onChange={(e) => setNewIcon({ ...newIcon, iconColor: e.target.value.toUpperCase() })}
-            />
-          </div>
+          <Palette
+            value={{
+              ...(newIcon.iconColor ? { color: newIcon.iconColor } : {}),
+              ...(newIcon.colorSlot ? { colorSlot: newIcon.colorSlot } : {}),
+            }}
+            onChange={handleColorChange}
+          />
         </div>
 
         <div className="edit-website-buttons">

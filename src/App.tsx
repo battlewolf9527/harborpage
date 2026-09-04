@@ -69,6 +69,7 @@ function App() {
     websites, openFolder, setOpenFolder, setWebsiteIcons,
     addIcon, updateIcon, dragIconOut, changeFolderName,
     disbandFolder, deleteFolder, updateFolderIcons, createFolder,
+    changeFolderColor,
   } = useIconsDataSelector();
 
   const {
@@ -159,6 +160,11 @@ function App() {
     setShowEditIcon(true);
   }, [setEditingIcon, setShowEditIcon]);
 
+  // 当前打开文件夹对象（供取色/展示其水晶材质色：iconColor 快照/静态 + colorSlot 槽绑定）
+  const openFolderIcon = openFolder
+    ? websites.find((item) => item.isFolder && item.id === openFolder.id) ?? null
+    : null;
+
   if (isCheckingAuth) {
     return (
       <div className="app-container" data-click-area="empty" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
@@ -224,6 +230,8 @@ function App() {
       
       <FolderWindow
         folderName={openFolder?.name || ''}
+        folderColor={openFolderIcon?.iconColor || ''}
+        {...(openFolderIcon?.colorSlot ? { folderColorSlot: openFolderIcon.colorSlot } : {})}
         icons={openFolder?.websites || []}
         isOpen={!!openFolder}
         onClose={() => setOpenFolder(null)}
@@ -231,6 +239,7 @@ function App() {
         onIconDragOut={dragIconOut}
         onIconsChange={updateFolderIcons}
         onFolderNameChange={changeFolderName}
+        onFolderColorChange={changeFolderColor}
         onEditIcon={handleEditIcon}
         onDeleteIcon={handleDeleteIcon}
         onDisbandFolder={disbandFolder}

@@ -337,11 +337,16 @@
   color: var(--text-primary);
 }
 
+/* 三个图标操作按钮（上传 / 智能获取 / 保存）纵向各占一行，避免挤在同一行 */
 .edit-website-upload-buttons {
   display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+}
+.edit-website-upload-buttons .edit-website-button,
+.edit-website-upload-button-wrapper {
+  width: 100%;
 }
 
 /* 自动获取图标按钮 */
@@ -412,104 +417,3 @@
   box-shadow: 0 10px 24px color-mix(in srgb, var(--aurora-1) 40%, transparent);
 }
 .edit-website-button-save-r2:disabled { opacity: 0.5; cursor: not-allowed; }
-
-/* ── 颜色选择器 ── */
-.edit-website-color-picker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-}
-.edit-website-color-swatch {
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.22);
-  cursor: pointer;
-  transition: all var(--motion-fast);
-  position: relative;
-  overflow: hidden;
-  line-height: 1;
-}
-.edit-website-color-swatch:hover {
-  transform: scale(1.12);
-  border-color: rgba(255, 255, 255, 0.55);
-}
-.edit-website-color-swatch.active {
-  border-color: #fff;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--aurora-2) 45%, transparent),
-              var(--aurora-glow);
-}
-.edit-website-color-swatch::after {
-  content: '✓';
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: var(--font-md);
-  font-weight: 700;
-  line-height: 1;
-  opacity: 0;
-  transition: opacity 120ms ease;
-  pointer-events: none;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-}
-.edit-website-color-swatch.active::after { opacity: 1; }
-
-.edit-website-color-swatch.transparent {
-  background:
-    linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.2) 75%),
-    linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.2) 75%);
-  background-size: 10px 10px;
-  background-position: 0 0, 5px 5px;
-  background-color: rgba(255, 255, 255, 0.06);
-}
-
-.edit-website-color-custom {
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.22);
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: all var(--motion-fast);
-  line-height: 1;
-  background: conic-gradient(
-    #EF4444 0deg, #F97316 30deg, #EAB308 60deg,
-    #22C55E 90deg, #14B8A6 120deg, #3B82F6 150deg,
-    #6366F1 180deg, #A855F7 210deg, #EC4899 240deg,
-    #EF4444 360deg
-  );
-}
-.edit-website-color-custom:hover { transform: scale(1.12); border-color: rgba(255,255,255,0.55); }
-.edit-website-color-custom.active {
-  border-color: #fff;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--aurora-2) 45%, transparent),
-              var(--aurora-glow);
-}
-.edit-website-color-custom::after {
-  content: '✓';
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: var(--font-md);
-  font-weight: 700;
-  line-height: 1;
-  opacity: 0;
-  transition: opacity 120ms ease;
-  pointer-events: none;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
-}
-.edit-website-color-custom.active::after { opacity: 1; }
-
-.edit-website-color-hidden {
-  position: absolute;
-  width: 0; height: 0;
-  opacity: 0;
-  pointer-events: none;
-  overflow: hidden;
-}

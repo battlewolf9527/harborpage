@@ -217,8 +217,34 @@
   margin-top: 12px;
 }
 
-/* ── 通用按钮：玻璃幽灵 + 10px 圆 ── */
-.settings-panel button {
+/* ── 调色板管理块（个性化区）── */
+.palette-manage-block {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.palette-manage-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.palette-manage-title {
+  font-size: var(--font-md);
+  font-weight: 500;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+.palette-manage-hint {
+  font-size: var(--font-xs);
+  color: var(--text-quaternary);
+}
+
+/* ── 通用按钮：玻璃幽灵 + 10px 圆 ──
+   调色板组件（Palette）自带紧凑色块按钮（.palette-cell），
+   用 :not() 排除，避免被拉伸成通栏玻璃按钮。 */
+.settings-panel button:not(.palette-cell) {
   padding: 0 16px;
   min-height: var(--btn-h);
   border: var(--glass-border);
@@ -239,13 +265,13 @@
   line-height: 1;
   text-align: center;
 }
-.settings-panel button:hover:not(:disabled) {
+.settings-panel button:hover:not(:disabled):not(.palette-cell) {
   background: var(--glass-surface-hover);
   color: var(--text-primary);
   border-color: rgba(255, 255, 255, 0.18);
   transform: translateY(-1px);
 }
-.settings-panel button:active { transform: translateY(0); }
+.settings-panel button:active:not(.palette-cell) { transform: translateY(0); }
 
 .settings-panel button:disabled {
   opacity: 0.45;
@@ -254,16 +280,22 @@
   box-shadow: none;
 }
 
-.settings-section button {
+.settings-section button:not(.palette-cell) {
   background: var(--glass-surface-300);
   border: var(--glass-border);
   color: var(--text-secondary);
 }
-.settings-section button:hover:not(:disabled) {
+.settings-section button:hover:not(:disabled):not(.palette-cell) {
   background: var(--glass-surface-hover);
   border-color: rgba(255, 255, 255, 0.18);
   transform: translateY(-1px);
   color: var(--text-primary);
+}
+
+/* 设置模式调色板：大色块自动排成 2 行 × 8 列 */
+.palette-manage-block .palette {
+  --palette-cell: 30px;
+  --palette-gap: 10px;
 }
 
 /* ── 滑动条：统一蓝紫色滑块 ── */

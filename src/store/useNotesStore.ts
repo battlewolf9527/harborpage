@@ -1,20 +1,15 @@
 import { create } from 'zustand';
-import type { Note, NoteColor } from '../types';
+import type { Note } from '../types';
 import { setupAutoPersist } from './persistence';
 import { getServices } from '../services/serviceContainer';
 import { generateId } from '../utils/idUtils';
+import { NOTE_COLOR_PRESETS } from '../utils/noteColors';
+import { canonicalSlotId, type ColorSelection } from '../utils/paletteColors';
 
 type NotesUpdater = Note[] | ((prev: Note[]) => Note[]);
 
-// 预设便签颜色循环（新增笔记时轮询分配，避免一排同色；与 types/NoteColor 字面量严格一致 16 色）
-const COLOR_ROTATION: NoteColor[] = [
-  'yellow', 'amber', 'orange', 'coral',
-  'pink', 'rose',
-  'red',
-  'green', 'lime', 'emerald', 'teal', 'cyan',
-  'blue', 'sky',
-  'purple', 'indigo',
-];
+// 预设便签颜色循环（新增笔记时随机分配，避免一排同色；随共享 16 色预设变化）
+const COLOR_ROTATION: string[] = NOTE_COLOR_PRESETS.map((p) => p.name);
 
 export interface NotesState {
   notes: Note[];
@@ -23,7 +18,7 @@ export interface NotesState {
   setNotes: (notes: NotesUpdater) => void;
 
   /** 新增笔记：在当前数组开头插入，分配颜色与时间戳；返回生成的 id */
-  addNote: (input: { title?: string; content?: string; color?: NoteColor }) => string;
+  addNote: (input: { title?: string; content?: string; color?: string; colorSlot?: string }) => string;
 
   /** 按 id 更新笔记（浅合并），自动刷新 updatedAt */
   updateNote: (id: string, patch: Partial<Omit<Note, 'id' | 'createdAt'>>) => void;
@@ -31,8 +26,11 @@ export interface NotesState {
   /** 按 id 删除笔记 */
   deleteNote: (id: string) => void;
 
-  /** 更换便签颜色 */
-  setNoteColor: (id: string, color: NoteColor) => void;
+  /** 更换便签颜色为静态色（预设名或自定义 #rrggbb），清除槽位绑定 */
+  setNoteColor: (id: string, color: string) => void;
+
+  /** 应用颜色选择：sel 含 colorSlot → 绑定槽位（color 记快照）；否则为静态自定义色（移除 colorSlot） */
+  applyNoteColor: (id: string, sel: ColorSelection) => void;
 
   /** 拖拽重排（任意两项之间重排；允许 toIndex === notes.length 即末尾） */
   reorderNotes: (fromIndex: number, toIndex: number) => void;
@@ -43,7 +41,7 @@ export interface NotesState {
 
 const initialState: Omit<NotesState,
   | 'setNotes' | 'addNote' | 'updateNote' | 'deleteNote'
-  | 'setNoteColor' | 'reorderNotes' | 'initialize'
+  | 'setNoteColor' | 'applyNoteColor' | 'reorderNotes' | 'initialize'
 > = {
   notes: [],
 };
@@ -64,7 +62,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
 
     // 分配颜色：若调用方显式传 color → 用传入；否则从 COLOR_ROTATION 随机挑，保证新建笔记每次默认颜色不同。
     const randomIdx = Math.floor(Math.random() * COLOR_ROTATION.length);
-    const color: NoteColor = input.color ?? COLOR_ROTATION[randomIdx];
+    const color: string = input.color ?? COLOR_ROTATION[randomIdx];
 
     const note: Note = {
       id,
@@ -75,6 +73,8 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       // pinned 字段仅保留用于历史数据读取；UI 入口已移除不再写入
       pinned: false,
       color,
+      // colorSlot 落盘前归一化为 palette-N（兼容旧预设名入参）
+      ...(canonicalSlotId(input.colorSlot) ? { colorSlot: canonicalSlotId(input.colorSlot) } : {}),
     };
 
     // 新笔记插在数组最前（置顶语义已移除，拖拽排序自由重排）
@@ -104,7 +104,27 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   },
 
   setNoteColor: (id, color) => {
-    get().updateNote(id, { color });
+    get().applyNoteColor(id, color ? { color } : {});
+  },
+
+  applyNoteColor: (id, sel) => {
+    set((state) => {
+      let changed = false;
+      const next = state.notes.map((n) => {
+        if (n.id !== id) return n;
+        const copy: Note = { ...n };
+        if (sel?.color) copy.color = sel.color;
+        if (sel?.colorSlot) copy.colorSlot = sel.colorSlot;
+        else delete copy.colorSlot;
+        const sameColor = copy.color === n.color;
+        const sameSlot = (copy.colorSlot ?? '') === (n.colorSlot ?? '');
+        if (sameColor && sameSlot) return n;
+        changed = true;
+        copy.updatedAt = new Date().toISOString();
+        return copy;
+      });
+      return changed ? { notes: next } : state;
+    });
   },
 
   reorderNotes: (fromIndex, toIndex) => {

@@ -14,6 +14,13 @@ export interface Website {
   icon?: string;
   /** 图标底色（CSS 颜色值，如 '#2563EB' 或 'transparent'），默认透明 */
   iconColor?: string;
+  /**
+   * 绑定的全局调色板槽 id（palette-1 … palette-16，仅表位置、不含颜色语义；
+   * 兼容旧预设名，如 'blue'，见 paletteColors.ts）。
+   * 设置后该元素颜色实时跟随槽位当前色（iconColor 作为快照/回退保留）；
+   * 旧数据无此字段，一律按自定义静态色处理，不参与槽位联动。
+   */
+  colorSlot?: string;
   isFolder?: boolean;
   children?: Website[];
 }
@@ -39,9 +46,12 @@ export interface Todo {
   createdAt: number;
 }
 
-// 便签颜色（与多彩便签球/卡片视觉对应；按色相渐变排列，保证相邻两篇不撞色）
+// 便签颜色（与多彩便签球/卡片视觉对应；白色居首，其余按色相渐变排列，保证相邻两篇不撞色）
+// 历史/预设值使用下列 16 色名字面量；自定义色另存任意 #rrggbb（见 Note.color 注释）
+// 注意：'coral' 曾作为预设，现因与 orange 过近退役，仅保留读取兼容（见 noteColors.ts RETIRED_PRESET_HEX）
 export type NoteColor =
-  | 'yellow' | 'amber' | 'orange' | 'coral'
+  | 'white'
+  | 'yellow' | 'amber' | 'orange'
   | 'pink' | 'rose'
   | 'red'
   | 'green' | 'lime' | 'emerald' | 'teal' | 'cyan'
@@ -58,7 +68,10 @@ export interface Note {
   updatedAt?: string;   // 最后更新时间（用于列表默认排序）
   /** @deprecated 已移除置顶 UI 入口，字段保留仅用于读取历史数据，新建/修改不会再写 */
   pinned?: boolean;
-  color?: NoteColor;    // 便签球/卡片颜色
+  /** 便签球/卡片颜色：16 色预设名（如 'white'，旧数据静态色）或自定义 #rrggbb；新绑定槽位的便签此字段存当前色快照 */
+  color?: string;
+  /** 绑定的全局调色板槽 id（palette-N 位置 id，兼容旧预设名；无此字段 = 静态自定义色） */
+  colorSlot?: string;
 }
 
 // 文件夹状态类型（运行时状态，持久化中不存储此结构）
@@ -104,6 +117,9 @@ export interface Settings extends VisualSettings {
   faviconSources?: FaviconSource[];
 }
 
+// 全局调色板：槽 id（palette-N）→ 当前 hex（id 见 paletteColors.PALETTE_SLOT_IDS，缺省按默认 16 色补齐）
+export type PaletteHexMap = Record<string, string>;
+
 // 用户数据类型
 export interface UserData {
   settings?: Settings;
@@ -115,4 +131,6 @@ export interface UserData {
   todoList?: Todo[]; // 向后兼容：旧数据使用 todoList 字段
   notes?: Note[];
   wallpaper?: WallpaperData;
+  /** 全局调色板（16 槽当前色）；未设置 = 全部使用默认 16 色 */
+  palette?: PaletteHexMap;
 }

@@ -55,6 +55,7 @@ export const useIconsDataSelector = () => {
     deleteIcon: s.deleteIcon,
     dragIconOut: s.dragIconOut,
     changeFolderName: s.changeFolderName,
+    changeFolderColor: s.changeFolderColor,
     disbandFolder: s.disbandFolder,
     deleteFolder: s.deleteFolder,
     updateFolderIcons: s.updateFolderIcons,

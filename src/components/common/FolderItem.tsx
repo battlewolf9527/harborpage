@@ -1,13 +1,16 @@
 import React, { useMemo, memo, useState, useRef, useCallback } from 'react';
 import './FolderItem.css';
-import { IconType, isUrlLike } from '../../services/IconManager';
+import { IconType } from '../../services/IconManager';
 import type { Website } from '../../types';
 import { handleIconLoadError } from '../../services/iconUtils';
 import { getServices } from '../../services/serviceContainer';
 import DraggableIconWrapper from './DraggableIconWrapper';
+import CrystalShell from './CrystalShell';
 import { isTouchDevice } from '../../utils/deviceUtils';
 import { useLongPress } from '../../hooks/useLongPress';
 import { useClickOutside } from '../../hooks/useClickOutside';
+import { usePaletteStore } from '../../store/usePaletteStore';
+import { resolveIconHslVars } from '../../utils/paletteColors';
 
 interface FolderItemProps {
   icon: Website;
@@ -41,6 +44,13 @@ const FolderItem: React.FC<FolderItemProps> = ({
   onMoveToPage,
 }) => {
   const { iconManager } = getServices();
+  const slots = usePaletteStore((s) => s.slots);
+
+  // 水晶材质主色：绑定槽→槽当前色；旧 hex→静态；未设置→CSS 缺省晶蓝
+  const crystalStyle = useMemo(
+    () => resolveIconHslVars(icon, slots) as React.CSSProperties | undefined,
+    [icon, slots],
+  );
 
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
@@ -128,14 +138,15 @@ const FolderItem: React.FC<FolderItemProps> = ({
         ariaLabel={icon.name}
         label={<div className="icon-label">{icon.name}</div>}
       >
-        <div className="icon-circle folder-icon-grid">
-          {childIcons.length > 0 ? (
-            <div className="folder-preview-grid">
-              {childIcons.map((child) => {
-                // 文字图标的 iconColor 已作为文字颜色使用，不再作为背景
-                const isTextIcon = !!child.icon && !isUrlLike(child.icon) && !child.icon.startsWith('data:');
-                const imgStyle = child.iconColor && !isTextIcon ? { background: child.iconColor } : undefined;
-                return (
+        <div
+          className="icon-circle folder-icon-grid"
+          style={crystalStyle}
+        >
+          <CrystalShell />
+          <span className="crystal-content">
+            {childIcons.length > 0 ? (
+              <div className="folder-preview-grid">
+                {childIcons.map((child) => (
                   <div key={child.id} className="folder-preview-item">
                     <img
                       src={iconManager.getIconUrlSync(IconType.SITE, child)}
@@ -143,20 +154,19 @@ const FolderItem: React.FC<FolderItemProps> = ({
                       className="folder-preview-image"
                       loading="lazy"
                       referrerPolicy="no-referrer"
-                      style={imgStyle}
                       onError={(e) => handleIconLoadError(e, child)}
-                      /* 与 IconItem 里的 icon-image 同样修复：
-                         <img> 原生 draggable=true 会抢占外层 FolderItem wrapper 的 draggable，
-                         导致文件夹整体拖不动。draggable={false} 强制用 wrapper 作为 drag source。 */
-                      draggable={false}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <span className="folder-empty-icon">📁</span>
-          )}
+                        /* 与 IconItem 里的 icon-image 同样修复：
+                           <img> 原生 draggable=true 会抢占外层 FolderItem wrapper 的 draggable，
+                           导致文件夹整体拖不动。draggable={false} 强制用 wrapper 作为 drag source。 */
+                        draggable={false}
+                      />
+                    </div>
+                ))}
+              </div>
+            ) : (
+              <span className="folder-empty-icon">📁</span>
+            )}
+          </span>
         </div>
       </DraggableIconWrapper>
 

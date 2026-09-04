@@ -2,21 +2,21 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useShallow } from 'zustand/react/shallow';
 import './NoteEditorDialog.css';
 import { useNotesStore } from '../../store/useNotesStore';
-import type { Note, NoteColor } from '../../types';
+import { usePaletteStore } from '../../store/usePaletteStore';
+import type { Note } from '../../types';
 import ConfirmDialog from '../common/ConfirmDialog';
+import { Palette } from '../common/PalettePicker';
 import createLogger from '../../utils/logger';
+import { noteHexStyleVars } from '../../utils/noteColors';
+import {
+  buildSelection,
+  canonicalSlotId,
+  resolveColorHex,
+  randomSlotSelection,
+  type ColorSelection,
+} from '../../utils/paletteColors';
 
 const logger = createLogger('NoteEditorDialog');
-
-// 便签球颜色：与 types/NoteColor 字面量严格一致，共 16 色
-const ALL_COLORS: NoteColor[] = [
-  'yellow', 'amber', 'orange', 'coral',
-  'pink', 'rose',
-  'red',
-  'green', 'lime', 'emerald', 'teal', 'cyan',
-  'blue', 'sky',
-  'purple', 'indigo',
-];
 
 const EMPTY: Pick<Note, 'title' | 'content'> = { title: '', content: '' };
 
@@ -30,18 +30,16 @@ interface NoteEditorDialogProps {
 }
 
 const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onClose }) => {
-  const { notes, addNote, updateNote, deleteNote } = useNotesStore(
+  const { notes, addNote, updateNote, deleteNote, applyNoteColor } = useNotesStore(
     useShallow((s) => ({
       notes: s.notes,
       addNote: s.addNote,
       updateNote: s.updateNote,
       deleteNote: s.deleteNote,
+      applyNoteColor: s.applyNoteColor,
     })),
   );
-
-  // 每次默认颜色随机（新建模式），与原逻辑一致
-  const pickRandomColor = (): NoteColor =>
-    ALL_COLORS[Math.floor(Math.random() * ALL_COLORS.length)];
+  const slots = usePaletteStore((s) => s.slots);
 
   // ── 【关键】直接在 useState lazy init 里派生初值，彻底移除 effect 里同步 setState。
   //    父组件通过 key={noteId ?? 'new'} 切换上下文时会重挂载组件，
@@ -49,39 +47,56 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
   type EditorState = {
     activeId: string | null;
     draft: Pick<Note, 'title' | 'content'>;
-    color: NoteColor;
+    /** color=最终写入 Note.color 的值（旧数据保留原名/hex；新选择写 hex 快照） */
+    color: string;
+    /** 绑定槽位 id（跟随调色板当前色；无 = 静态自定义色） */
+    colorSlot?: string;
   };
   const initEditorState = (): EditorState => {
     if (noteId) {
       const target = notes.find((n) => n.id === noteId);
       if (target) {
+        const fallback = randomSlotSelection(slots);
         return {
           activeId: target.id,
           draft: { title: target.title, content: target.content },
-          color: target.color ?? pickRandomColor(),
+          color: target.color ?? fallback.color ?? '',
+          // 打开即归一化槽位 id（旧数据 colorSlot 可能是预设名，落盘时升级为 palette-N）
+          ...(canonicalSlotId(target.colorSlot) ? { colorSlot: canonicalSlotId(target.colorSlot) } : {}),
         };
       }
       logger.warn('NoteEditorDialog: 找不到目标笔记，退化为新建模式。', noteId);
     }
+    const fallback = randomSlotSelection(slots);
     return {
       activeId: null,
       draft: { ...EMPTY },
-      color: pickRandomColor(),
+      color: fallback.color ?? '',
+      ...(fallback.colorSlot ? { colorSlot: fallback.colorSlot } : {}),
     };
   };
   const [editorState, setEditorState] = useState<EditorState>(initEditorState);
-  const { activeId, draft, color } = editorState;
+  const { activeId, draft, color, colorSlot } = editorState;
   type DraftShape = Pick<Note, 'title' | 'content'>;
   const setDraft = (d: React.SetStateAction<DraftShape>) =>
     setEditorState((s) => ({
       ...s,
       draft: typeof d === 'function' ? (d as (prev: DraftShape) => DraftShape)(s.draft) : d,
     }));
-  const setColor = (c: React.SetStateAction<NoteColor>) =>
-    setEditorState((s) => ({
-      ...s,
-      color: typeof c === 'function' ? (c as (prev: NoteColor) => NoteColor)(s.color) : c,
-    }));
+  /** 颜色选择：槽 → 记快照色并绑定 colorSlot；自定义 → 记色并清除 colorSlot */
+  const handleColorChange = useCallback((sel: ColorSelection) => {
+    setEditorState((s) => {
+      if (sel.colorSlot) {
+        return { ...s, color: sel.color || '', colorSlot: sel.colorSlot };
+      }
+      if (sel.color) {
+        const next: EditorState = { ...s, color: sel.color };
+        delete next.colorSlot;
+        return next;
+      }
+      return s;
+    });
+  }, []);
 
   // 关闭流程：先触发本地 isClosing 动画 → 延迟调用 onClose
   const [isClosing, setIsClosing] = useState(false);
@@ -133,9 +148,9 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
     if (!target) return true;
     const titleChanged = (draft.title.trim() || '无标题') !== (target.title ?? '');
     const contentChanged = draft.content.trim() !== (target.content ?? '');
-    const colorChanged = color !== (target.color ?? 'yellow');
+    const colorChanged = color !== (target.color ?? '') || (colorSlot ?? '') !== (target.colorSlot ?? '');
     return titleChanged || contentChanged || colorChanged;
-  }, [activeId, draft, color, notes]);
+  }, [activeId, draft, color, colorSlot, notes]);
 
   // 统一关闭入口：有未保存更改 → 弹确认框（可返回继续编辑）；无 → 直接关闭。
   // 供 ESC / 头部 ✕ / 底部 取消 使用，避免误触导致内容丢失。
@@ -164,18 +179,36 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
   const handleSave = useCallback(() => {
     const title = draft.title.trim() || '无标题';
     const content = draft.content.trim();
+    // 保存快照色：绑定槽 → 槽当前色（改色后快照保鲜）；静态 → 归一化后的 hex/原名
+    const savedColor = resolveColorHex(buildSelection(color, colorSlot), slots) || color || '';
 
     if (activeId) {
       const existing = notes.find((n) => n.id === activeId);
-      const merged: Partial<Note> = { title, content };
-      if (existing && existing.color !== color) merged.color = color;
-      // 单次 update：pinned 字段已从 UI 入口移除，不再写入
-      updateNote(activeId, merged);
+      const patch: Partial<Note> = { title, content };
+      // 颜色仅在用户改动过时才写（避免把旧数据预设名无故改写成 hex）；
+      // 需要清除/绑定 colorSlot 时走 applyNoteColor（updateNote 浅合并无法删除字段）
+      const colorChanged =
+        !existing ||
+        color !== (existing.color ?? '') ||
+        (colorSlot ?? '') !== (existing.colorSlot ?? '');
+      if (colorChanged) {
+        applyNoteColor(activeId, {
+          color: savedColor,
+          ...(colorSlot ? { colorSlot } : {}),
+        });
+      }
+      // pinned 字段已从 UI 入口移除，不再写入
+      updateNote(activeId, patch);
     } else {
-      addNote({ title, content, color });
+      addNote({
+        title,
+        content,
+        color: savedColor,
+        ...(colorSlot ? { colorSlot } : {}),
+      });
     }
     runClosing();
-  }, [activeId, draft, color, updateNote, addNote, notes, runClosing]);
+  }, [activeId, draft, color, colorSlot, slots, applyNoteColor, updateNote, addNote, notes, runClosing]);
 
   // Ctrl/Cmd+S 保存；Enter 在标题输入 → 跳到正文；最后输入框(正文) Ctrl/⌘ + Enter 保存
   const handleTitleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -212,14 +245,23 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
     runClosing();
   }, [activeId, deleteNote, runClosing]);
 
-  // ── 颜色切换 ──────────────────────────────────────────────────────────
-  const handlePickColor = useCallback((c: NoteColor) => {
-    setColor(c);
-  }, []);
+  const isCreate = !activeId;
+
+  // 编辑器主题色 = 当前选择解析后的 hex（绑定槽 → 槽当前色；旧数据静态解析）；
+  // 以 hex 直接注入 CSS 变量，槽位改色即改即生效
+  const editorDisplayHex = resolveColorHex(buildSelection(color, colorSlot), slots);
+  const colorStyleVars = editorDisplayHex ? noteHexStyleVars(editorDisplayHex, 0.1) : undefined;
+  // 取色器展示值：旧数据预设名归一化显示为静态自定义色，便于高亮与原生取色器联动
+  const pickerValue: ColorSelection = useMemo(() => {
+    if (colorSlot) {
+      return color ? { color, colorSlot } : { colorSlot };
+    }
+    const staticHex = color ? resolveColorHex(buildSelection(color), slots) : '';
+    const displayColor = staticHex || color || '';
+    return displayColor ? { color: displayColor } : {};
+  }, [color, colorSlot, slots]);
 
   if (!isOpen) return null;
-
-  const isCreate = !activeId;
 
   return (
     <>
@@ -231,7 +273,8 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
         className={`note-editor-overlay ${isClosing ? 'closing' : ''}`}
       />
       <div
-        className={`note-editor-dialog color-${color} ${isClosing ? 'closing' : ''}`}
+        className={`note-editor-dialog ${isClosing ? 'closing' : ''}`}
+        style={colorStyleVars}
         role="dialog"
         aria-modal="true"
         aria-label={isCreate ? '新建笔记' : '编辑笔记'}
@@ -252,15 +295,7 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
           </div>
           <div className="note-editor-toolbar">
             <div className="note-editor-color-palette" role="group" aria-label="便签颜色">
-              {ALL_COLORS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  className={`note-color-chip ${c} ${color === c ? 'active' : ''}`}
-                  onClick={() => handlePickColor(c)}
-                  aria-label={`颜色 ${c}`}
-                />
-              ))}
+              <Palette value={pickerValue} onChange={handleColorChange} />
             </div>
           </div>
         </div>

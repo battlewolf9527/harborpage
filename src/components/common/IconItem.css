@@ -3,7 +3,8 @@
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  /* transform 使用样例的弹性曲线：hover 托举先快后慢再轻微回弹 */
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
   padding: clamp(8px, 1vw, 16px) 0;
   border-radius: 12px;
   position: relative;
@@ -37,7 +38,11 @@
   gap: clamp(6px, 0.6vw, 10px);
   padding: clamp(8px, 1vw, 16px) clamp(8px, 1vw, 16px) clamp(4px, 0.5vw, 8px);
   border-radius: 10px;
-  transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  /* transform 使用样例的弹性曲线，hover 时让图标块带轻微回弹地浮起 */
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
   width: clamp(72px, 10vw, 120px);
   justify-content: center;
   position: relative;
@@ -77,17 +82,24 @@ body.is-dragging-active .icon-item:hover {
 body.is-dragging-active .icon-item:hover .icon-wrapper {
   transform: none;
 }
-body.is-dragging-active .icon-circle {
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+/* backdrop-filter 在玻璃基底 .cc-glass 上：拖拽时统一降 blur */
+body.is-dragging-active .icon-circle > .cc-glass {
+  backdrop-filter: blur(3px) saturate(1.2);
+  -webkit-backdrop-filter: blur(3px) saturate(1.2);
 }
 body.is-dragging-active .icon-item:hover .icon-circle {
   transform: none;
   animation: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
-/* 拖拽中的图标本身：opacity/scale 保留，但为其内部 icon-circle 去除 backdrop 避免层叠加 */
-body.is-dragging-active .icon-item.dragging .icon-circle {
+/* 拖拽期间隐藏呼吸光晕与柔光/暗部等装饰层，避免干扰投放反馈 */
+body.is-dragging-active .icon-circle > .cc-aura,
+body.is-dragging-active .icon-circle > .cc-highlight,
+body.is-dragging-active .icon-circle > .cc-texture {
+  opacity: 0;
+  animation: none;
+}
+/* 拖拽中的图标本身：opacity/scale 保留，但为其玻璃基底去除 backdrop 避免层叠加 */
+body.is-dragging-active .icon-item.dragging .icon-circle > .cc-glass {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
@@ -102,35 +114,156 @@ body.is-dragging-active .icon-item.dragging .icon-circle {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   .icon-circle —— 水晶图标块（站点图标 / 文件夹图标共用）
+   参考 samples/Crystal_block.html（HSL 彩色水晶方案）逐层移植：
+   .icon-circle        透明壳：尺寸/圆角/内容布局 + hover 位移
+   ├ .cc-aura          呼吸发光层（样例 .breathe-glow），hover 时脉动
+   ├ .cc-glass         彩色半透明玻璃基底（样例 .crystal-folder）：
+   │                   145° 材质渐变 + backdrop 磨砂 + 彩色描边 + 环境光投影
+   ├ .cc-highlight     左上角柔光（样例 ::before 椭圆径向光）
+   ├ .cc-texture       右下角暗部（样例 ::after 椭圆径向暗调）
+   └ .crystal-content  中心图标内容（置于最上层）
+   主色由 IconItem / FolderItem 按 iconColor 换算为 HSL 后，以
+   --c-hue / --c-sat / --c-lit 内联注入；未设置时回落为默认晶蓝。
+   ═══════════════════════════════════════════════════════════════ */
 .icon-circle {
+  /* 默认材质色 #9aa7ff ≈ hsl(232, 100%, 80%)，可被内联 --c-* 覆盖 */
+  --c-hue: 232;
+  --c-sat: 100%;
+  --c-lit: 80%;
+  /* 由主色派生的材质调色板（同 Crystal_block.html 的 :root 换算） */
+  --c-glow: hsla(var(--c-hue), var(--c-sat), var(--c-lit), 0.30);
+  --c-glow-strong: hsla(var(--c-hue), var(--c-sat), var(--c-lit), 0.55);
+  --c-border: hsla(var(--c-hue), var(--c-sat), calc(var(--c-lit) + 30%), 0.40);
+  --c-border-b: hsla(var(--c-hue), var(--c-sat), calc(var(--c-lit) + 10%), 0.15);
+  --c-inset: hsla(var(--c-hue), var(--c-sat), calc(var(--c-lit) + 40%), 0.55);
+  --c-shadow: hsla(var(--c-hue), var(--c-sat), calc(var(--c-lit) - 20%), 0.15);
+  /* 呼吸发光层专用：浓度明显低于常规辉光，避免呼吸光过强 */
+  --c-aura-core: hsla(var(--c-hue), var(--c-sat), var(--c-lit), 0.30);
+  --c-aura-soft: hsla(var(--c-hue), var(--c-sat), var(--c-lit), 0.16);
+  position: relative;
+  z-index: 0; /* 自建层叠上下文，把 cc-* 各层约束在壳内部 */
   width: clamp(56px, 10vw, 120px);
   height: clamp(56px, 10vw, 120px);
-  border-radius: 22%;
+  border-radius: 20%;
+  font-size: clamp(22px, 4vw, 42px);
+  /* hover 托举：弹性缓动先快后慢再轻微回弹 */
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.icon-item:hover .icon-circle {
+  transform: scale(1.06);
+}
+
+/* 光效层统一基类：全部绝对定位、不响应指针，避免影响拖拽/点击 */
+.icon-circle > .cc-layer {
+  position: absolute;
+  pointer-events: none;
+}
+
+/* ── 呼吸发光层（样例 .breathe-glow）：位于方块身后，
+   常态隐藏；hover 时浮现并缓慢呼吸脉动（刻意压低强度） */
+.icon-circle > .cc-aura {
+  inset: -18%;
+  border-radius: 40%;
+  background: radial-gradient(ellipse at center,
+    var(--c-aura-core) 0%,
+    var(--c-aura-soft) 35%,
+    transparent 65%);
+  filter: blur(10px);
+  z-index: 0;
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 0.6s ease;
+}
+.icon-item:hover .icon-circle > .cc-aura {
+  opacity: 1;
+  animation: crystalBreathe 2.8s ease-in-out infinite;
+}
+
+/* 呼吸动画（样例 breathe）：亮度与范围一起脉动，
+   透明度压到谷 0.25 / 峰 0.60，避免呼吸光过强盖过玻璃主体 */
+@keyframes crystalBreathe {
+  0%, 100% {
+    opacity: 0.25;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 0.60;
+    transform: scale(1.08);
+  }
+}
+
+/* ── 彩色半透明玻璃基底（样例 .crystal-folder）：
+   145° 材质深浅渐变 + backdrop 磨砂 + 上/左亮边、下/右暗边 + 环境光投影 */
+.icon-circle > .cc-glass {
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(145deg,
+    hsla(var(--c-hue), var(--c-sat), calc(var(--c-lit) + 25%), 0.12) 0%,
+    hsla(var(--c-hue), var(--c-sat), calc(var(--c-lit) + 5%), 0.03) 45%,
+    hsla(var(--c-hue), var(--c-sat), calc(var(--c-lit) - 5%), 0.01) 55%,
+    hsla(var(--c-hue), var(--c-sat), calc(var(--c-lit) + 20%), 0.10) 100%);
+  backdrop-filter: blur(8px) saturate(1.2);
+  -webkit-backdrop-filter: blur(8px) saturate(1.2);
+  border: 1px solid var(--c-border);
+  border-bottom: 1px solid var(--c-border-b);
+  border-right: 1px solid var(--c-border-b);
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.30),
+    inset 0 1px 0 var(--c-inset),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.08),
+    0 0 50px var(--c-shadow);
+  z-index: 1;
+  transition: box-shadow 0.4s ease;
+}
+/* hover：投影加深、内侧上光增强，并泛起彩色环境辉光 */
+.icon-item:hover .icon-circle > .cc-glass {
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 hsla(var(--c-hue), var(--c-sat), calc(var(--c-lit) + 45%), 0.60),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.08),
+    0 0 35px var(--c-glow);
+}
+
+/* ── 左上角柔光（样例 ::before）：以主色亮调在左上投一簇径向光 */
+.icon-circle > .cc-highlight {
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at 25% 15%,
+    hsla(var(--c-hue), var(--c-sat), calc(var(--c-lit) + 40%), 0.18) 0%,
+    transparent 50%);
+  z-index: 2;
+  opacity: 1;
+}
+
+/* ── 右下角暗部（样例 ::after）：以主色暗调压住右下角，
+   增强球面玻璃的立体感 */
+.icon-circle > .cc-texture {
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at 80% 80%,
+    hsla(var(--c-hue), var(--c-sat), calc(var(--c-lit) - 40%), 0.06) 0%,
+    transparent 50%);
+  z-index: 2;
+  opacity: 1;
+}
+
+/* ── 中心图标内容：置于所有光效层之上 */
+.icon-circle > .crystal-content {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(22px, 4vw, 42px);
-  transition: transform 0.3s ease;
-  background: rgba(255, 255, 255, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  position: relative;
 }
-
-.icon-item:hover .icon-circle {
-  transform: scale(1.1);
-  animation: blinking 2s ease infinite;
+/* 站点小图 hover 时轻微放大，文件夹预览不放大 */
+.icon-image {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-
-@keyframes blinking {
-  0%,
-  100% {
-    box-shadow: 0px 0px  3px 0px rgba(33, 150, 243, 0.72);
-  }
-  50% {
-    box-shadow: 0px 0px 20px 5px rgba(33, 150, 243, 0.72);
-  }
+.icon-item:hover .icon-circle > .crystal-content .icon-image {
+  transform: scale(1.12);
 }
 
 .icon-label {
@@ -142,6 +275,7 @@ body.is-dragging-active .icon-item.dragging .icon-circle {
   text-align: center;
   width: 100%;
   display: -webkit-box;
+  line-clamp: 3;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -346,6 +480,18 @@ body.is-dragging-active .icon-item.dragging .icon-circle {
   box-shadow: 0 2px 8px rgba(255, 71, 87, 0.35);
 }
 
+/* 拖放（center/invalid）指示期间隐藏水晶 hover 光效层，避免遮盖绿/红投放反馈。
+   （.folder-icon-grid 与 > .icon-circle 是同一元素，这里一并列出以保一致性） */
+.icon-wrapper.drag-over-center > .icon-circle > .cc-aura,
+.icon-wrapper.drag-over-center > .icon-circle > .cc-highlight,
+.icon-wrapper.drag-over-center > .icon-circle > .cc-texture,
+.icon-wrapper.drag-over-invalid > .icon-circle > .cc-aura,
+.icon-wrapper.drag-over-invalid > .icon-circle > .cc-highlight,
+.icon-wrapper.drag-over-invalid > .icon-circle > .cc-texture {
+  opacity: 0;
+  animation: none;
+}
+
 @keyframes shake {
   0%, 100% {
     transform: translateX(0);
@@ -358,15 +504,23 @@ body.is-dragging-active .icon-item.dragging .icon-circle {
   }
 }
 
-/* 外部拖放区域样式 - 在图标两侧添加透明的拖放区域，扩大操作空间 */
+/* 外部拖放区域样式 - 在图标两侧添加透明的拖放区域，扩大拖放排序的操作空间 */
 .icon-drop-zone {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   width: 50px;
   height: 80%;
-  cursor: pointer;
   z-index: 5;
+  /* 关键修复：静止时该区域不参与任何指针事件 ——
+     它们只是"拖放排序"的投放目标，不能成为图标的点击/拖动热区，
+     否则图标外大片空白也会打开站点、也会误触发图标拖动，
+     甚至会盖住悬浮层（如文件夹颜色浮层 z 值低于它）导致点击穿透。
+     仅在真正拖拽（body.is-dragging-active）时才恢复为投放目标。 */
+  pointer-events: none;
+}
+body.is-dragging-active .icon-drop-zone {
+  pointer-events: auto;
 }
 
 .icon-drop-zone-left {

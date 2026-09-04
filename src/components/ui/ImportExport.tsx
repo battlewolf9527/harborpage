@@ -13,9 +13,10 @@ import {
   type DataSelection,
 } from '../../utils/importExportUtils';
 import { EXPORT_FILE_PREFIX } from '../../constants';
-import type { UserData, Website, Page } from '../../types';
+import type { UserData, Website, Page, PaletteHexMap } from '../../types';
 import { generateId } from '../../utils/idUtils';
 import { DEFAULT_PAGE_NAME } from '../../store/usePagesStore';
+import { DEFAULT_PALETTE_HEXES, PALETTE_SLOT_IDS, normalizePaletteMap } from '../../utils/paletteColors';
 import './ImportExport.css';
 
 // 数据分类配置
@@ -33,6 +34,7 @@ const DATA_CATEGORIES: CategoryConfig[] = [
   { key: 'todos', label: '待办列表' },
   { key: 'notes', label: '笔记' },
   { key: 'settings', label: '其它设置' },
+  { key: 'palette', label: '调色板' },
 ];
 
 const ALL_SELECTED: DataSelection = {
@@ -42,6 +44,18 @@ const ALL_SELECTED: DataSelection = {
   todos: true,
   notes: true,
   settings: true,
+  palette: true,
+};
+
+/** 统计与默认 16 色不同的调色板槽位数（自动兼容旧预设名 key 的调色板数据） */
+const countPaletteModifications = (palette?: PaletteHexMap): number => {
+  if (!palette) return 0;
+  const normalized = normalizePaletteMap(palette);
+  let count = 0;
+  for (const id of PALETTE_SLOT_IDS) {
+    if (normalized[id] !== DEFAULT_PALETTE_HEXES[id]) count++;
+  }
+  return count;
 };
 
 interface ImportPreview {
@@ -61,6 +75,7 @@ const EMPTY_EXPORT_COUNTS: ExportCounts = {
   todos: 0,
   notes: 0,
   settings: null,
+  palette: 0,
 };
 
 interface ToastState {
@@ -105,6 +120,7 @@ const computeExportCounts = (): ExportCounts => {
     todos: data.todos?.length ?? 0,
     notes: data.notes?.length ?? 0,
     settings: null,
+    palette: countPaletteModifications(data.palette),
   };
 };
 
@@ -124,6 +140,8 @@ const buildImportSummary = (data: FullExportData): string => {
   if (data.todos?.length) parts.push(`待办 ${data.todos.length} 条`);
   if (data.notes?.length) parts.push(`笔记 ${data.notes.length} 条`);
   if (data.settings) parts.push('设置项');
+  const paletteCount = countPaletteModifications(data.palette);
+  if (paletteCount > 0) parts.push(`调色板 ${paletteCount} 槽`);
   if (parts.length === 0) return '文件中无有效数据。';
   return `文件包含：${parts.join('，')}。`;
 };
@@ -196,6 +214,7 @@ const ImportExport: React.FC = () => {
         todos: !!(raw.todos?.length),
         notes: !!(raw.notes?.length),
         settings: !!raw.settings,
+        palette: countPaletteModifications(raw.palette) > 0,
       };
       const counts: ImportPreview['counts'] = {
         searchEngines: raw.searchEngines?.length ?? null,
@@ -205,6 +224,7 @@ const ImportExport: React.FC = () => {
         todos: raw.todos?.length ?? null,
         notes: raw.notes?.length ?? null,
         settings: null,
+        palette: countPaletteModifications(raw.palette) || null,
       };
       setImportSelection({ ...available });
       setImportPreview({ raw, available, counts });
@@ -291,6 +311,9 @@ const ImportExport: React.FC = () => {
     }
     if (importSelection.settings && raw.settings) {
       imported.settings = raw.settings;
+    }
+    if (importSelection.palette && raw.palette) {
+      imported.palette = raw.palette;
     }
 
     // 启动导入组件（ImportProgressOverlay），由其完成导入并显示进度
@@ -401,7 +424,9 @@ const ImportExport: React.FC = () => {
                         <span className="ie-checkbox-count">
                           {key === 'pages'
                             ? `${exportCounts.pages}页/${exportCounts.pageSiteCount}站`
-                            : `${count} 个`}
+                            : key === 'palette'
+                              ? `${count} 槽`
+                              : `${count} 个`}
                         </span>
                       )}
                     </label>
@@ -466,7 +491,9 @@ const ImportExport: React.FC = () => {
                         <span className="ie-checkbox-count">
                           {key === 'pages'
                             ? `${importPreview.counts.pages}页/${importPreview.counts.pageSiteCount}站`
-                            : `${count} 个`}
+                            : key === 'palette'
+                              ? `${count} 槽`
+                              : `${count} 个`}
                         </span>
                       )}
                       {key === 'settings' && available && (

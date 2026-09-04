@@ -1,0 +1,311 @@
+/* ColorPickerWindow.css — 取色器窗口（Aurora Dark Glass 统一风格）
+ * 顶层固定遮罩，经 createPortal 挂到 body，z-index 高于业务弹窗。
+ */
+
+.color-picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-bg);
+  backdrop-filter: var(--overlay-blur);
+  -webkit-backdrop-filter: var(--overlay-blur);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9998;
+  animation: fadeIn var(--motion-normal) both;
+}
+
+.color-picker-dialog {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(360px, calc(100vw - 32px));
+  box-sizing: border-box;
+  max-height: calc(100vh - 64px);
+  background: var(--glass-surface-700);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-glass-lg);
+  color: var(--text-primary);
+  overflow: hidden;
+  animation: glass-modal-scale var(--motion-spring) both;
+}
+
+/* aurora 渐变色 3px 顶条 — 与全站其他 dialog 呼应 */
+.color-picker-dialog::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--aurora-gradient);
+  opacity: 0.9;
+}
+
+/* ── 头部：标题左、关闭右 ── */
+.color-picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px 12px;
+}
+
+.color-picker-title {
+  font-size: var(--font-lg);
+  font-weight: 650;
+  color: var(--text-primary);
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  min-width: 0;
+}
+
+.color-picker-close {
+  width: var(--btn-close-size);
+  height: var(--btn-close-size);
+  padding: 0;
+  flex-shrink: 0;
+  border: var(--glass-border);
+  border-radius: var(--btn-close-radius);
+  background: var(--glass-surface-300);
+  color: var(--text-tertiary);
+  font-size: var(--font-md);
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: all var(--motion-fast);
+}
+.color-picker-close:hover {
+  background: var(--semantic-danger);
+  color: #fff;
+  border-color: var(--semantic-danger);
+  transform: translateY(-1px);
+}
+
+/* ── 主体 ── */
+.color-picker-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 20px 16px;
+  overflow-y: auto;
+}
+
+.color-picker-caption {
+  margin: 0;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-tertiary);
+  letter-spacing: 0.01em;
+}
+
+/* 预设 16 色：固定 8 列，横向居中（2 行 × 8） */
+.color-picker-presets {
+  display: grid;
+  grid-template-columns: repeat(8, 24px);
+  justify-content: center;
+  gap: 8px;
+}
+
+.color-picker-preset {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: transform var(--motion-fast), border-color var(--motion-fast),
+    box-shadow var(--motion-fast);
+}
+.color-picker-preset:hover {
+  transform: scale(1.16);
+  border-color: rgba(255, 255, 255, 0.65);
+}
+.color-picker-preset:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 1px;
+}
+.color-picker-preset.active {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+/* 选中对勾：加投影保证在白色/浅色槽上也可见 */
+.color-picker-preset-check {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.75), 0 0 4px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+.color-picker-preset-check::before {
+  content: '✓';
+}
+
+/* ── 自定义颜色 ── */
+.color-picker-custom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.color-picker-custom-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--glass-surface-300);
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--motion-fast);
+}
+.color-picker-custom-btn:hover {
+  background: var(--glass-surface-hover);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+/* 自定义取色圆点：未选色时显示彩虹渐变，选中后显示当前色 */
+.color-picker-custom-swatch {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-sizing: border-box;
+  background: conic-gradient(
+    #ffffff, #facc15, #f59e0b, #fb923c,
+    #f472b6, #e879f9, #f87171,
+    #4ade80, #a3e635, #34d399, #2dd4bf, #22d3ee,
+    #60a5fa, #38bdf8, #c084fc, #818cf8,
+    #ffffff
+  );
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast);
+}
+.color-picker-custom-swatch.active {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+.color-picker-hidden-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* 当前选中色：预设显示中文色名，自定义显示 hex */
+.color-picker-current {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: var(--font-sm);
+  color: var(--text-tertiary);
+}
+.color-picker-current-name {
+  font-weight: 600;
+  text-transform: uppercase;
+  -webkit-text-stroke: 1px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.45);
+}
+
+/* ── 底部：功能钮（恢复默认）居左；确定/取消 居右，取消最右 ── */
+.color-picker-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 20px 18px;
+  border-top: var(--glass-border-subtle);
+}
+
+.color-picker-btn.ghost {
+  margin-right: auto;
+}
+
+.color-picker-btn {
+  padding: 0 var(--btn-pad-x);
+  min-height: var(--btn-h);
+  border: none;
+  border-radius: var(--btn-radius);
+  font-size: var(--font-md);
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--motion-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1;
+}
+.color-picker-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 主（确定）按钮：aurora 渐变 */
+.color-picker-btn.primary {
+  background: var(--aurora-gradient);
+  color: var(--text-on-accent);
+  box-shadow: var(--aurora-glow);
+}
+.color-picker-btn.primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 32px color-mix(in srgb, var(--aurora-2) 44%, transparent),
+    0 0 0 1px rgba(255, 255, 255, 0.14) inset;
+}
+
+/* 取消按钮：玻璃幽灵 */
+.color-picker-btn.secondary {
+  background: var(--glass-surface-300);
+  border: var(--glass-border);
+  color: var(--text-secondary);
+}
+.color-picker-btn.secondary:hover {
+  background: var(--glass-surface-hover);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+/* 恢复默认：轻量文字按钮（左侧功能钮） */
+.color-picker-btn.ghost {
+  padding: 0 8px;
+  min-height: var(--btn-h);
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+.color-picker-btn.ghost:hover {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--aurora-2) 12%, transparent);
+}

@@ -1,7 +1,14 @@
-import type { Website, ImportableWebsite, SearchEngine, Todo, Note, Settings, UserData, Page } from '../types';
+import type { Website, ImportableWebsite, SearchEngine, Todo, Note, Settings, UserData, Page, PaletteHexMap } from '../types';
 import { EXPORT_FILE_PREFIX } from '../constants';
 import ConfigService from '../services/ConfigService';
 import { generateId } from './idUtils';
+import { isNoteColorPresetName, isHexColor } from './noteColors';
+import {
+  DEFAULT_PALETTE_HEXES,
+  isPaletteSlotId,
+  normalizePaletteMap,
+  PALETTE_SLOT_IDS,
+} from './paletteColors';
 
 // 导出数据格式
 export interface ExportData {
@@ -239,6 +246,8 @@ export interface FullExportData {
   searchEngines?: SearchEngine[];
   todos?: Todo[];
   notes?: Note[];
+  /** 被修改的调色板槽位（仅导出与默认 16 色不同的槽，保持文件精简） */
+  palette?: PaletteHexMap;
 }
 
 // 导出/导入数据勾选项
@@ -249,6 +258,7 @@ export interface DataSelection {
   todos: boolean;
   notes: boolean;
   settings: boolean;
+  palette: boolean;
 }
 
 // 导出时清理网站：剥离冗余的 isFolder（文件夹与否由 children 决定），
@@ -346,6 +356,21 @@ export const buildFullExportData = (data: UserData, selection: DataSelection): F
   if (selection.settings && cleaned.settings) {
     result.settings = cleaned.settings;
   }
+  if (selection.palette && cleaned.palette) {
+    // 只导出被修改的槽位（≠ 默认色）；导入合并时不影响未修改槽
+    // （key 先归一化：兼容旧预设名调色板数据，统一导出为 palette-N）
+    const normalized = normalizePaletteMap(cleaned.palette);
+    const modified: PaletteHexMap = {};
+    for (const id of PALETTE_SLOT_IDS) {
+      const hex = normalized[id];
+      if (hex && hex !== DEFAULT_PALETTE_HEXES[id]) {
+        modified[id] = hex;
+      }
+    }
+    if (Object.keys(modified).length > 0) {
+      result.palette = modified;
+    }
+  }
   return result;
 };
 
@@ -386,15 +411,6 @@ const validateTodo = (item: unknown): item is Todo => {
   );
 };
 
-// 合法的 NoteColor 值集合（运行时枚举校验）—— 与 types/NoteColor 字面量严格一致 16 色
-const VALID_NOTE_COLORS = new Set<string>([
-  'yellow', 'amber', 'orange', 'coral',
-  'pink', 'rose', 'red',
-  'green', 'lime', 'emerald', 'teal', 'cyan',
-  'blue', 'sky',
-  'purple', 'indigo',
-]);
-
 // 校验笔记对象（向后兼容：旧数据只有 id/title/content；updatedAt/pinned/color 可选）
 const validateNote = (item: unknown): item is Note => {
   if (typeof item !== 'object' || item === null) return false;
@@ -406,7 +422,9 @@ const validateNote = (item: unknown): item is Note => {
   if (note.createdAt !== undefined && typeof note.createdAt !== 'string') return false;
   if (note.updatedAt !== undefined && typeof note.updatedAt !== 'string') return false;
   if (note.pinned !== undefined && typeof note.pinned !== 'boolean') return false;
-  if (note.color !== undefined && !VALID_NOTE_COLORS.has(note.color)) return false;
+  // 颜色：16 色预设名（含退役兼容名）或自定义 #rrggbb 均合法
+  if (note.color !== undefined && typeof note.color !== 'string') return false;
+  if (note.color !== undefined && !isNoteColorPresetName(note.color) && !isHexColor(note.color)) return false;
   return true;
 };
 
@@ -434,10 +452,20 @@ export const validateFullImportData = (data: unknown): data is FullExportData =>
   if (d.todos !== undefined && (!Array.isArray(d.todos) || !d.todos.every(validateTodo))) return false;
   if (d.notes !== undefined && (!Array.isArray(d.notes) || !d.notes.every(validateNote))) return false;
   if (d.settings !== undefined && (typeof d.settings !== 'object' || d.settings === null)) return false;
+  // 调色板：对象，值为合法 hex，槽 id 须属于 16 槽
+  if (d.palette !== undefined) {
+    if (typeof d.palette !== 'object' || d.palette === null || Array.isArray(d.palette)) return false;
+    const entries = Object.entries(d.palette as PaletteHexMap);
+    if (entries.length === 0) return false;
+    for (const [slotId, hex] of entries) {
+      if (!isPaletteSlotId(slotId)) return false;
+      if (typeof hex !== 'string' || !isHexColor(hex)) return false;
+    }
+  }
 
   // 至少要有一个数据字段
   const hasAnyData = d.websites !== undefined || d.pages !== undefined || d.searchEngines !== undefined ||
-    d.todos !== undefined || d.notes !== undefined || d.settings !== undefined;
+    d.todos !== undefined || d.notes !== undefined || d.settings !== undefined || d.palette !== undefined;
   if (!hasAnyData) return false;
 
   return true;

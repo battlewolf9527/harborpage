@@ -1,9 +1,12 @@
 import React, { memo } from 'react';
 import type { Website } from '../../types';
 import { handleIconLoadError } from '../../services/iconUtils';
-import { IconType, isUrlLike } from '../../services/IconManager';
+import { IconType } from '../../services/IconManager';
 import { getServices } from '../../services/serviceContainer';
+import { usePaletteStore } from '../../store/usePaletteStore';
+import { resolveIconHslVars } from '../../utils/paletteColors';
 import DraggableIconWrapper from './DraggableIconWrapper';
+import CrystalShell from './CrystalShell';
 import './IconItem.css';
 
 interface IconItemProps {
@@ -38,14 +41,12 @@ const IconItem: React.FC<IconItemProps> = ({
   onDragOverOutside,
 }) => {
   const { iconManager } = getServices();
+  const slots = usePaletteStore((s) => s.slots);
   const iconContent = iconManager.getIconUrlSync(IconType.SITE, icon);
 
   const isUrl = iconContent && (iconContent.startsWith('http://') || iconContent.startsWith('https://') || iconContent.startsWith('/api/') || iconContent.startsWith('data:'));
-  // 判断是否为纯文本图标（用户输入的文字，由 generateColoredTextSvg 生成 SVG）
-  // 此时 iconColor 已作为文字颜色使用，不再作为 img 背景色
-  const isTextIcon = !!icon.icon && !isUrlLike(icon.icon) && !icon.icon.startsWith('data:');
-  // 图标底色：仅对非文字图标应用为 img 背景色
-  const imgStyle = icon.iconColor && !isTextIcon ? { background: icon.iconColor } : undefined;
+  // 水晶材质主色：绑定槽→槽当前色；旧 hex→静态；非十六进制（如 transparent）或未设置时走 CSS 缺省晶蓝
+  const crystalStyle = resolveIconHslVars(icon, slots) as React.CSSProperties | undefined;
 
   return (
     <DraggableIconWrapper
@@ -64,32 +65,34 @@ const IconItem: React.FC<IconItemProps> = ({
       onContextMenu={onContextMenu}
       label={<div className="icon-label">{icon.name}</div>}
     >
-      <div className="icon-circle">
-        {isUrl ? (
-          <img
-            src={iconContent}
-            alt={icon.name}
-            className="icon-image"
-            loading="lazy"
-            referrerPolicy="no-referrer"
-            style={imgStyle}
-            onError={(e) => handleIconLoadError(e, icon)}
-            /* 关键：禁用 <img> 原生 draggable。
-               HTML5 Drag & Drop 规范规定"浏览器选择最内层的 draggable=true 元素作为 drag source"。
-               <img> 默认 draggable=true（浏览器原生允许拖图片到桌面/其他应用），
-               而且是 draggable 属性出现之前就内置的隐式行为，优先级比外层的显式 draggable 更高。
-               结果：当用户按下 icon-circle 上的图片开始拖，浏览器把 <img> 当成 drag source，
-                    生成 drag image 用的是图片内容；配合 loading="lazy" + 4K 大图未解码，
-                    Chromium 内核会**静默取消整个 drag 操作**（dragstart 事件还能冒泡触发我们的
-                    handler 写入 draggedIcon state，但内核不再发送 dragover/drop，图标看起来完全拖不动）。
-               修复：draggable={false} 告诉浏览器"不要拿这个图片当 drag source"，
-                    浏览器就会沿 DOM 往上找最近 draggable=true 的祖先 —
-                    DraggableIconWrapper 的 .icon-item，完全走我们的自定义 drag & drop 链路。 */
-            draggable={false}
-          />
-        ) : (
-          iconContent || '🌐'
-        )}
+      <div className="icon-circle" style={crystalStyle}>
+        <CrystalShell />
+        <span className="crystal-content">
+          {isUrl ? (
+            <img
+              src={iconContent}
+              alt={icon.name}
+              className="icon-image"
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              onError={(e) => handleIconLoadError(e, icon)}
+              /* 关键：禁用 <img> 原生 draggable。
+                 HTML5 Drag & Drop 规范规定"浏览器选择最内层的 draggable=true 元素作为 drag source"。
+                 <img> 默认 draggable=true（浏览器原生允许拖图片到桌面/其他应用），
+                 而且是 draggable 属性出现之前就内置的隐式行为，优先级比外层的显式 draggable 更高。
+                 结果：当用户按下 icon-circle 上的图片开始拖，浏览器把 <img> 当成 drag source，
+                      生成 drag image 用的是图片内容；配合 loading="lazy" + 4K 大图未解码，
+                      Chromium 内核会**静默取消整个 drag 操作**（dragstart 事件还能冒泡触发我们的
+                      handler 写入 draggedIcon state，但内核不再发送 dragover/drop，图标看起来完全拖不动）。
+                 修复：draggable={false} 告诉浏览器"不要拿这个图片当 drag source"，
+                      浏览器就会沿 DOM 往上找最近 draggable=true 的祖先 —
+                      DraggableIconWrapper 的 .icon-item，完全走我们的自定义 drag & drop 链路。 */
+              draggable={false}
+            />
+          ) : (
+            iconContent || '🌐'
+          )}
+        </span>
       </div>
     </DraggableIconWrapper>
   );

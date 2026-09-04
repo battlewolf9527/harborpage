@@ -683,26 +683,7 @@
  *   · rose  → fuchsia-family (#e879f9)，与 pink (#f472b6 玫红) / red (#ef4444 红) 三色三族互不撞；
  *   · emerald/teal 不再用 400 档（与 green-400/cyan-400 几乎一色），改为 emerald-600 #059669 / teal-600 #0d9488（深色"森林蓝绿"）。
  * NoteColor 字面量 16 色全部覆盖。 */
-/* ——— 黄/橙系（4）：黄 400→琥珀 500→深橘 600→珊瑚橙 400（色相+亮度双变化） ——— */
-.noteball.note.color-yellow { --tint: #facc15; }
-.noteball.note.color-amber  { --tint: #f59e0b; }
-.noteball.note.color-orange { --tint: #fb923c; }
-.noteball.note.color-coral  { --tint: #f97316; }
-/* ——— 粉/红系（3）：玫粉 400→品红 400→红 500（pink / fuchsia / red 三族分流） ——— */
-.noteball.note.color-pink   { --tint: #f472b6; }
-.noteball.note.color-rose   { --tint: #e879f9; }
-.noteball.note.color-red    { --tint: #f87171; }
-/* ——— 绿/青系（5）：黄绿 400→草绿 400→森林 600→深青 600→湖蓝 400（深浅跳跃） ——— */
-.noteball.note.color-lime   { --tint: #a3e635; }
-.noteball.note.color-green  { --tint: #4ade80; }
-.noteball.note.color-emerald{ --tint: #34d399; }
-.noteball.note.color-teal   { --tint: #2dd4bf; }
-.noteball.note.color-cyan   { --tint: #22d3ee; }
-/* ——— 蓝/紫系（4）：天蓝 400→钴蓝 500→靛蓝 500→紫 500（蓝族内升档→紫，紫比 fuchsia 更紫） ——— */
-.noteball.note.color-sky    { --tint: #38bdf8; }
-.noteball.note.color-blue   { --tint: #60a5fa; }
-.noteball.note.color-indigo { --tint: #818cf8; }
-.noteball.note.color-purple { --tint: #c084fc; }
+/* ——— 球主题色由内联 style 注入 --tint（16 槽调色板当前色或自定义色），无静态 .color-* 规则 ——— */
 
 /* 球首字：白字"嵌入"深色玻璃球（样例 .ball span）——
  * 四层 text-shadow：向下厚度影 + 球色微光两档 + 左上受光微亮 */
@@ -935,25 +916,7 @@
   top: -7px;
   transform: translateX(-50%) scaleY(-1);
 }
-/* 缩略预览的 16 色身份色：--note-accent 与调色板 chip 色值 1:1 一致
-   （此前缺失 → 所有预览都落到默认琥珀 #f59e0b，用户反馈"没体现笔记设置的颜色"）。
-   作用于顶部 accent 条、badge、✏️ 编辑按钮。 */
-.noteball-tooltip.color-yellow  { --note-accent: #facc15; --note-soft: rgba(250,204,21,0.14); }
-.noteball-tooltip.color-amber   { --note-accent: #f59e0b; --note-soft: rgba(245,158,11,0.14); }
-.noteball-tooltip.color-orange  { --note-accent: #fb923c; --note-soft: rgba(251,146,60,0.14); }
-.noteball-tooltip.color-coral   { --note-accent: #f97316; --note-soft: rgba(249,115,22,0.14); }
-.noteball-tooltip.color-pink    { --note-accent: #f472b6; --note-soft: rgba(244,114,182,0.14); }
-.noteball-tooltip.color-rose    { --note-accent: #e879f9; --note-soft: rgba(232,121,249,0.14); }
-.noteball-tooltip.color-red     { --note-accent: #f87171; --note-soft: rgba(248,113,113,0.14); }
-.noteball-tooltip.color-lime    { --note-accent: #a3e635; --note-soft: rgba(163,230,53,0.14); }
-.noteball-tooltip.color-green   { --note-accent: #4ade80; --note-soft: rgba(74,222,128,0.14); }
-.noteball-tooltip.color-emerald { --note-accent: #34d399; --note-soft: rgba(52,211,153,0.14); }
-.noteball-tooltip.color-teal    { --note-accent: #2dd4bf; --note-soft: rgba(45,212,191,0.14); }
-.noteball-tooltip.color-cyan    { --note-accent: #22d3ee; --note-soft: rgba(34,211,238,0.14); }
-.noteball-tooltip.color-sky     { --note-accent: #38bdf8; --note-soft: rgba(56,189,248,0.14); }
-.noteball-tooltip.color-blue    { --note-accent: #60a5fa; --note-soft: rgba(96,165,250,0.14); }
-.noteball-tooltip.color-indigo  { --note-accent: #818cf8; --note-soft: rgba(129,140,248,0.14); }
-.noteball-tooltip.color-purple  { --note-accent: #c084fc; --note-soft: rgba(192,132,252,0.14); }
+/* 缩略预览主题色由内联 style 注入 --note-accent / --note-soft（同笔记球解析），无静态 .color-* 规则 */
 .noteball-tooltip-header {
   display: flex;
   align-items: center;

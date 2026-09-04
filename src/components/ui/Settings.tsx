@@ -6,6 +6,7 @@ import SearchManager from '../features/SearchManager';
 import IconSettings from './IconSettings';
 import AutoSaveSettings from './AutoSaveSettings';
 import FaviconSettings from './FaviconSettings';
+import { Palette } from '../common/PalettePicker';
 import ImportPresetDialog from './ImportPresetDialog';
 import ImportExport from './ImportExport';
 import ConfirmDialog from '../common/ConfirmDialog';
@@ -228,6 +229,14 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
             <button onClick={() => setShowWallpaperManager(true)}>更改壁纸</button>
             <button onClick={() => setShowIconSettings(true)}>桌面图标设置</button>
             <button onClick={() => setShowFaviconManager(true)}>管理图标源</button>
+          </div>
+          {/* 调色板：全局 16 槽（设置模式 2×8）；点任意槽弹取色器改色，使用该槽位的元素自动跟随 */}
+          <div className="palette-manage-block">
+            <div className="palette-manage-head">
+              <span className="palette-manage-title">调色板</span>
+              <span className="palette-manage-hint">点击色块可重新设定该调色板颜色，使用该颜色的元素将自动更新</span>
+            </div>
+            <Palette mode="settings" />
           </div>
         </div>
 

@@ -2,9 +2,12 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import './NotesManagerDialog.css';
 import { useNotesStore } from '../../store/useNotesStore';
+import { usePaletteStore } from '../../store/usePaletteStore';
 import type { Note } from '../../types';
 import NoteEditorDialog from './NoteEditorDialog';
 import ConfirmDialog from '../common/ConfirmDialog';
+import { noteHexStyleVars } from '../../utils/noteColors';
+import { buildSelection, resolveColorHex } from '../../utils/paletteColors';
 
 interface NotesManagerDialogProps {
   isOpen: boolean;
@@ -23,6 +26,7 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
       reorderNotes: s.reorderNotes,
     })),
   );
+  const slots = usePaletteStore((s) => s.slots);
 
   // 关闭流程（同编辑器：先动画，再回调）
   const [isClosing, setIsClosing] = useState(false);
@@ -238,16 +242,19 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
           ) : (
             <ul className="notes-mgr-list">
               {visibleNotes.map((note, index) => {
-                const colorClass = note.color ?? 'yellow';
+                // 绑定槽 → 槽当前色；旧数据静态解析；统一走解析后的内联变量，改色即时生效
+                const resolvedHex = resolveColorHex(buildSelection(note.color, note.colorSlot), slots);
+                const colorStyle = resolvedHex ? noteHexStyleVars(resolvedHex, 0.14) : undefined;
                 const isDragOver = dragOverIndex === index;
                 return (
                   <li
                     key={note.id}
-                    className={`notes-mgr-item color-${colorClass}
+                    className={`notes-mgr-item
                       ${dragIndex === index ? 'dragging' : ''}
                       ${isDragOver && dragOverPosition === 'top' ? 'drop-top' : ''}
                       ${isDragOver && dragOverPosition === 'bottom' ? 'drop-bottom' : ''}
                     `}
+                    style={colorStyle}
                     draggable={!filteredIds}
                     onDragStart={(e) => handleDragStart(e, index)}
                     onDragEnd={() => { setDragIndex(null); setDragOverIndex(null); }}

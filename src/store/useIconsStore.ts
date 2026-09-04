@@ -5,6 +5,7 @@ import { setupAutoPersist } from './persistence';
 import { generateId } from '../utils/idUtils';
 import createLogger from '../utils/logger';
 import { usePagesStore } from './usePagesStore';
+import type { ColorSelection } from '../utils/paletteColors';
 
 const logger = createLogger('IconsStore');
 
@@ -40,6 +41,8 @@ interface IconsState {
   deleteIcon: (iconId: string) => void;
   dragIconOut: (icon: Website) => void;
   changeFolderName: (newName: string) => void;
+  /** 修改当前打开文件夹的水晶材质色：colorSlot=绑定槽（跟随调色板），否则 color=静态 hex/清除=缺省色 */
+  changeFolderColor: (sel: ColorSelection) => void;
   disbandFolder: () => void;
   deleteFolder: () => void;
   updateFolderIcons: (icons: Website[]) => void;
@@ -214,6 +217,33 @@ export const useIconsStore = create<IconsState>((set, get) => ({
     set({
       openFolder: { ...openFolder, name: newName },
     });
+    get().setWebsiteIcons(newIcons);
+  },
+
+  // 修改当前打开文件夹的水晶材质色：选中槽位 → 存 iconColor 快照 + colorSlot 绑定（跟随调色板）；
+  // 自定义色 → 仅存 iconColor（静态）；空选择 → 清除、走缺省晶蓝
+  changeFolderColor: (sel) => {
+    const { openFolder } = get();
+    const websites = get().getWebsites();
+    if (!openFolder) return;
+
+    const folderIndex = websites.findIndex(item => item.isFolder && item.id === openFolder.id);
+    if (folderIndex === -1) return;
+
+    const targetFolder = websites[folderIndex];
+    const updated: Website = { ...targetFolder };
+    delete updated.colorSlot;
+    if (sel?.colorSlot) {
+      updated.iconColor = sel.color || '';
+      updated.colorSlot = sel.colorSlot;
+    } else if (sel?.color) {
+      updated.iconColor = sel.color;
+    } else {
+      delete updated.iconColor;
+    }
+
+    const newIcons = [...websites];
+    newIcons[folderIndex] = updated;
     get().setWebsiteIcons(newIcons);
   },
 

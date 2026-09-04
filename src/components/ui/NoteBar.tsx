@@ -3,9 +3,27 @@ import { createPortal } from 'react-dom';
 import { useShallow } from 'zustand/react/shallow';
 import './NoteBar.css';
 import { useNotesStore } from '../../store/useNotesStore';
-import type { Note } from '../../types';
+import { usePaletteStore } from '../../store/usePaletteStore';
+import type { Note, PaletteHexMap } from '../../types';
 import NotesManagerDialog from './NotesManagerDialog';
 import NoteEditorDialog from './NoteEditorDialog';
+import { noteHexStyleVars } from '../../utils/noteColors';
+import { buildSelection, resolveColorHex } from '../../utils/paletteColors';
+
+/**
+ * 便签颜色渲染元数据：绑定槽 → 槽当前色；旧名/hex → 静态解析。
+ * 一律以解析后的 hex 生成内联 CSS 变量（--tint/--note-accent/--note-soft），
+ * 使调色板改色即时生效，不依赖静态 .color-* 类。
+ */
+function noteDisplayMeta(
+  note: Pick<Note, 'color' | 'colorSlot'> | null | undefined,
+  slots?: PaletteHexMap,
+): { style?: React.CSSProperties } {
+  if (!note) return {};
+  const hex = resolveColorHex(buildSelection(note.color, note.colorSlot), slots);
+  if (!hex) return {};
+  return { style: noteHexStyleVars(hex, 0.14) };
+}
 
 /** 小工具：给定 lastMouseRef 的坐标，判断当前鼠标下是否有元素命中任一根节点。
  *  用于 notebar 的 scheduleClose — 因为气泡/缩略预览现在 portal 到 body，
@@ -41,6 +59,7 @@ const NoteBar: React.FC = () => {
       reorderNotes: s.reorderNotes,
     })),
   );
+  const slots = usePaletteStore((s) => s.slots);
 
   // 显示在笔记球区的前 8 条笔记（严格按 store 当前顺序截取；置顶已在 store 顺序里处于最前）
   const ballNotes: Note[] = useMemo(() => notes.slice(0, MAX_NOTE_BALLS), [notes]);
@@ -358,6 +377,11 @@ const NoteBar: React.FC = () => {
     [activeThumbNoteId, notes],
   );
 
+  // 缩略预览悬浮卡身份色：绑定槽 → 槽当前色；旧数据静态解析；统一走解析后的内联变量
+  const activeThumbColorMeta = activeThumbNote
+    ? noteDisplayMeta(activeThumbNote, slots)
+    : null;
+
   // 生成 peek 球 / + 球 / 管理球 的气泡提示文案
   const peekTipText = useMemo(
     () => notes.length > 0
@@ -446,7 +470,8 @@ const NoteBar: React.FC = () => {
       {activeThumbNote && (
         <div
           ref={(el) => { tooltipRefs.current.set(`note:${activeThumbNote.id}`, el); }}
-          className={`noteball-tooltip color-${activeThumbNote.color ?? 'yellow'}`}
+          className="noteball-tooltip"
+          style={activeThumbColorMeta?.style}
           onMouseEnter={() => { cancelTooltipHide(); showTooltipFor(`note:${activeThumbNote.id}`); }}
           onMouseLeave={scheduleTooltipHide}
         >
@@ -565,7 +590,7 @@ const NoteBar: React.FC = () => {
               </div>
             )}
             {ballNotes.map((note, index) => {
-              const color = note.color ?? 'yellow';
+              const { style: colorStyle } = noteDisplayMeta(note, slots);
               const synthId = `note:${note.id}`;
               const isDragging = dragIndex === index;
               const isDragOver = dragOverIndex === index;
@@ -576,11 +601,12 @@ const NoteBar: React.FC = () => {
                 >
                   <div
                     ref={(el) => { ballRefs.current.set(note.id, el); }}
-                    className={`noteball note color-${color}
+                    className={`noteball note
                       ${isDragging ? 'dragging' : ''}
                       ${isDragOver && dragOverPosition === 'left' ? 'drop-left' : ''}
                       ${isDragOver && dragOverPosition === 'right' ? 'drop-right' : ''}
                     `}
+                    style={colorStyle}
                     role="button"
                     tabIndex={0}
                     draggable

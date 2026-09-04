@@ -56,29 +56,8 @@
   opacity: 0.95;
 }
 
-/* ── 16 色便签配色：改为适配深色玻璃的色阶
-      --note-accent = 400 档（明亮主色），用于色条/焦点环/主按钮
-      --note-soft   = 8% 透明度的 tint，用于 header 背景
-   ── 黄/橙系（4） ── */
-.note-editor-dialog.color-yellow { --note-accent: #facc15; --note-soft: rgba(250, 204, 21, 0.10); }
-.note-editor-dialog.color-amber  { --note-accent: #f59e0b; --note-soft: rgba(245, 158, 11, 0.10); }
-.note-editor-dialog.color-orange { --note-accent: #fb923c; --note-soft: rgba(251, 146, 60, 0.10); }
-.note-editor-dialog.color-coral  { --note-accent: #f97316; --note-soft: rgba(249, 115, 22, 0.10); }
-/* ── 粉/红系（3） ── */
-.note-editor-dialog.color-pink   { --note-accent: #f472b6; --note-soft: rgba(244, 114, 182, 0.10); }
-.note-editor-dialog.color-rose   { --note-accent: #e879f9; --note-soft: rgba(232, 121, 249, 0.10); }
-.note-editor-dialog.color-red    { --note-accent: #f87171; --note-soft: rgba(248, 113, 113, 0.10); }
-/* ── 绿/青系（5） ── */
-.note-editor-dialog.color-lime   { --note-accent: #a3e635; --note-soft: rgba(163, 230, 53, 0.10); }
-.note-editor-dialog.color-green  { --note-accent: #4ade80; --note-soft: rgba(74, 222, 128, 0.10); }
-.note-editor-dialog.color-emerald{ --note-accent: #34d399; --note-soft: rgba(52, 211, 153, 0.10); }
-.note-editor-dialog.color-teal   { --note-accent: #2dd4bf; --note-soft: rgba(45, 212, 191, 0.10); }
-.note-editor-dialog.color-cyan   { --note-accent: #22d3ee; --note-soft: rgba(34, 211, 238, 0.10); }
-/* ── 蓝/紫系（4） ── */
-.note-editor-dialog.color-sky    { --note-accent: #38bdf8; --note-soft: rgba(56, 189, 248, 0.10); }
-.note-editor-dialog.color-blue   { --note-accent: #60a5fa; --note-soft: rgba(96, 165, 250, 0.10); }
-.note-editor-dialog.color-indigo { --note-accent: #818cf8; --note-soft: rgba(129, 140, 248, 0.10); }
-.note-editor-dialog.color-purple { --note-accent: #c084fc; --note-soft: rgba(192, 132, 252, 0.10); }
+/* 便签主题色由内联 style 注入 --note-accent / --note-soft（16 槽调色板当前色或自定义色，
+   见 paletteColors.resolveColorHex + noteColors.noteHexStyleVars），无需静态 .color-* 规则 */
 
 /* ── Header ── */
 .note-editor-header {
@@ -131,43 +110,18 @@
   gap: 14px;
   flex-wrap: wrap;
 }
+/* 取色器区：通用 Palette（选择模式）内嵌于编辑器头部，16 槽 + 自定义随宽度自然换行（宽屏约一行） */
 .note-editor-color-palette {
-  display: inline-flex;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--glass-surface-300) 70%, transparent);
+  border: var(--glass-border-subtle);
+  box-sizing: border-box;
 }
-.note-color-chip {
-  width: 22px; height: 22px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  outline: none;
-  cursor: pointer;
-  padding: 0;
-  transition: transform var(--motion-fast), box-shadow var(--motion-fast), border-color var(--motion-fast);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.4);
-}
-.note-color-chip:hover { transform: scale(1.15); }
-.note-color-chip.active {
-  border-color: var(--text-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 20%, transparent);
-}
-/* ── 色盘 chip 16 色（深色背景上更亮、对比更强） ── */
-.note-color-chip.yellow  { background: #facc15; }
-.note-color-chip.amber   { background: #f59e0b; }
-.note-color-chip.orange  { background: #fb923c; }
-.note-color-chip.coral   { background: #f97316; }
-.note-color-chip.pink    { background: #f472b6; }
-.note-color-chip.rose    { background: #e879f9; }
-.note-color-chip.red     { background: #f87171; }
-.note-color-chip.lime    { background: #a3e635; }
-.note-color-chip.green   { background: #4ade80; }
-.note-color-chip.emerald { background: #34d399; }
-.note-color-chip.teal    { background: #2dd4bf; }
-.note-color-chip.cyan    { background: #22d3ee; }
-.note-color-chip.sky     { background: #38bdf8; }
-.note-color-chip.blue    { background: #60a5fa; }
-.note-color-chip.indigo  { background: #818cf8; }
-.note-color-chip.purple  { background: #c084fc; }
 
 /* ── Body ── */
 .note-editor-body {
@@ -304,7 +258,6 @@
 
 /* ── 触控设备 ── */
 @media (hover: none) and (pointer: coarse) {
-  .note-color-chip { width: 28px; height: 28px; }
   .note-editor-btn { min-height: 44px; padding: 0 18px; }
   .note-editor-close { width: 40px; height: 40px; }
 }
