@@ -195,7 +195,8 @@ body.is-dragging-active .icon-item.dragging .icon-circle > .cc-glass {
 }
 
 /* ── 彩色半透明玻璃基底（样例 .crystal-folder）：
-   145° 材质深浅渐变 + backdrop 磨砂 + 上/左亮边、下/右暗边 + 环境光投影 */
+   145° 材质深浅渐变 + backdrop 磨砂 + 上/左亮边、下/右暗边
+   + 边缘内部发光（玻璃厚度感） + 环境光投影 */
 .icon-circle > .cc-glass {
   inset: 0;
   border-radius: inherit;
@@ -213,6 +214,9 @@ body.is-dragging-active .icon-item.dragging .icon-circle > .cc-glass {
     0 8px 30px rgba(0, 0, 0, 0.30),
     inset 0 1px 0 var(--c-inset),
     inset 0 -1px 0 rgba(0, 0, 0, 0.08),
+    /* 边缘内部发光 —— 玻璃厚度感（同 Crystal_block.html 的 .crystal-folder） */
+    inset 0 0 24px hsla(var(--c-hue), var(--c-sat), calc(var(--c-lit) + 35%), 0.18),
+    inset 0 0 6px hsla(var(--c-hue), var(--c-sat), calc(var(--c-lit) + 45%), 0.25),
     0 0 50px var(--c-shadow);
   z-index: 1;
   transition: box-shadow 0.4s ease;
@@ -223,6 +227,9 @@ body.is-dragging-active .icon-item.dragging .icon-circle > .cc-glass {
     0 18px 50px rgba(0, 0, 0, 0.35),
     inset 0 1px 0 hsla(var(--c-hue), var(--c-sat), calc(var(--c-lit) + 45%), 0.60),
     inset 0 -1px 0 rgba(0, 0, 0, 0.08),
+    /* hover 时边缘内发光随之增强（同 Crystal_block.html 的 .crystal-folder:hover） */
+    inset 0 0 30px hsla(var(--c-hue), var(--c-sat), calc(var(--c-lit) + 40%), 0.22),
+    inset 0 0 8px hsla(var(--c-hue), var(--c-sat), calc(var(--c-lit) + 50%), 0.30),
     0 0 35px var(--c-glow);
 }
 
