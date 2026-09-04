@@ -7,6 +7,7 @@ import { useDragAndDrop } from '../../hooks/useDragAndDrop';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { usePaletteStore } from '../../store/usePaletteStore';
 import { resolveColorHex, type ColorSelection } from '../../utils/paletteColors';
+import { hexToHsl } from '../../utils/colorUtils';
 
 interface FolderWindowProps {
   folderName: string;
@@ -346,6 +347,17 @@ const FolderWindow: React.FC<FolderWindowProps> = memo(({
   // 颜色球展示的有效色：绑定槽→槽当前色；静态→解析快照；未设置（空串）→缺省水晶蓝
   const effectiveFolderColor = resolveColorHex(folderSelection, slots) || DEFAULT_FOLDER_COLOR;
 
+  // 文件夹窗口主题：把有效色换算为 --fc-hue/--fc-sat/--fc-lit，
+  // 注入 .folder-window 供 CSS 派生半透明色系分层（底色/描边/内外光）
+  const folderHsl = hexToHsl(effectiveFolderColor);
+  const folderThemeStyle = folderHsl
+    ? ({
+        '--fc-hue': String(Math.round(folderHsl.h)),
+        '--fc-sat': `${Math.round(folderHsl.s)}%`,
+        '--fc-lit': `${Math.round(folderHsl.l)}%`,
+      } as React.CSSProperties)
+    : undefined;
+
   const handleColorChange = useCallback((sel: ColorSelection) => {
     onFolderColorChange?.(sel);
   }, [onFolderColorChange]);
@@ -545,7 +557,7 @@ const FolderWindow: React.FC<FolderWindowProps> = memo(({
       onDragLeave={handleDragLeave}
       onDragEnter={handleDragEnter}
     >
-      <div className="folder-window" ref={windowRef}>
+      <div className="folder-window" ref={windowRef} style={folderThemeStyle}>
         <FolderHeader
           folderName={effectiveFolderName}
           showEditButton={showEditButton}

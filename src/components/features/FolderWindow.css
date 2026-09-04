@@ -30,14 +30,31 @@
 /* ---------- 第二层：Folder Window 外壳 ---------- */
 .folder-window {
   position: relative; /* 承载 ::before 左竖条 */
-  background: var(--glass-surface-700);
+  /* 文件夹材质色（由 FolderWindow.tsx 按 effectiveFolderColor 换算内联注入；此处为缺省晶蓝兜底） */
+  --fc-hue: 232;
+  --fc-sat: 100%;
+  --fc-lit: 80%;
+  /* 半透明玻璃 + 文件夹色系分层薄染：上缘略亮、中部最透、下缘微沉，整窗带材质色调 */
+  background:
+    linear-gradient(165deg,
+      hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) + 12%), 0.12) 0%,
+      hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) - 20%), 0.04) 52%,
+      hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) - 34%), 0.09) 100%),
+    var(--glass-surface-700);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--glass-border);
+  /* 描边混入材质亮调，比纯玻璃描边更有色彩感 */
+  border: 1px solid color-mix(in srgb,
+    hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) + 28%), 0.40) 55%,
+    var(--glass-border));
   backdrop-filter: blur(var(--glass-blur)) saturate(155%);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(155%);
   box-shadow:
+    /* 顶部内高光带一点材质色（玻璃厚度感） */
+    inset 0 1px 0 hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) + 22%), 0.10),
     var(--glass-inner-hl),
-    var(--shadow-glass-lg);
+    var(--shadow-glass-lg),
+    /* 窗外一圈低调的材质色环境光晕 */
+    0 0 90px hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) - 28%), 0.12);
   min-width: clamp(900px, 65%, 1800px);
   max-width: clamp(900px, 65%, 1800px);
   max-height: 80vh;
@@ -66,7 +83,12 @@
   padding: clamp(14px, 1.8vw, 20px) clamp(18px, 2.2vw, 24px);
   border-bottom: 1px solid color-mix(in srgb, var(--glass-border) 90%, transparent);
   gap: clamp(10px, 1vw, 16px);
-  background: color-mix(in srgb, var(--glass-surface-500) 50%, transparent);
+  /* 头部 = 材质色最浓的受光带：从顶部内高光渐变到底部回归中性玻璃 */
+  background:
+    linear-gradient(180deg,
+      hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) + 14%), 0.16) 0%,
+      hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) - 18%), 0.04) 100%),
+    color-mix(in srgb, var(--glass-surface-500) 50%, transparent);
 }
 
 .folder-name-container {
@@ -372,20 +394,25 @@
   overflow-x: hidden;
   max-height: calc(80vh - 80px);
   color: var(--text-primary);
+  /* 内容区仅留顶部一缕材质色漫射光，主体保持中性玻璃，避免影响图标观感 */
+  background:
+    radial-gradient(130% 55% at 50% 0%,
+      hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) - 6%), 0.05) 0%,
+      transparent 62%);
 }
 
-/* 滚动条 6px 深色主题色阶 */
+/* 滚动条 6px：圆点换成文件夹材质色 */
 .folder-content::-webkit-scrollbar { width: 6px; }
 .folder-content::-webkit-scrollbar-track {
   background: color-mix(in srgb, var(--glass-surface-300) 55%, transparent);
   border-radius: 3px;
 }
 .folder-content::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--aurora-2) 35%, rgba(255,255,255,.18));
+  background: hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) + 6%), 0.32);
   border-radius: 3px;
 }
 .folder-content::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--aurora-2) 55%, rgba(255,255,255,.24));
+  background: hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) + 12%), 0.48);
 }
 
 .folder-icons-grid { width: 100%; }
@@ -407,8 +434,15 @@
   justify-content: center; /* 功能动作居中（左右留白对称） */
   gap: 16px;
   padding: 16px 24px;
-  border-top: 1px solid color-mix(in srgb, var(--glass-border) 90%, transparent);
-  background: color-mix(in srgb, var(--glass-surface-500) 45%, transparent);
+  border-top: 1px solid color-mix(in srgb,
+    hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) + 8%), 0.18) 60%,
+    transparent);
+  /* 底部 = 材质色回光带：中部回归中性玻璃，下缘再次带上材质亮调 */
+  background:
+    linear-gradient(180deg,
+      hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) - 22%), 0.03) 0%,
+      hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) + 10%), 0.12) 100%),
+    color-mix(in srgb, var(--glass-surface-500) 45%, transparent);
 }
 
 /* 功能按钮：与全局 Aurora 按钮规格 1:1 对齐（--btn-h / --btn-radius / --btn-pad-x），
