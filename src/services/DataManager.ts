@@ -289,6 +289,26 @@ class DataManager {
     DataRepository.saveConfigValue(STORAGE_KEYS.AUTO_SAVE_DURATION, String(duration));
   }
 
+  public updateWeatherEnabled(enabled: boolean): void {
+    this.updateSettingsField('weatherEnabled', enabled);
+  }
+
+  public updateSearchEnabled(enabled: boolean): void {
+    this.updateSettingsField('searchEnabled', enabled);
+  }
+
+  public updateNotesEnabled(enabled: boolean): void {
+    this.updateSettingsField('notesEnabled', enabled);
+  }
+
+  public updateTodosEnabled(enabled: boolean): void {
+    this.updateSettingsField('todosEnabled', enabled);
+  }
+
+  public updatePagesEnabled(enabled: boolean): void {
+    this.updateSettingsField('pagesEnabled', enabled);
+  }
+
   public updateBlurLevel(blurLevel: number): void {
     this.updateData('wallpaper', () => {
       const current = this.data.wallpaper;
@@ -309,6 +329,30 @@ class DataManager {
         wallpaper: current
           ? { ...current, overlayLevel }
           : { url: null, type: 'solid', overlayLevel },
+      };
+    });
+  }
+
+  public updateWallpaperAutoChange(autoChangeEnabled: boolean, autoChangeIntervalHours: number): void {
+    this.updateData('wallpaper', () => {
+      const current = this.data.wallpaper;
+      this.data = {
+        ...this.data,
+        wallpaper: current
+          ? { ...current, autoChangeEnabled, autoChangeIntervalHours }
+          : { url: null, type: 'gradient', autoChangeEnabled, autoChangeIntervalHours },
+      };
+    });
+  }
+
+  public updateWallpaperLastChangeAt(lastAutoChangeAt: number): void {
+    this.updateData('wallpaper', () => {
+      const current = this.data.wallpaper;
+      this.data = {
+        ...this.data,
+        wallpaper: current
+          ? { ...current, lastAutoChangeAt }
+          : { url: null, type: 'gradient', lastAutoChangeAt },
       };
     });
   }

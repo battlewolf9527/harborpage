@@ -26,6 +26,16 @@ export function useAutoSave({
 
   const shouldRun = hasUnsavedChanges && autoSaveEnabled && !isSaving;
 
+  // 渲染期调整（替代 effect 内同步 setState）：shouldRun 或时长变化时，
+  // 把倒计时归零到完整时长。ref 同步留在 effect（规则禁止渲染期写 ref）。
+  const [runConfig, setRunConfig] = useState({ active: shouldRun, duration: autoSaveDuration });
+  if (runConfig.active !== shouldRun || runConfig.duration !== autoSaveDuration) {
+    setRunConfig({ active: shouldRun, duration: autoSaveDuration });
+    if (shouldRun) {
+      setCountdown(autoSaveDuration);
+    }
+  }
+
   // 当 shouldRun 切换时管理定时器
   useEffect(() => {
     if (!shouldRun) {
@@ -37,7 +47,6 @@ export function useAutoSave({
     }
 
     countdownRef.current = autoSaveDuration;
-    setCountdown(autoSaveDuration);
 
     // 保持简单稳定：每秒更新一次。
     // SavePrompt 组件只有在 hasUnsavedChanges=true 且 isVisible=true 时才会渲染倒计时SVG，

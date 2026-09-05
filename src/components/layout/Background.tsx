@@ -4,7 +4,8 @@ import './Background.css';
 import { useWallpaperStore } from '../../store/useWallpaperStore';
 
 const getWallpaperUrl = (originalUrl: string, type: string): string => {
-  if (originalUrl.startsWith('data:') || type === 'local') return originalUrl;
+  // 自定义 URL 壁纸直接加载（/api/wallpaper 代理有域名白名单，无法代理任意用户 URL）
+  if (originalUrl.startsWith('data:') || type === 'local' || type === 'custom') return originalUrl;
   return `/api/wallpaper?url=${encodeURIComponent(originalUrl)}`;
 };
 

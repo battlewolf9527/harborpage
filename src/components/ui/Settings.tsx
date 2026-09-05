@@ -85,12 +85,32 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
     setSiteTitle,
     iconColumns,
     setIconColumns,
+    weatherEnabled,
+    setWeatherEnabled,
+    searchEnabled,
+    setSearchEnabled,
+    notesEnabled,
+    setNotesEnabled,
+    todosEnabled,
+    setTodosEnabled,
+    pagesEnabled,
+    setPagesEnabled,
   } = useSettingsStore(
     useShallow((s) => ({
       siteTitle: s.siteTitle,
       setSiteTitle: s.setSiteTitle,
       iconColumns: s.iconColumns,
       setIconColumns: s.setIconColumns,
+      weatherEnabled: s.weatherEnabled,
+      setWeatherEnabled: s.setWeatherEnabled,
+      searchEnabled: s.searchEnabled,
+      setSearchEnabled: s.setSearchEnabled,
+      notesEnabled: s.notesEnabled,
+      setNotesEnabled: s.setNotesEnabled,
+      todosEnabled: s.todosEnabled,
+      setTodosEnabled: s.setTodosEnabled,
+      pagesEnabled: s.pagesEnabled,
+      setPagesEnabled: s.setPagesEnabled,
     })),
   );
 
@@ -249,7 +269,74 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
           </div>
         </div>
 
-        {/* ── 第 3 组：数据管理 ───────────────────────────── */}
+        {/* ── 第 3 组：功能开关（控制主界面上各功能入口的显隐） ── */}
+        <div className="settings-section">
+          <h3>功能开关</h3>
+          <div className="settings-feature-list">
+            <div className="settings-feature-row">
+              <span className="settings-feature-name">天气</span>
+              <label className="settings-switch">
+                <input
+                  type="checkbox"
+                  checked={weatherEnabled}
+                  onChange={(e) => setWeatherEnabled(e.target.checked)}
+                  aria-label="显示天气组件"
+                />
+                <span className="settings-switch-track" />
+              </label>
+            </div>
+            <div className="settings-feature-row">
+              <span className="settings-feature-name">搜索框</span>
+              <label className="settings-switch">
+                <input
+                  type="checkbox"
+                  checked={searchEnabled}
+                  onChange={(e) => setSearchEnabled(e.target.checked)}
+                  aria-label="显示搜索框"
+                />
+                <span className="settings-switch-track" />
+              </label>
+            </div>
+            <div className="settings-feature-row">
+              <span className="settings-feature-name">笔记</span>
+              <label className="settings-switch">
+                <input
+                  type="checkbox"
+                  checked={notesEnabled}
+                  onChange={(e) => setNotesEnabled(e.target.checked)}
+                  aria-label="显示笔记入口"
+                />
+                <span className="settings-switch-track" />
+              </label>
+            </div>
+            <div className="settings-feature-row">
+              <span className="settings-feature-name">待办事项</span>
+              <label className="settings-switch">
+                <input
+                  type="checkbox"
+                  checked={todosEnabled}
+                  onChange={(e) => setTodosEnabled(e.target.checked)}
+                  aria-label="显示待办事项入口"
+                />
+                <span className="settings-switch-track" />
+              </label>
+            </div>
+            <div className="settings-feature-row">
+              <span className="settings-feature-name">多页面</span>
+              <label className="settings-switch">
+                <input
+                  type="checkbox"
+                  checked={pagesEnabled}
+                  onChange={(e) => setPagesEnabled(e.target.checked)}
+                  aria-label="显示多页面入口"
+                />
+                <span className="settings-switch-track" />
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* ── 第 4 组：数据管理 ───────────────────────────── */}
         <div className="settings-section">
           <h3>数据管理</h3>
           <div className="tool-buttons">
@@ -274,7 +361,7 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
           </div>
         </div>
 
-        {/* ── 第 4 组：账户与关于 ─────────────────────────── */}
+        {/* ── 第 5 组：账户与关于 ─────────────────────────── */}
         <div className="settings-section">
           <h3>账户与关于</h3>
           <div className="tool-buttons">

@@ -19,6 +19,7 @@ import Weather from './components/features/Weather'
 import TodoSidebar from './components/features/TodoSidebar'
 import PagesSidebar from './components/features/PagesSidebar'
 import NoteBar from './components/ui/NoteBar'
+import FeatureDock from './components/common/FeatureDock'
 import type { Website, SearchEngine } from './types'
 import { useAuth } from './hooks/useAuth';
 import { useDataInitialization } from './hooks/useDataInitialization';
@@ -26,6 +27,7 @@ import { useLongPress } from './hooks/useLongPress';
 import { useDeleteIcon } from './hooks/useDeleteIcon';
 import { useAddWebsiteShortcut } from './hooks/useAddWebsiteShortcut';
 import { useWallpaperInit } from './hooks/useWallpaperInit';
+import { useWallpaperAutoChange } from './hooks/useWallpaperAutoChange';
 import { isClickOnEmptyArea } from './utils/deviceUtils';
 import IconDownloadQueue from './services/IconDownloadQueue';
 import DataRepository from './services/DataRepository';
@@ -44,6 +46,7 @@ const useDocumentTitle = (title: string) => {
 function App() {
   const { isAuthenticated, isCheckingAuth, handleLogin } = useAuth();
   useWallpaperInit(isAuthenticated, isCheckingAuth);
+  useWallpaperAutoChange(isAuthenticated, isCheckingAuth);
   const settingsWindowRef = useRef<{ handleClose: () => void }>(null);
   const addIconWindowRef = useRef<{ handleClose: () => void }>(null);
 
@@ -62,7 +65,7 @@ function App() {
     };
   }, []);
 
-  const { iconColumns, siteTitle } = useSettingsSelector();
+  const { iconColumns, siteTitle, weatherEnabled, searchEnabled, notesEnabled, todosEnabled, pagesEnabled, settingsReady } = useSettingsSelector();
   useDocumentTitle(siteTitle);
 
   const {
@@ -199,7 +202,8 @@ function App() {
       onMouseLeave={handleMouseLeave}
     >
       <Background />
-      <Weather />
+      {/* 等账号设置加载完成后再挂载天气组件，避免天气关闭时仍触发定位/天气请求 */}
+      {settingsReady && weatherEnabled && <Weather />}
       
       <button 
         className="settings-button"
@@ -209,7 +213,7 @@ function App() {
         ⚙️
       </button>
 
-      <Search onSearch={handleSearch} />
+      {searchEnabled && <Search onSearch={handleSearch} />}
       
       <IconsContainer
         websites={websites}
@@ -309,11 +313,14 @@ function App() {
         onCancel={cancelDeleteIcon}
       />
 
-      <PagesSidebar />
-      <TodoSidebar />
+      {/* 宿主 Dock：为已注册功能渲染共享入口球（倒置依赖宿主侧） */}
+      <FeatureDock />
 
-      {/* 底部半隐入笔记栏（仅登录后展示） */}
-      <NoteBar />
+      {pagesEnabled && <PagesSidebar />}
+      {todosEnabled && <TodoSidebar />}
+
+      {/* 底部半隐入笔记栏（仅登录后展示）；功能开关关闭时不渲染入口 peek 球 */}
+      {notesEnabled && <NoteBar />}
 
       <MoveToPageDialog
         isOpen={!!moveDialog}

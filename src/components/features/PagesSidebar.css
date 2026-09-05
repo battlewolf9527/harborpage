@@ -1,4 +1,6 @@
 /* PagesSidebar.css - Aurora Dark Glass 左侧页面切换侧边栏
+ * 入口球已收敛到共享组件 PeekBall（宿主 FeatureDock 渲染），
+ * 本文件只负责「面板」本体。
  * — 本地 sidebar 专有色（Pages 用 emerald/amber 作为品牌绿-金系），
  *   外壳、阴影、文字、边框全部用全局 glass token。
  */
@@ -37,188 +39,6 @@
 
 .pages-sidebar.animating {
   pointer-events: none;
-}
-
-/* 圆形图标按钮 - 左侧（完全对齐 NoteBar peek-ball 水晶球风格）
-   —— 身份色保留 emerald→amber，但用水晶球六层渐变 + 内壁折射 + 底部色光
-      （samples/CrystalBall.html 方法，与 .noteball / notebar-peek-ball 同一套）。
-   关键：本容器是 <.pages-sidebar> 的 DOM 兄弟节点，CSS 变量不会跨兄弟继承 →
-        必须在本容器自己的 scope 上重新声明 --page-primary-color / --page-secondary-color，
-        否则 identity gradient / box-shadow 的 color-mix 会因变量 undefined 整行失效 → 球全透明连外框都没 */
-.pages-sidebar-icon {
-  --page-primary-color: #10b981;
-  --page-secondary-color: #f59e0b;
-  --tint: var(--page-primary-color);      /* 主身份色：翠绿 */
-  --tint-2: var(--page-secondary-color);  /* 次身份色：琥珀（底部氛围光） */
-  --ball-color:         color-mix(in srgb, var(--tint) 40%, transparent);
-  --ball-color-soft:    color-mix(in srgb, var(--tint) 15%, transparent);
-  --ball-glow:          color-mix(in srgb, var(--tint) 50%, transparent);
-  --ball-glow-soft:     color-mix(in srgb, var(--tint) 20%, transparent);
-  --ball-glow-ambient:  color-mix(in srgb, var(--tint) 8%, transparent);
-  --ball-glow-dim:      color-mix(in srgb, var(--tint) 18%, transparent);
-  --ball-glow-dim-soft: color-mix(in srgb, var(--tint) 8%, transparent);
-  position: fixed;
-  left: calc(var(--sidebar-toggle-size) / 2 * -1 + 2px);
-  top: 50%;
-  transform: translateY(-50%);
-  width: var(--sidebar-toggle-size);
-  height: var(--sidebar-toggle-size);
-  cursor: pointer;
-  z-index: 1000;
-  transition:
-    left var(--motion-normal),
-    opacity var(--motion-fast),
-    transform var(--motion-normal);
-  /* idle：0.75（原 0.3 太低几乎不可见），与 NoteBar peek-ball 平衡 */
-  opacity: 0.75;
-}
-
-.pages-sidebar-icon:hover {
-  left: 0;
-  opacity: 1;
-}
-
-/* expanded：按钮贴边并旋转（保持旧交互语义，但视觉从 child .pages-icon-container 呈现） */
-.pages-sidebar.expanded ~ .pages-sidebar-icon {
-  left: 0 !important;
-  transform: translateY(-50%) rotate(180deg);
-  opacity: 1 !important;
-  z-index: 1000;
-}
-
-.pages-sidebar.expanded ~ .pages-sidebar-icon:hover {
-  transform: translateY(-50%) rotate(180deg) scale(1.06);
-}
-
-/* ── 核心：玻璃弹珠层 —— 与 NoteBar.peek-ball 同规格 ── */
-.pages-icon-container {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  transition:
-    transform var(--motion-spring),
-    filter 260ms ease,
-    opacity 260ms ease;
-  transform: translateY(0) scale(1);
-  filter: none;
-  isolation: isolate;
-  overflow: visible;
-  /* ── 水晶球（samples/CrystalBall.html 六层渐变 + 内壁折射 + 底部色光）──
-     —— 与 NoteBar.peek-ball / 笔记球 .noteball 同一套视觉方法 */
-  background:
-    radial-gradient(ellipse 70% 35% at 50% 95%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 55%),
-    radial-gradient(circle at 30% 22%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.1) 5%, rgba(255,255,255,0) 10%),
-    radial-gradient(circle at 22% 18%, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.3) 6%, rgba(255,255,255,0) 12%),
-    radial-gradient(circle at 50% 55%, var(--ball-color) 0%, transparent 65%),
-    radial-gradient(circle at 50% 50%, var(--ball-color-soft) 0%, transparent 70%),
-    radial-gradient(circle at 50% 50%, rgba(25,25,40,0.4) 0%, rgba(8,8,18,0.9) 100%);
-  /* 内壁折射 + 底部氛围光（无白色描边环，避免塑料感） */
-  box-shadow:
-    inset 0 0 12px 3px rgba(255,255,255,0.35),
-    inset 0 0 4px 1px rgba(255,255,255,0.55),
-    0 0 8px 1px var(--ball-glow-dim),
-    0 0 16px 3px var(--ball-glow-dim-soft),
-    0 10px 30px rgba(0,0,0,0.5),
-    0 12px 30px -8px color-mix(in srgb, var(--tint-2) 22%, transparent);
-  /* 呼吸动画（默认暂停，仅 hover 用户看时跑，防 CPU 空转） */
-  animation: pages-peek-breath 4.6s ease-in-out infinite;
-  animation-play-state: paused;
-}
-
-/* hover 跑呼吸 + 弹跳显形：完全对齐 NoteBar.peek-ball hover 行为 */
-.pages-sidebar-icon:hover .pages-icon-container,
-.pages-sidebar-icon:focus-visible .pages-icon-container,
-.pages-sidebar.expanded ~ .pages-sidebar-icon .pages-icon-container {
-  animation-play-state: running;
-}
-.pages-sidebar-icon:hover .pages-icon-container,
-.pages-sidebar-icon:focus-visible .pages-icon-container {
-  opacity: 1;
-  transform: translateY(-2px) scale(1.06);
-  filter: brightness(1.12);   /* 水晶球 hover 提亮（不再 saturate 增色） */
-  outline: none;
-}
-
-.pages-icon-container svg {
-  color: white;
-  width: clamp(16px, 0.9vw, 20px);
-  height: clamp(16px, 0.9vw, 20px);
-  transition: transform var(--motion-fast);
-  /* 水晶球为深色玻璃，白图标配暗投影 + 身份色微光（与 NoteBar.peek-ball emoji 阴影一致） */
-  filter:
-    drop-shadow(0 1px 4px rgba(0,0,0,0.5))
-    drop-shadow(0 0 8px var(--ball-glow));
-  position: relative;
-  z-index: 2;
-}
-
-/* 气球提示：升级为 Aurora 玻璃 tooltip（与 Todo tooltip 统一） */
-.pages-tooltip {
-  position: absolute;
-  left: 100%;
-  top: 50%;
-  transform: translateY(-50%);
-  background: var(--glass-surface-300);
-  backdrop-filter: var(--glass-blur-soft);
-  -webkit-backdrop-filter: var(--glass-blur-soft);
-  color: var(--text-primary);
-  padding: 6px 12px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-border-subtle);
-  font-size: var(--font-sm);
-  font-weight: 500;
-  font-family: inherit;
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  transition: all var(--motion-fast);
-  pointer-events: none;
-  z-index: 1001;
-  margin-left: 10px;
-  box-shadow: var(--shadow-glass-sm);
-}
-
-.pages-tooltip::after {
-  content: '';
-  position: absolute;
-  right: 100%;
-  top: 50%;
-  transform: translateY(-50%);
-  border: 6px solid transparent;
-  border-right-color: var(--glass-surface-300);
-}
-
-.pages-sidebar-icon:hover .pages-tooltip {
-  opacity: 1;
-  visibility: visible;
-}
-
-/* 呼吸动画：与 NoteBar.nb-peek-breath 同方法 —— 直接在球体自身 box-shadow 上做
-   光晕扩张↔回缩，光晕钉在球缘不会与球脱开；身份色替换为 Pages 绿-金系 */
-@keyframes pages-peek-breath {
-  0%, 100% {
-    box-shadow:
-      inset 0 0 12px 3px rgba(255,255,255,0.35),
-      inset 0 0 4px 1px rgba(255,255,255,0.55),
-      0 0 8px 1px var(--ball-glow-dim),
-      0 0 16px 3px var(--ball-glow-dim-soft),
-      0 10px 30px rgba(0,0,0,0.5),
-      0 12px 30px -8px color-mix(in srgb, var(--tint-2) 22%, transparent);
-  }
-  50% {
-    box-shadow:
-      inset 0 0 12px 3px rgba(255,255,255,0.45),
-      inset 0 0 4px 1px rgba(255,255,255,0.65),
-      0 0 14px 2px var(--ball-glow),
-      0 0 24px 5px var(--ball-glow-soft),
-      0 0 36px 9px var(--ball-glow-ambient),
-      0 10px 30px rgba(0,0,0,0.5),
-      0 14px 40px -6px color-mix(in srgb, var(--tint-2) 35%, transparent);
-  }
 }
 
 /* 侧边栏内容 */
@@ -587,18 +407,6 @@
     left: 0;
   }
 
-  .pages-sidebar-icon {
-    width: clamp(44px, 7vw, 52px);
-    height: clamp(44px, 7vw, 52px);
-    left: calc(clamp(44px, 7vw, 52px) / 2 * -1 + 3px);
-    opacity: 0.5;
-  }
-
-  .pages-icon-container svg {
-    width: clamp(20px, 3.2vw, 24px);
-    height: clamp(20px, 3.2vw, 24px);
-  }
-
   .pages-sidebar-content {
     padding: 18px 16px;
     gap: 10px;
@@ -621,10 +429,6 @@
     opacity: 0.6;
   }
 
-  .pages-tooltip {
-    display: none;
-  }
-
   .page-action-btn {
     width: 24px;
     height: 24px;
@@ -644,35 +448,8 @@
     min-height: 480px;
   }
 
-  .pages-sidebar-icon {
-    width: 42px;
-    height: 42px;
-    left: -18px;
-  }
-
-  .pages-icon-container svg {
-    width: 18px;
-    height: 18px;
-  }
-
   .pages-sidebar-content {
     padding: 16px 14px;
     gap: 8px;
-  }
-}
-
-/* ========== 触控设备优化 ========== */
-@media (hover: none) and (pointer: coarse) {
-  .pages-sidebar-icon {
-    opacity: 0.6;
-  }
-
-  .pages-sidebar-icon:hover {
-    transform: translateY(-50%);
-    opacity: 0.6;
-  }
-
-  .pages-sidebar.expanded ~ .pages-sidebar-icon:hover {
-    transform: translateY(-50%) rotate(180deg);
   }
 }

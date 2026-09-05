@@ -41,6 +41,11 @@ function syncToDataManager(): void {
     dataManager.updateIconColumns(s.iconColumns);
     dataManager.updateAutoSaveEnabled(s.autoSaveEnabled);
     dataManager.updateAutoSaveDuration(s.autoSaveDuration);
+    dataManager.updateWeatherEnabled(s.weatherEnabled);
+    dataManager.updateSearchEnabled(s.searchEnabled);
+    dataManager.updateNotesEnabled(s.notesEnabled);
+    dataManager.updateTodosEnabled(s.todosEnabled);
+    dataManager.updatePagesEnabled(s.pagesEnabled);
     dataManager.updateDefaultSearchEngineId(useSearchStore.getState().defaultSearchEngineId);
   });
 
@@ -52,6 +57,8 @@ function syncToDataManager(): void {
   safeSync('wallpaper', () => {
     const w = useWallpaperStore.getState();
     dataManager.updateWallpaper(w.wallpaper, w.wallpaperType);
+    dataManager.updateWallpaperAutoChange(w.autoChangeEnabled, w.autoChangeIntervalHours);
+    dataManager.updateWallpaperLastChangeAt(w.lastAutoChangeAt);
     if (w.solidColor) dataManager.updateSolidColor(w.solidColor);
     if (w.blurLevel !== undefined) dataManager.updateBlurLevel(w.blurLevel);
     if (w.overlayLevel !== undefined) dataManager.updateOverlayLevel(w.overlayLevel);

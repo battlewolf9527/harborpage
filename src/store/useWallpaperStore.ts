@@ -10,6 +10,12 @@ interface WallpaperState {
   blurLevel: number;
   overlayLevel: number;
   solidColor: string;
+  /** 自动更换壁纸开关（持久化，整页生效） */
+  autoChangeEnabled: boolean;
+  /** 自动更换间隔（小时） */
+  autoChangeIntervalHours: number;
+  /** 最近一次壁纸切换时间戳，作为自动更换计时的锚点 */
+  lastAutoChangeAt: number;
 
   setWallpaper: (wallpaper: string | null, type: WallpaperType) => void;
   /** 静默更新壁纸（不触发持久化），用于自动刷新 Bing/随机壁纸 */
@@ -17,22 +23,33 @@ interface WallpaperState {
   setBlurLevel: (blurLevel: number) => void;
   setOverlayLevel: (overlayLevel: number) => void;
   setSolidColor: (color: string) => void;
+  setAutoChangeEnabled: (enabled: boolean) => void;
+  setAutoChangeIntervalHours: (hours: number) => void;
   initialize: (wallpaperData?: WallpaperData) => void;
 }
 
-const initialState: Omit<WallpaperState, 'setWallpaper' | 'setWallpaperSilent' | 'setBlurLevel' | 'setOverlayLevel' | 'setSolidColor' | 'initialize'> = {
+const initialState: Omit<WallpaperState, 'setWallpaper' | 'setWallpaperSilent' | 'setBlurLevel' | 'setOverlayLevel' | 'setSolidColor' | 'setAutoChangeEnabled' | 'setAutoChangeIntervalHours' | 'initialize'> = {
   wallpaper: null,
   wallpaperType: 'gradient',
   blurLevel: 0,
   overlayLevel: 0.3,
   solidColor: '#667eea',
+  autoChangeEnabled: false,
+  autoChangeIntervalHours: 24,
+  lastAutoChangeAt: 0,
 };
 
-export const useWallpaperStore = create<WallpaperState>((set) => ({
+export const useWallpaperStore = create<WallpaperState>((set, get) => ({
   ...initialState,
 
   setWallpaper: (wallpaper, type) => {
-    set({ wallpaper, wallpaperType: type });
+    const { autoChangeEnabled } = get();
+    set({
+      wallpaper,
+      wallpaperType: type,
+      // 自动更换开启时，任何一次切换都重置锚点，从该时刻起重新计时
+      ...(autoChangeEnabled ? { lastAutoChangeAt: Date.now() } : {}),
+    });
   },
 
   setWallpaperSilent: (wallpaper, type) => {
@@ -53,6 +70,18 @@ export const useWallpaperStore = create<WallpaperState>((set) => ({
     set({ solidColor });
   },
 
+  setAutoChangeEnabled: (enabled) => {
+    set(() => ({
+      autoChangeEnabled: enabled,
+      // 开启时重置锚点，保证从开启时刻起满一个间隔后才首次更换
+      ...(enabled ? { lastAutoChangeAt: Date.now() } : {}),
+    }));
+  },
+
+  setAutoChangeIntervalHours: (hours) => {
+    set({ autoChangeIntervalHours: Math.max(1, Math.min(24, hours)) });
+  },
+
   initialize: (wallpaperData) => {
     if (wallpaperData) {
       const type = wallpaperData.type || 'gradient';
@@ -66,6 +95,9 @@ export const useWallpaperStore = create<WallpaperState>((set) => ({
         blurLevel: wallpaperData.blurLevel ?? 0,
         overlayLevel: wallpaperData.overlayLevel ?? 0.3,
         solidColor: wallpaperData.solidColor || '#667eea',
+        autoChangeEnabled: wallpaperData.autoChangeEnabled ?? false,
+        autoChangeIntervalHours: wallpaperData.autoChangeIntervalHours ?? 24,
+        lastAutoChangeAt: wallpaperData.lastAutoChangeAt ?? 0,
       });
       // 如果是 IndexedDB 标记，异步加载实际 data URL
       if (wallpaper === 'indexeddb://wallpaper') {
@@ -114,10 +146,19 @@ export const cleanupWallpaperPersist = () => {
   }
 };
 
+// 自动更换开关与间隔可能同时变化，持久化时读取最新状态一次写全
+const persistAutoChangeSettings = () => {
+  const { autoChangeEnabled, autoChangeIntervalHours } = useWallpaperStore.getState();
+  getDM().updateWallpaperAutoChange(autoChangeEnabled, autoChangeIntervalHours);
+};
+
 setupAutoPersist(useWallpaperStore, [
   { key: 'wallpaper', persist: debouncedPersistWallpaperState },
   { key: 'wallpaperType', persist: debouncedPersistWallpaperState },
   { key: 'blurLevel', persist: (v) => getDM().updateBlurLevel(v as number) },
   { key: 'overlayLevel', persist: (v) => getDM().updateOverlayLevel(v as number) },
   { key: 'solidColor', persist: (v) => getDM().updateSolidColor(v as string) },
+  { key: 'autoChangeEnabled', persist: persistAutoChangeSettings },
+  { key: 'autoChangeIntervalHours', persist: persistAutoChangeSettings },
+  { key: 'lastAutoChangeAt', persist: (v) => getDM().updateWallpaperLastChangeAt(v as number) },
 ]);

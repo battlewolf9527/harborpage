@@ -34,27 +34,34 @@
   --fc-hue: 232;
   --fc-sat: 100%;
   --fc-lit: 80%;
-  /* 半透明玻璃 + 文件夹色系分层薄染：上缘略亮、中部最透、下缘微沉，整窗带材质色调 */
+  /* 半透明玻璃 + 文件夹色系分层薄染：上缘略亮、中部最透、下缘微沉，整窗带材质色调。
+     亮度注：材质光各层 alpha/lightness 高于同类玻璃件，且 lightness 下限 clamp 到 ~42%，
+     避免深色文件夹把整窗压成暗沉（用户反馈"颜色过暗"）。 */
   background:
     linear-gradient(165deg,
-      hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) + 12%), 0.12) 0%,
-      hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) - 20%), 0.04) 52%,
-      hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) - 34%), 0.09) 100%),
+      hsla(var(--fc-hue), var(--fc-sat), clamp(58%, calc(var(--fc-lit) + 16%), 80%), 0.20) 0%,
+      hsla(var(--fc-hue), var(--fc-sat), clamp(46%, calc(var(--fc-lit) - 4%), 64%), 0.06) 52%,
+      hsla(var(--fc-hue), var(--fc-sat), clamp(42%, calc(var(--fc-lit) - 14%), 62%), 0.16) 100%),
+    /* 中性提亮层：垫在材质光下、玻璃基底上，缓解暗底压沉感 */
+    linear-gradient(180deg,
+      rgba(186, 196, 228, 0.15) 0%,
+      rgba(186, 196, 228, 0.05) 46%,
+      rgba(186, 196, 228, 0.12) 100%),
     var(--glass-surface-700);
   border-radius: var(--radius-lg);
   /* 描边混入材质亮调，比纯玻璃描边更有色彩感 */
   border: 1px solid color-mix(in srgb,
-    hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) + 28%), 0.40) 55%,
+    hsla(var(--fc-hue), var(--fc-sat), clamp(60%, calc(var(--fc-lit) + 26%), 84%), 0.52) 62%,
     var(--glass-border));
   backdrop-filter: blur(var(--glass-blur)) saturate(155%);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(155%);
   box-shadow:
     /* 顶部内高光带一点材质色（玻璃厚度感） */
-    inset 0 1px 0 hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) + 22%), 0.10),
+    inset 0 1px 0 hsla(var(--fc-hue), var(--fc-sat), clamp(62%, calc(var(--fc-lit) + 24%), 84%), 0.18),
     var(--glass-inner-hl),
     var(--shadow-glass-lg),
     /* 窗外一圈低调的材质色环境光晕 */
-    0 0 90px hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) - 28%), 0.12);
+    0 0 90px hsla(var(--fc-hue), var(--fc-sat), clamp(40%, calc(var(--fc-lit) - 20%), 60%), 0.18);
   min-width: clamp(900px, 65%, 1800px);
   max-width: clamp(900px, 65%, 1800px);
   max-height: 80vh;
@@ -86,8 +93,8 @@
   /* 头部 = 材质色最浓的受光带：从顶部内高光渐变到底部回归中性玻璃 */
   background:
     linear-gradient(180deg,
-      hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) + 14%), 0.16) 0%,
-      hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) - 18%), 0.04) 100%),
+      hsla(var(--fc-hue), var(--fc-sat), clamp(60%, calc(var(--fc-lit) + 18%), 82%), 0.24) 0%,
+      hsla(var(--fc-hue), var(--fc-sat), clamp(46%, calc(var(--fc-lit) - 8%), 64%), 0.06) 100%),
     color-mix(in srgb, var(--glass-surface-500) 50%, transparent);
 }
 
@@ -397,7 +404,7 @@
   /* 内容区仅留顶部一缕材质色漫射光，主体保持中性玻璃，避免影响图标观感 */
   background:
     radial-gradient(130% 55% at 50% 0%,
-      hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) - 6%), 0.05) 0%,
+      hsla(var(--fc-hue), var(--fc-sat), clamp(52%, calc(var(--fc-lit) + 2%), 72%), 0.09) 0%,
       transparent 62%);
 }
 
@@ -408,7 +415,7 @@
   border-radius: 3px;
 }
 .folder-content::-webkit-scrollbar-thumb {
-  background: hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) + 6%), 0.32);
+  background: hsla(var(--fc-hue), var(--fc-sat), clamp(56%, calc(var(--fc-lit) + 6%), 76%), 0.38);
   border-radius: 3px;
 }
 .folder-content::-webkit-scrollbar-thumb:hover {
@@ -447,13 +454,13 @@
   gap: 16px;
   padding: 16px 24px;
   border-top: 1px solid color-mix(in srgb,
-    hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) + 8%), 0.18) 60%,
+    hsla(var(--fc-hue), var(--fc-sat), clamp(56%, calc(var(--fc-lit) + 10%), 78%), 0.26) 60%,
     transparent);
   /* 底部 = 材质色回光带：中部回归中性玻璃，下缘再次带上材质亮调 */
   background:
     linear-gradient(180deg,
-      hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) - 22%), 0.03) 0%,
-      hsla(var(--fc-hue), var(--fc-sat), calc(var(--fc-lit) + 10%), 0.12) 100%),
+      hsla(var(--fc-hue), var(--fc-sat), clamp(44%, calc(var(--fc-lit) - 14%), 62%), 0.05) 0%,
+      hsla(var(--fc-hue), var(--fc-sat), clamp(58%, calc(var(--fc-lit) + 14%), 80%), 0.18) 100%),
     color-mix(in srgb, var(--glass-surface-500) 45%, transparent);
 }
 

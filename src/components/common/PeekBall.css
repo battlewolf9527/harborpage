@@ -1,0 +1,349 @@
+/* PeekBall.css —— 共享入口球（水晶球统一视觉）
+ *
+ * 三个功能（待办/多页面/便签）的入口球统一由本组件渲染，视觉逐层对齐：
+ * 六层渐变 + 内壁折射 + 底部身份色光 + hover 呼吸（与 samples/CrystalBall.html 同方法）。
+ *
+ * 关键：
+ *  · 身份色只由入口球根部内联的 --tint/--tint-2 提供，其余 7 个派生变量在本文件内
+ *    color-mix 生成（球是独立子树，不会再有兄弟节点变量失效问题）；
+ *  · 呼吸动画默认 paused —— 仅在 hover/focus/展开时 running，避免静止 CPU 空转；
+ *  · 无白色描边环（避免塑料感）。
+ */
+
+.peek-ball {
+  --size: var(--sidebar-toggle-size, 44px);
+  /* 水晶球派生变量（--tint / --tint-2 由 React 内联到根部） */
+  --ball-color:         color-mix(in srgb, var(--tint) 40%, transparent);
+  --ball-color-soft:    color-mix(in srgb, var(--tint) 15%, transparent);
+  --ball-glow:          color-mix(in srgb, var(--tint) 50%, transparent);
+  --ball-glow-soft:     color-mix(in srgb, var(--tint) 20%, transparent);
+  --ball-glow-ambient:  color-mix(in srgb, var(--tint) 8%, transparent);
+  --ball-glow-dim:      color-mix(in srgb, var(--tint) 18%, transparent);
+  --ball-glow-dim-soft: color-mix(in srgb, var(--tint) 8%, transparent);
+
+  position: fixed;
+  width: var(--size);
+  height: var(--size);
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  /* idle：0.75（原 0.3 太低几乎不可见），hover/展开升为 1 */
+  opacity: 0.75;
+  z-index: 1000;
+}
+
+.peek-ball__orb {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+  overflow: visible;
+  /* ── 水晶球：六层渐变 + 内壁折射 + 底部色光（无白描边） ── */
+  background:
+    radial-gradient(ellipse 70% 35% at 50% 95%, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 55%),
+    radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.1) 5%, rgba(255, 255, 255, 0) 10%),
+    radial-gradient(circle at 22% 18%, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.3) 6%, rgba(255, 255, 255, 0) 12%),
+    radial-gradient(circle at 50% 55%, var(--ball-color) 0%, transparent 65%),
+    radial-gradient(circle at 50% 50%, var(--ball-color-soft) 0%, transparent 70%),
+    radial-gradient(circle at 50% 50%, rgba(25, 25, 40, 0.4) 0%, rgba(8, 8, 18, 0.9) 100%);
+  box-shadow:
+    inset 0 0 12px 3px rgba(255, 255, 255, 0.35),
+    inset 0 0 4px 1px rgba(255, 255, 255, 0.55),
+    0 0 8px 1px var(--ball-glow-dim),
+    0 0 16px 3px var(--ball-glow-dim-soft),
+    0 10px 30px rgba(0, 0, 0, 0.5),
+    0 12px 30px -8px color-mix(in srgb, var(--tint-2) 22%, transparent);
+  transition:
+    transform var(--motion-spring),
+    filter 260ms ease,
+    opacity 260ms ease;
+  transform: translateY(0) scale(1);
+  filter: none;
+  animation: peek-ball-breath 4.6s ease-in-out infinite;
+  animation-play-state: paused;
+}
+
+/* ── 三种放置位置（由主界面槽位配置决定） ── */
+
+/* 左侧中央（多页面） */
+.peek-ball--left-center {
+  left: calc(var(--size) / 2 * -1 + 2px);
+  top: 50%;
+  transform: translateY(-50%);
+  transition:
+    left var(--motion-normal),
+    opacity var(--motion-fast);
+}
+.peek-ball--left-center:hover,
+.peek-ball--left-center.is-active {
+  left: 0;
+  opacity: 1;
+}
+
+/* 右侧中央（待办） */
+.peek-ball--right-center {
+  right: calc(var(--size) / 2 * -1 + 2px);
+  top: 50%;
+  transform: translateY(-50%);
+  transition:
+    right var(--motion-normal),
+    opacity var(--motion-fast);
+}
+.peek-ball--right-center:hover,
+.peek-ball--right-center.is-active {
+  right: 0;
+  opacity: 1;
+}
+
+/* 底部中央（便签入口）：半沉在视口下缘，悬停/展开才抬升 */
+.peek-ball--bottom-center {
+  left: 50%;
+  bottom: calc(var(--size) / 2 * -1);
+  transform: translateX(-50%);
+  transition: opacity 300ms ease 80ms;
+}
+.peek-ball--bottom-center:hover {
+  opacity: 1;
+}
+
+/* ── 呈现方式 ── */
+/* panel-slide：面板滑入后入口球旋转 180° 并让位隐藏 ——
+   球隐藏期间由面板自身的关闭机制接管（点击外部等），球不再遮挡面板内容；
+   收起后 open=false → is-active 移除 → 球自然淡回原位，交互语义即「点球开 / 点外关」。 */
+.peek-ball--panel-slide.is-active .peek-ball__orb {
+  transform: rotate(180deg);
+  animation-play-state: running;
+}
+.peek-ball--panel-slide.is-active {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* bar-reveal：底部栏升起后入口球淡出（保持 flex 占位不变，只改视觉） */
+.peek-ball--bar-reveal.is-active {
+  opacity: 0;
+  pointer-events: none;
+}
+.peek-ball--bar-reveal.is-active .peek-ball__orb {
+  transform: translateY(2px) scale(0.92);
+  animation: none;
+}
+
+/* ── hover / focus：跑呼吸 + 弹跳显形 ── */
+.peek-ball:hover .peek-ball__orb,
+.peek-ball:focus-visible .peek-ball__orb,
+.peek-ball.is-active .peek-ball__orb {
+  animation-play-state: running;
+}
+.peek-ball:hover .peek-ball__orb,
+.peek-ball:focus-visible .peek-ball__orb {
+  opacity: 1;
+  transform: translateY(-2px) scale(1.06);
+  filter: brightness(1.12);
+  outline: none;
+}
+
+/* 呼吸动画：光晕在球体自身 box-shadow 上扩张/回缩，光晕钉在球缘不会脱开 */
+@keyframes peek-ball-breath {
+  0%, 100% {
+    box-shadow:
+      inset 0 0 12px 3px rgba(255, 255, 255, 0.35),
+      inset 0 0 4px 1px rgba(255, 255, 255, 0.55),
+      0 0 8px 1px var(--ball-glow-dim),
+      0 0 16px 3px var(--ball-glow-dim-soft),
+      0 10px 30px rgba(0, 0, 0, 0.5),
+      0 12px 30px -8px color-mix(in srgb, var(--tint-2) 22%, transparent);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 12px 3px rgba(255, 255, 255, 0.45),
+      inset 0 0 4px 1px rgba(255, 255, 255, 0.65),
+      0 0 14px 2px var(--ball-glow),
+      0 0 24px 5px var(--ball-glow-soft),
+      0 0 36px 9px var(--ball-glow-ambient),
+      0 10px 30px rgba(0, 0, 0, 0.5),
+      0 14px 40px -6px color-mix(in srgb, var(--tint-2) 35%, transparent);
+  }
+}
+
+/* ── 球心图形（emoji 或 svg，由功能组件提供） ── */
+.peek-ball__glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: calc(var(--size) * 0.42);
+  line-height: 1;
+  position: relative;
+  z-index: 2;
+  filter:
+    drop-shadow(0 1px 4px rgba(0, 0, 0, 0.5))
+    drop-shadow(0 0 8px var(--ball-glow));
+}
+.peek-ball__glyph svg {
+  width: clamp(16px, 0.9vw, 20px);
+  height: clamp(16px, 0.9vw, 20px);
+}
+
+/* ── 角标（如待办未完成数） ── */
+.peek-ball__badge {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  background: var(--tint-2);
+  color: #fff;
+  border-radius: var(--border-radius-full);
+  width: clamp(14px, 0.9vw, 18px);
+  height: clamp(14px, 0.9vw, 18px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(9px, 0.45vw, 11px);
+  font-weight: 700;
+  font-family: inherit;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--tint-2) 40%, transparent);
+  z-index: 3;
+}
+
+/* ── 悬停 tooltip（Aurora 玻璃；方向随放置位置） ── */
+.peek-ball__tooltip {
+  position: absolute;
+  background: var(--glass-surface-300);
+  backdrop-filter: var(--glass-blur-soft);
+  -webkit-backdrop-filter: var(--glass-blur-soft);
+  color: var(--text-primary);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border-subtle);
+  font-size: var(--font-sm);
+  font-weight: 500;
+  font-family: inherit;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--motion-fast);
+  pointer-events: none;
+  z-index: 1001;
+  box-shadow: var(--shadow-glass-sm);
+}
+
+/* 右侧球 → tooltip 在左 */
+.peek-ball--right-center .peek-ball__tooltip {
+  right: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+.peek-ball--right-center .peek-ball__tooltip::after {
+  content: '';
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-left-color: var(--glass-surface-300);
+}
+
+/* 左侧球 → tooltip 在右 */
+.peek-ball--left-center .peek-ball__tooltip {
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+.peek-ball--left-center .peek-ball__tooltip::after {
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-right-color: var(--glass-surface-300);
+}
+
+/* 底部球 → tooltip 在上方居中 */
+.peek-ball--bottom-center .peek-ball__tooltip {
+  left: 50%;
+  bottom: calc(100% + 14px);
+  transform: translateX(-50%);
+}
+.peek-ball--bottom-center .peek-ball__tooltip::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--glass-surface-300);
+}
+
+.peek-ball:hover .peek-ball__tooltip,
+.peek-ball:focus-visible .peek-ball__tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ── 响应式：手机端 ── */
+@media (max-width: 768px) {
+  .peek-ball {
+    --size: clamp(44px, 7vw, 52px);
+    opacity: 0.5;
+  }
+  .peek-ball--left-center {
+    left: calc(var(--size) / 2 * -1 + 3px);
+  }
+  .peek-ball--right-center {
+    right: calc(var(--size) / 2 * -1 + 3px);
+  }
+  .peek-ball__glyph svg {
+    width: clamp(20px, 3.2vw, 24px);
+    height: clamp(20px, 3.2vw, 24px);
+  }
+  .peek-ball__tooltip {
+    display: none;
+  }
+  .peek-ball__badge {
+    width: 18px;
+    height: 18px;
+    font-size: 11px;
+    top: -3px;
+    left: -3px;
+  }
+}
+
+/* 超小屏 */
+@media (max-width: 375px) {
+  .peek-ball {
+    --size: 42px;
+  }
+  .peek-ball--left-center {
+    left: -18px;
+  }
+  .peek-ball--right-center {
+    right: -18px;
+  }
+  .peek-ball__glyph svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* 触控设备：无 hover 弹跳，仅减弱 idle */
+@media (hover: none) and (pointer: coarse) {
+  .peek-ball {
+    opacity: 0.6;
+  }
+  /* 底部入口球：触屏没有 hover，点按需要整球可见 → 从"半埋"抬到贴边全显 */
+  .peek-ball--bottom-center {
+    bottom: 8px;
+  }
+  .peek-ball:hover .peek-ball__orb {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: none;
+  }
+}

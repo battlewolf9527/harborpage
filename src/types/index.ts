@@ -89,13 +89,19 @@ export interface VisualSettings {
 }
 
 // 壁纸类型字面量联合类型
-export type WallpaperType = 'gradient' | 'image' | 'solid' | 'bing' | 'randomBing' | 'local';
+export type WallpaperType = 'gradient' | 'image' | 'solid' | 'bing' | 'randomBing' | 'local' | 'custom';
 
 // 壁纸数据类型（保持向后兼容）
 export interface WallpaperData extends VisualSettings {
   url: string | null;
   type: WallpaperType;
   solidColor?: string; // 纯色背景颜色
+  /** 自动更换壁纸开关（持久化） */
+  autoChangeEnabled?: boolean;
+  /** 自动更换间隔（小时） */
+  autoChangeIntervalHours?: number;
+  /** 最近一次壁纸切换时间戳，作为自动更换计时的锚点 */
+  lastAutoChangeAt?: number;
 }
 
 // Favicon源配置（可自定义的favicon下载源）
@@ -115,6 +121,16 @@ export interface Settings extends VisualSettings {
   autoSaveDuration?: number;
   defaultSearchEngineId?: string;
   faviconSources?: FaviconSource[];
+  /** 主界面功能开关（默认全部开启）：天气组件入口 */
+  weatherEnabled?: boolean;
+  /** 主界面功能开关（默认全部开启）：搜索框入口 */
+  searchEnabled?: boolean;
+  /** 主界面功能开关（默认全部开启）：笔记入口 */
+  notesEnabled?: boolean;
+  /** 主界面功能开关（默认全部开启）：待办事项入口 */
+  todosEnabled?: boolean;
+  /** 主界面功能开关（默认全部开启）：多页面入口 */
+  pagesEnabled?: boolean;
 }
 
 // 全局调色板：槽 id（palette-N）→ 当前 hex（id 见 paletteColors.PALETTE_SLOT_IDS，缺省按默认 16 色补齐）

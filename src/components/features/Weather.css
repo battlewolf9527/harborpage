@@ -52,6 +52,15 @@
   max-width: 140px;
 }
 
+.city--clickable {
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.city--clickable:hover {
+  opacity: 1;
+}
+
 .time-weather-row {
   display: flex;
   justify-content: space-between;

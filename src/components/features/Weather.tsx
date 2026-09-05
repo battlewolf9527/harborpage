@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, memo } from 'react';
+import React, { useEffect, useRef, useState, memo } from 'react';
 import './Weather.css';
 import { useWeather } from '../../hooks/useWeather';
 
@@ -28,12 +28,37 @@ const Weather: React.FC = () => {
     weatherError,
     cityName,
     locationMethod,
+    locationDetail,
     showLunar,
     lunarInfo,
     currentDate,
     handleDateClick,
     weatherApiAvailable,
   } = useWeather();
+
+  // 点击城市定位信息时，将附加信息（IP/经纬度）复制到剪贴板
+  const [copied, setCopied] = useState(false);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    };
+  }, []);
+
+  const copyLocationDetail = async () => {
+    if (!locationDetail || copied) return;
+    try {
+      await navigator.clipboard.writeText(locationDetail);
+    } catch (error) {
+      // 剪贴板 API 不可用时（非安全上下文等）静默失败
+      console.warn('复制定位信息失败:', error);
+      return;
+    }
+    setCopied(true);
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    copyTimerRef.current = setTimeout(() => setCopied(false), 1500);
+  };
 
   return (
     <div className={`weather-info${weatherApiAvailable ? '' : ' weather-info--compact'}`}>
@@ -46,7 +71,13 @@ const Weather: React.FC = () => {
           {showLunar ? lunarInfo : currentDate}
         </div>
         {weatherApiAvailable && (
-          <div className="city" title={locationMethod}>📍 {cityName || '定位中...'}</div>
+          <div
+            className={`city${locationDetail ? ' city--clickable' : ''}`}
+            title={locationDetail ? `${locationMethod}：${locationDetail}` : locationMethod}
+            onClick={locationDetail ? copyLocationDetail : undefined}
+          >
+            {copied ? '已复制' : cityName || '定位中...'}
+          </div>
         )}
       </div>
 

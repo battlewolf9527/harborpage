@@ -42,7 +42,7 @@ const SearchManager: React.FC = () => {
 
   const openAddDialog = useCallback(() => {
     setDialog({ mode: 'add', name: '', url: '', icon: '' });
-  }, []);
+  }, [setDialog]);
 
   const openEditDialog = useCallback((engine: SearchEngine) => {
     setDialog({
@@ -52,11 +52,11 @@ const SearchManager: React.FC = () => {
       url: engine.url,
       icon: engine.icon,
     });
-  }, []);
+  }, [setDialog]);
 
   const closeDialog = useCallback(() => {
     setDialog(null);
-  }, []);
+  }, [setDialog]);
 
   const handleSaveDialog = async () => {
     if (!dialog) return;

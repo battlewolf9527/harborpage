@@ -17,7 +17,6 @@
 
   /* ── 响应式基础 Token（保留原系统，与旧组件兼容） ── */
   --sidebar-width: clamp(280px, 18vw, 360px);
-  --sidebar-icon-size: clamp(36px, 2.4vw, 48px);
   --sidebar-toggle-size: clamp(40px, 3vw, 52px);
   --font-xs: clamp(11px, 0.6vw, 14px);
   --font-sm: clamp(12px, 0.7vw, 16px);

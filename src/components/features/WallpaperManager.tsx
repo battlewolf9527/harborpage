@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import './WallpaperManager.css';
 import { useWallpaperStore } from '../../store/useWallpaperStore';
@@ -6,10 +6,9 @@ import type { WallpaperType } from '../../types';
 import AuthService from '../../services/AuthService';
 import createLogger from '../../utils/logger';
 import { saveLocalWallpaper } from '../../utils/wallpaperStorage';
+import { fetchBingWallpaperUrl, getRandomBingWallpaperUrl } from '../../utils/wallpaperRefresh';
 
 const logger = createLogger('WallpaperManager');
-
-const FALLBACK_WALLPAPER = 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1920&q=80';
 
 interface WallpaperSource {
   id: string;
@@ -25,9 +24,13 @@ const WallpaperManager: React.FC = () => {
     setBlurLevel, 
     setOverlayLevel, 
     setSolidColor,
+    setAutoChangeEnabled,
+    setAutoChangeIntervalHours,
     blurLevel, 
     overlayLevel, 
     solidColor,
+    autoChangeEnabled,
+    autoChangeIntervalHours,
     wallpaper,
     wallpaperType
   } = useWallpaperStore(
@@ -36,9 +39,13 @@ const WallpaperManager: React.FC = () => {
       setBlurLevel: s.setBlurLevel,
       setOverlayLevel: s.setOverlayLevel,
       setSolidColor: s.setSolidColor,
+      setAutoChangeEnabled: s.setAutoChangeEnabled,
+      setAutoChangeIntervalHours: s.setAutoChangeIntervalHours,
       blurLevel: s.blurLevel,
       overlayLevel: s.overlayLevel,
       solidColor: s.solidColor,
+      autoChangeEnabled: s.autoChangeEnabled,
+      autoChangeIntervalHours: s.autoChangeIntervalHours,
       wallpaper: s.wallpaper,
       wallpaperType: s.wallpaperType,
     })),
@@ -49,59 +56,34 @@ const WallpaperManager: React.FC = () => {
     { id: '2', name: '随机壁纸', type: 'randomBing' },
     { id: '3', name: '本地壁纸', type: 'local' },
     { id: '4', name: '纯色背景', type: 'solid', color: solidColor },
+    { id: '5', name: '自定义', type: 'custom' },
   ], [solidColor]);
 
   const selectedSource = useMemo(() => {
     const source = wallpapers.find(w => w.type === wallpaperType);
     return source?.id || '1';
   }, [wallpaperType, wallpapers]);
-  
-  const [autoChange, setAutoChange] = useState<boolean>(false);
-  const [changeInterval, setChangeInterval] = useState<number>(1);
 
-  // 记录上次使用的 Bing 壁纸 URL，避免刷新时选到同一张
-  const lastBingWallpaperRef = useRef<string | null>(null);
+  const [customUrl, setCustomUrl] = useState('');
+  const [customUrlError, setCustomUrlError] = useState<string | null>(null);
+
+  // 预填（React 官方「渲染期调整状态」模式）：来源为自定义时，把外部已应用的
+  // 壁纸地址同步进输入框。不用 effect 内 setState（会触发级联渲染），
+  // 改为「与上一次渲染比较、就地修正」，wallpaper 未变化时保持用户草稿。
+  const [prevWallpaper, setPrevWallpaper] = useState(wallpaper);
+  if (wallpaperType === 'custom' && wallpaper !== prevWallpaper) {
+    setPrevWallpaper(wallpaper);
+    setCustomUrl(wallpaper ?? '');
+  }
 
   const getRandomBingWallpaper = useCallback(() => {
-    const randomParam = Date.now().toString(36);
-    const fullUrl = `https://wp.upx8.com/api.php?r=${randomParam}`;
-    setWallpaper(fullUrl, 'randomBing');
+    setWallpaper(getRandomBingWallpaperUrl(), 'randomBing');
   }, [setWallpaper]);
 
   const getBingWallpaper = useCallback(async () => {
-    try {
-      const response = await fetch('/api/bing/HPImageArchive.aspx?format=json&idx=0&n=8&mkt=zh-CN', {
-        headers: AuthService.getAuthHeaders(),
-        cache: 'no-store',
-      });
-      if (!response.ok) {
-        throw new Error(`Bing API请求失败: ${response.status}`);
-      }
-      const data = await response.json();
-      if (data?.images?.length > 0) {
-        const images: Array<{ url: string; urlbase: string }> = data.images;
-        // 从 url 字段构造图片地址，去掉 & 后的附加参数
-        // 例如 /th?id=XXX_UHD.jpg&rf=... -> /th?id=XXX_UHD.jpg
-        const toFullUrl = (img: { url: string }) =>
-          `https://cn.bing.com${img.url.split('&')[0]}`;
-
-        // 过滤掉上次使用的壁纸
-        const available = images.filter(
-          (img) => toFullUrl(img) !== lastBingWallpaperRef.current
-        );
-        const pool = available.length > 0 ? available : images;
-        const image = pool[Math.floor(Math.random() * pool.length)];
-        const wallpaperUrl = toFullUrl(image);
-        lastBingWallpaperRef.current = wallpaperUrl;
-        setWallpaper(wallpaperUrl, 'bing');
-      } else {
-        throw new Error('Bing API返回数据格式异常');
-      }
-    } catch (error) {
-      logger.error('获取Bing每日壁纸失败', error);
-      setWallpaper(FALLBACK_WALLPAPER, 'bing');
-    }
-  }, [setWallpaper]);
+    const url = await fetchBingWallpaperUrl(wallpaper);
+    setWallpaper(url, 'bing');
+  }, [wallpaper, setWallpaper]);
 
   const refreshWallpaperByType = useCallback((type: WallpaperType) => {
     switch (type) {
@@ -118,27 +100,38 @@ const WallpaperManager: React.FC = () => {
     const source = wallpapers.find(w => w.id === sourceId);
     if (!source) return;
 
-    if (source.type === 'solid' || source.type === 'local') {
+    if (source.type === 'custom') {
+      // 已应用的自定义地址点击时保留；否则进入等待输入状态
+      if (wallpaperType !== 'custom' || !wallpaper) {
+        setWallpaper(null, source.type);
+      }
+    } else if (source.type === 'solid' || source.type === 'local') {
       setWallpaper(null, source.type);
     } else {
       refreshWallpaperByType(source.type);
     }
-  }, [wallpapers, setWallpaper, refreshWallpaperByType]);
+  }, [wallpapers, wallpaper, wallpaperType, setWallpaper, refreshWallpaperByType]);
 
-  useEffect(() => {
-    let interval: number | null = null;
-    if (autoChange) {
-      interval = setInterval(() => {
-        const currentSource = wallpapers.find(w => w.id === selectedSource);
-        if (currentSource) {
-          refreshWallpaperByType(currentSource.type);
-        }
-      }, changeInterval * 60 * 60 * 1000);
+  const handleApplyCustomUrl = useCallback(() => {
+    const url = customUrl.trim();
+    if (!url) {
+      setCustomUrlError('请输入图片地址');
+      return;
     }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [autoChange, changeInterval, selectedSource, wallpapers, refreshWallpaperByType]);
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      setCustomUrlError('URL 格式无效');
+      return;
+    }
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      setCustomUrlError('仅支持 http/https 协议');
+      return;
+    }
+    setCustomUrlError(null);
+    setWallpaper(url, 'custom');
+  }, [customUrl, setWallpaper]);
 
   const handleLocalUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -228,34 +221,64 @@ const WallpaperManager: React.FC = () => {
         </div>
       )}
 
+      {selectedSource === '5' && (
+        <div className="custom-url">
+          <input
+            type="text"
+            placeholder="粘贴图片 URL，如 https://example.com/wallpaper.jpg"
+            value={customUrl}
+            onChange={(e) => {
+              setCustomUrl(e.target.value);
+              if (customUrlError) setCustomUrlError(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleApplyCustomUrl();
+            }}
+          />
+          <button onClick={handleApplyCustomUrl}>应用</button>
+        </div>
+      )}
+      {customUrlError && selectedSource === '5' && (
+        <div className="custom-url-error">{customUrlError}</div>
+      )}
+
       <div className="wallpaper-options">
         <h4>壁纸选项</h4>
-        
-        <div className="option-item">
-          <label>
-            <input 
-              type="checkbox" 
-              checked={autoChange} 
-              onChange={(e) => setAutoChange(e.target.checked)}
-            />
-            自动更换壁纸
-          </label>
-        </div>
 
-        {autoChange && (
-          <div className="option-item">
-            <label>
-              更换间隔: {changeInterval} 小时
-              <input 
-                type="range" 
-                min="1" 
-                max="24" 
-                value={changeInterval} 
-                onChange={(e) => setChangeInterval(Number(e.target.value))}
+        <div className="auto-change-block">
+          <div className="auto-change-row">
+            <span className="auto-change-name">自动更换壁纸</span>
+            <label className="settings-switch">
+              <input
+                type="checkbox"
+                checked={autoChangeEnabled}
+                onChange={(e) => setAutoChangeEnabled(e.target.checked)}
+                aria-label="自动更换壁纸"
               />
+              <span className="settings-switch-track" />
             </label>
           </div>
-        )}
+
+          {autoChangeEnabled && (
+            <div className="option-item auto-change-interval">
+              <label>
+                <span>更换间隔：{autoChangeIntervalHours} 小时</span>
+                <input
+                  type="range"
+                  min="1"
+                  max="24"
+                  step="1"
+                  value={autoChangeIntervalHours}
+                  onChange={(e) => setAutoChangeIntervalHours(Number(e.target.value))}
+                />
+              </label>
+            </div>
+          )}
+
+          <p className="auto-change-hint">
+            开启后到点自动更换壁纸（Bing每日 / 随机 / 自定义来源）；刷新页面后仍按上次更换时间到点更换。
+          </p>
+        </div>
 
         <div className="option-item">
           <label>
@@ -296,7 +319,7 @@ const WallpaperManager: React.FC = () => {
           <div 
             className="preview-image"
             style={{
-              backgroundImage: `url(${wallpaper.startsWith('data:') || wallpaperType === 'local' ? wallpaper : `/api/wallpaper?url=${encodeURIComponent(wallpaper)}`})`,
+              backgroundImage: `url(${wallpaper.startsWith('data:') || wallpaperType === 'local' || wallpaperType === 'custom' ? wallpaper : `/api/wallpaper?url=${encodeURIComponent(wallpaper)}`})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               width: '100%',

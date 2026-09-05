@@ -138,8 +138,94 @@
     0 0 0 4px color-mix(in srgb, var(--aurora-2) 18%, transparent);
 }
 
+/* ── 自定义 URL 壁纸 ── */
+.custom-url {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+.custom-url input {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  padding: 0 12px;
+  font-size: var(--font-md);
+  color: var(--text-primary);
+  background: var(--glass-surface-500);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--glass-inner-hl);
+  outline: none;
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast);
+}
+.custom-url input::placeholder {
+  color: var(--text-tertiary);
+}
+.custom-url input:hover,
+.custom-url input:focus {
+  border-color: color-mix(in srgb, var(--aurora-2) 42%, var(--glass-border));
+  box-shadow:
+    var(--glass-inner-hl),
+    0 0 0 4px color-mix(in srgb, var(--aurora-2) 18%, transparent);
+}
+.custom-url button {
+  flex-shrink: 0;
+  height: 40px;
+  padding: 0 18px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--aurora-gradient);
+  color: #fff;
+  font-size: var(--font-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-spring);
+}
+.custom-url button:hover {
+  box-shadow: 0 0 14px color-mix(in srgb, var(--aurora-2) 55%, transparent);
+}
+.custom-url button:active {
+  transform: scale(0.96);
+}
+.custom-url-error {
+  margin: -4px 0 32px 0;
+  font-size: var(--font-sm);
+  color: var(--danger, #f87171);
+}
+
 .wallpaper-options {
   margin-bottom: 32px;
+}
+
+/* ── 自动更换壁纸 ── */
+.auto-change-block {
+  margin-bottom: 20px;
+}
+.auto-change-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.auto-change-name {
+  font-size: var(--font-md);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.auto-change-interval {
+  margin-top: 14px;
+  margin-bottom: 0;
+}
+.auto-change-interval label {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.auto-change-hint {
+  margin: 10px 0 0 0;
+  font-size: var(--font-sm);
+  line-height: 1.5;
+  color: var(--text-tertiary);
 }
 
 .option-item {

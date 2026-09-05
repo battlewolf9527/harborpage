@@ -1,4 +1,6 @@
-/* TodoSidebar.css - Aurora Dark Glass 统一版 */
+/* TodoSidebar.css - Aurora Dark Glass 统一版
+ * 入口球已收敛到共享组件 PeekBall（宿主 FeatureDock 渲染），
+ * 本文件只负责「面板」本体。 */
 
 /* ── 组件作用域：Todo 的身份色（靛蓝→品红渐变）下沉到本地，不再污染 :root ── */
 .todo-sidebar {
@@ -27,8 +29,6 @@
   border-right: 0;
   border-radius: var(--radius-md) 0 0 var(--radius-md);
   box-shadow: var(--shadow-glass-md);
-  /* ── 左侧 aurora 渐变竖条（与 SettingsWindow 一致的身份锚点） ── */
-  position: fixed;
   transition: right var(--motion-normal);
   z-index: 1002;
   display: flex;
@@ -60,212 +60,6 @@
 
 .todo-sidebar.animating {
   pointer-events: none;
-}
-
-/* ===================== 圆形图标按钮（侧边栏开关）
-   与 NoteBar peek-ball 同方法的水晶球（samples/CrystalBall.html）：
-   六层渐变 + 内壁折射 + 身份色内部光 + 底部色光，hover/展开时呼吸光晕。
-   身份色保留 Todo 靛蓝→品红渐变（--tint 靛蓝 / --tint-2 品红）。
-   关键：本容器是 <.todo-sidebar> 的 DOM 兄弟节点，CSS 变量不会跨兄弟继承 →
-        必须在本容器自己的 scope 上重新声明颜色体系，
-        否则 color-mix 因变量 undefined 整行失效 → 球全透明 ===================== */
-.sidebar-icon {
-  --todo-primary: #6366f1;
-  --todo-primary-light: #818cf8;
-  --todo-primary-dark: #4f46e5;
-  --todo-secondary: #ec4899;
-  /* 水晶球 7 变量（与 .noteball / notebar-peek-ball 同结构） */
-  --tint: var(--todo-primary);
-  --tint-2: var(--todo-secondary);
-  --ball-color:         color-mix(in srgb, var(--tint) 40%, transparent);
-  --ball-color-soft:    color-mix(in srgb, var(--tint) 15%, transparent);
-  --ball-glow:          color-mix(in srgb, var(--tint) 50%, transparent);
-  --ball-glow-soft:     color-mix(in srgb, var(--tint) 20%, transparent);
-  --ball-glow-ambient:  color-mix(in srgb, var(--tint) 8%, transparent);
-  --ball-glow-dim:      color-mix(in srgb, var(--tint) 18%, transparent);
-  --ball-glow-dim-soft: color-mix(in srgb, var(--tint) 8%, transparent);
-  position: fixed;
-  right: calc(var(--sidebar-toggle-size) / 2 * -1 + 2px);
-  top: 50%;
-  transform: translateY(-50%);
-  width: var(--sidebar-toggle-size);
-  height: var(--sidebar-toggle-size);
-  cursor: pointer;
-  z-index: 1000;
-  transition:
-    right var(--motion-normal),
-    opacity var(--motion-fast),
-    transform var(--motion-normal);
-  /* idle：0.75（原 0.3 太低几乎不可见），与 Pages peek-ball 同档 */
-  opacity: 0.75;
-}
-
-.sidebar-icon:hover {
-  right: 0;
-  opacity: 1;
-}
-
-.todo-sidebar.expanded ~ .sidebar-icon {
-  right: 0 !important;
-  transform: translateY(-50%) rotate(180deg);
-  opacity: 1 !important;
-  z-index: 1000;
-}
-
-.todo-sidebar.expanded ~ .sidebar-icon:hover {
-  transform: translateY(-50%) rotate(180deg) scale(1.06);
-}
-
-/* ── 核心：水晶球层（与 NoteBar.peek-ball 同规格） ── */
-.icon-container {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  transition:
-    transform var(--motion-spring),
-    filter 260ms ease,
-    opacity 260ms ease;
-  transform: translateY(0) scale(1);
-  filter: none;
-  isolation: isolate;
-  overflow: visible;
-  /* ── 水晶球（samples/CrystalBall.html 六层渐变 + 内壁折射 + 底部色光）──
-     —— 与 NoteBar.peek-ball / 笔记球 .noteball 同一套视觉方法 */
-  background:
-    radial-gradient(ellipse 70% 35% at 50% 95%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 55%),
-    radial-gradient(circle at 30% 22%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.1) 5%, rgba(255,255,255,0) 10%),
-    radial-gradient(circle at 22% 18%, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.3) 6%, rgba(255,255,255,0) 12%),
-    radial-gradient(circle at 50% 55%, var(--ball-color) 0%, transparent 65%),
-    radial-gradient(circle at 50% 50%, var(--ball-color-soft) 0%, transparent 70%),
-    radial-gradient(circle at 50% 50%, rgba(25,25,40,0.4) 0%, rgba(8,8,18,0.9) 100%);
-  /* 内壁折射 + 底部氛围光（无白色描边环，避免塑料感） */
-  box-shadow:
-    inset 0 0 12px 3px rgba(255,255,255,0.35),
-    inset 0 0 4px 1px rgba(255,255,255,0.55),
-    0 0 8px 1px var(--ball-glow-dim),
-    0 0 16px 3px var(--ball-glow-dim-soft),
-    0 10px 30px rgba(0,0,0,0.5),
-    0 12px 30px -8px color-mix(in srgb, var(--tint-2) 22%, transparent);
-  /* 呼吸动画（默认暂停，仅 hover 用户看时跑，防 CPU 空转） */
-  animation: todo-peek-breath 4.6s ease-in-out infinite;
-  animation-play-state: paused;
-}
-
-/* hover 跑呼吸 + 弹跳显形（与 NoteBar peek-ball 同行为） */
-.sidebar-icon:hover .icon-container,
-.sidebar-icon:focus-visible .icon-container,
-.todo-sidebar.expanded ~ .sidebar-icon .icon-container {
-  animation-play-state: running;
-}
-.sidebar-icon:hover .icon-container,
-.sidebar-icon:focus-visible .icon-container {
-  opacity: 1;
-  transform: translateY(-2px) scale(1.06);
-  filter: brightness(1.12);   /* 水晶球 hover 提亮（不再 saturate 增色） */
-  outline: none;
-}
-
-.icon-container svg {
-  color: white;
-  width: clamp(16px, 0.9vw, 20px);
-  height: clamp(16px, 0.9vw, 20px);
-  transition: transform var(--motion-fast);
-  /* 水晶球为深色玻璃，白图标配暗投影 + 身份色微光 */
-  filter:
-    drop-shadow(0 1px 4px rgba(0,0,0,0.5))
-    drop-shadow(0 0 8px var(--ball-glow));
-  position: relative;
-  z-index: 2;
-}
-
-/* 呼吸动画：与 NoteBar.nb-peek-breath 同方法 —— 直接在球体自身 box-shadow 上做
-   光晕扩张↔回缩，光晕钉在球缘不会与球脱开；身份色换 Todo 靛蓝-品红 */
-@keyframes todo-peek-breath {
-  0%, 100% {
-    box-shadow:
-      inset 0 0 12px 3px rgba(255,255,255,0.35),
-      inset 0 0 4px 1px rgba(255,255,255,0.55),
-      0 0 8px 1px var(--ball-glow-dim),
-      0 0 16px 3px var(--ball-glow-dim-soft),
-      0 10px 30px rgba(0,0,0,0.5),
-      0 12px 30px -8px color-mix(in srgb, var(--tint-2) 22%, transparent);
-  }
-  50% {
-    box-shadow:
-      inset 0 0 12px 3px rgba(255,255,255,0.45),
-      inset 0 0 4px 1px rgba(255,255,255,0.65),
-      0 0 14px 2px var(--ball-glow),
-      0 0 24px 5px var(--ball-glow-soft),
-      0 0 36px 9px var(--ball-glow-ambient),
-      0 10px 30px rgba(0,0,0,0.5),
-      0 14px 40px -6px color-mix(in srgb, var(--tint-2) 35%, transparent);
-  }
-}
-
-/* ===================== 气球提示 ===================== */
-.tooltip {
-  position: absolute;
-  right: 100%;
-  top: 50%;
-  transform: translateY(-50%);
-  background: var(--glass-surface-300);
-  backdrop-filter: var(--glass-blur-soft);
-  -webkit-backdrop-filter: var(--glass-blur-soft);
-  color: var(--text-primary);
-  padding: 6px 12px;
-  border-radius: var(--radius-sm);
-  border: var(--glass-border-subtle);
-  font-size: var(--font-sm);
-  font-weight: 500;
-  font-family: inherit;
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  transition: all var(--motion-fast);
-  pointer-events: none;
-  z-index: 1001;
-  margin-right: 10px;
-  box-shadow: var(--shadow-glass-sm);
-}
-
-.tooltip::after {
-  content: '';
-  position: absolute;
-  left: 100%;
-  top: 50%;
-  transform: translateY(-50%);
-  border: 6px solid transparent;
-  border-left-color: var(--glass-surface-300);
-}
-
-.sidebar-icon:hover .tooltip {
-  opacity: 1;
-  visibility: visible;
-}
-
-/* ===================== 提醒徽章 ===================== */
-.badge {
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  background: var(--todo-secondary);
-  color: white;
-  border-radius: var(--border-radius-full);
-  width: clamp(14px, 0.9vw, 18px);
-  height: clamp(14px, 0.9vw, 18px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: clamp(9px, 0.45vw, 11px);
-  font-weight: 700;
-  font-family: inherit;
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--todo-secondary) 40%, transparent);
-  /* 原 badgePulse 无限脉冲动画已移除：box-shadow 扩散每帧触发重绘，持续耗 CPU/GPU */
-  z-index: 1002;
 }
 
 /* ===================== 侧边栏内容 ===================== */
@@ -310,25 +104,6 @@
   color: var(--text-primary);
   font-family: inherit;
   line-height: 1.2;
-}
-
-.todo-count {
-  display: flex;
-  align-items: baseline;
-  gap: 2px;
-}
-
-.count-number {
-  font-size: var(--font-md);
-  font-weight: 700;
-  color: var(--todo-primary-light);
-  font-family: inherit;
-}
-
-.count-label {
-  font-size: var(--font-xs);
-  color: var(--text-tertiary);
-  font-family: inherit;
 }
 
 /* ===================== 滚动条样式（Aurora 统一） ===================== */
@@ -377,27 +152,10 @@
   }
   .todo-sidebar.expanded { right: 0; }
 
-  .sidebar-icon {
-    width: clamp(44px, 7vw, 52px);
-    height: clamp(44px, 7vw, 52px);
-    right: calc(clamp(44px, 7vw, 52px) / 2 * -1 + 3px);
-    opacity: 0.5;
-  }
-  .icon-container svg {
-    width: clamp(20px, 3.2vw, 24px);
-    height: clamp(20px, 3.2vw, 24px);
-  }
   .sidebar-content {
     padding: 18px 16px;
     padding-left: 22px;
     gap: 14px;
-  }
-  .tooltip { display: none; }
-
-  .badge {
-    width: 18px; height: 18px;
-    font-size: 11px;
-    top: -3px; left: -3px;
   }
 }
 
@@ -408,19 +166,5 @@
     height: 82vh;
     min-height: min(480px, 82vh);
   }
-  .sidebar-icon { width: 42px; height: 42px; right: -18px; }
-  .icon-container svg { width: 18px; height: 18px; }
   .sidebar-content { padding: 16px 14px 16px 20px; gap: 12px; }
-}
-
-/* 触控设备优化 */
-@media (hover: none) and (pointer: coarse) {
-  .sidebar-icon { opacity: 0.6; }
-  .sidebar-icon:hover {
-    transform: translateY(-50%);
-    opacity: 0.6;
-  }
-  .todo-sidebar.expanded ~ .sidebar-icon:hover {
-    transform: translateY(-50%) rotate(180deg);
-  }
 }

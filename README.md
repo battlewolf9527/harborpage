@@ -2,11 +2,51 @@
 
 一个基于 React + Vite + Cloudflare Workers 构建的现代化个人导航页面，支持网站图标管理、文件夹分类、搜索引擎切换、天气显示、待办事项、笔记、数据导入导出等功能。
 
-## 界面预览
+## 📸 界面预览
 
-<div align="center">
-  <img src="screenshots/DEMO.png" width="300" style="margin: 5px;">
-</div>
+主界面全景：
+
+<p align="center">
+  <img src="screenshots/Demo.jpg" width="620" alt="主界面" />
+  <br />
+  <sub><b>主界面</b> · 壁纸 + 图标网格 + 搜索 / 天气 / 两侧半藏水晶球入口</sub>
+</p>
+
+三个边缘入口球功能：
+
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="screenshots/Pages.jpg" width="396" alt="多页面侧边栏" />
+      <br />
+      <sub><b>多页面</b> · 左缘入口球展开 PagesSidebar</sub>
+    </td>
+    <td align="center">
+      <img src="screenshots/TodoList.jpg" width="396" alt="待办侧边栏" />
+      <br />
+      <sub><b>待办事项</b> · 右缘入口球展开待办侧边栏</sub>
+    </td>
+    <td align="center">
+      <img src="screenshots/Notes.jpg" width="396" alt="笔记便签栏" />
+      <br />
+      <sub><b>笔记</b> · 底部入口球悬停展开便签栏</sub>
+    </td>
+  </tr>
+</table>
+
+窗口与对话框：
+
+<p align="center">
+  <img src="screenshots/Folder.jpg" width="560" alt="文件夹窗口" />
+  <br />
+  <sub><b>文件夹窗口</b> · 水晶方块图标 + 材质色分层玻璃（配色随文件夹颜色联动）</sub>
+</p>
+
+<p align="center">
+  <img src="screenshots/About.png" width="240" alt="关于对话框" />
+  <br />
+  <sub><b>关于</b> · 关于 HarborPage 对话框</sub>
+</p>
 
 ## ✨ 功能特性
 
@@ -43,7 +83,7 @@
 
 ### 🗂️ 多页面功能
 - 页面级隔离：每个页面拥有独立的网站和文件夹集合
-- 屏幕左缘半藏一颗「水晶球」开关（翠绿→琥珀身份色，六层渐变 + 呼吸辉光），悬停滑出、点击展开左侧 PagesSidebar 面板
+- 屏幕左缘半藏一颗「水晶球」入口球（翠绿→琥珀身份色，六层渐变 + 呼吸辉光），悬停滑出显形、点击展开 PagesSidebar（面板打开后入口球旋转淡出让位，点面板外任意处收起）
 - 页面创建、重命名、删除（至少保留一页）
 - 拖拽排序页面（HTML5 原生拖拽 + 上下半区指示线）
 - 网站/文件夹跨页移动：右键菜单「移动到页面…」，支持「仅移动」与「移动并跳转」
@@ -68,11 +108,11 @@
 - 时钟使用 ref 直接 DOM 操作，避免每秒触发 React 重渲染
 
 ### ✅ 待办事项
-- 屏幕右缘半藏一颗「水晶球」开关（靛蓝→品红身份色，与页面侧开关同款画法），点击滑出待办侧边栏
+- 屏幕右缘半藏一颗「水晶球」入口球（靛蓝→品红身份色，与页面入口球同款画法），点击展开待办侧边栏（关闭：点面板外任意处）
 - 添加、编辑、删除待办事项
 - 标记完成状态
 - 数据持久化存储到 Cloudflare KV
-- 未完成数量徽章显示（叠加在开关球左上角）
+- 未完成数量徽章显示（叠加在入口球左上角）
 
 ### 📝 笔记功能
 - 屏幕底部居中的「水晶球」便签栏：收起时只露半颗 📝 peek 球，鼠标悬停即整栏升起展开
@@ -219,7 +259,7 @@ npm run deploy
 
 ### 基本操作
 1. **登录**：打开页面后输入密码登录
-2. **切换页面**：点击屏幕左缘的翠绿→琥珀「水晶球」开关滑出 PagesSidebar，点击页面切换；拖拽手柄可重新排序
+2. **切换页面**：点击屏幕左缘的翠绿→琥珀「水晶球」入口球展开 PagesSidebar，点击页面切换（点面板外任意处收起）；拖拽手柄可重新排序
 3. **新建页面**：PagesSidebar 顶部「+ 新建页面」按钮
 4. **重命名/删除页面**：页面项右侧铅笔图标重命名（Enter 提交 / Esc 取消）、垃圾桶图标删除（需二次确认，至少保留一页）
 5. **添加网站**：右键页面空白处直接打开「新增网站」窗口；长按空白进入编辑模式后点击「+」也可新增。文件夹窗口内右键空白处添加的站点会进入当前文件夹
@@ -231,7 +271,7 @@ npm run deploy
 11. **移动图标**：拖拽网站图标到文件夹图标上移入文件夹
 12. **移出文件夹**：在文件夹中拖拽图标到文件夹窗口外
 13. **跨页移动网站/文件夹**：右键点击网站或文件夹 → 「移动到页面…」→ 选择「仅移动」或「移动并跳转」
-14. **打开待办**：点击屏幕右缘的靛蓝→品红「水晶球」开关滑出待办侧边栏，左上角徽章实时显示未完成数量
+14. **打开待办**：点击屏幕右缘的靛蓝→品红「水晶球」入口球展开待办侧边栏（点面板外任意处收起），左上角徽章实时显示未完成数量
 15. **打开笔记栏**：鼠标悬停屏幕底部中央的 📝「水晶球」便签球即整栏展开——悬停笔记球看缩略预览、点击球打开编辑器、拖拽球排序、右侧「⚙︎」管理全部笔记
 
 ### 图标设置
@@ -270,7 +310,7 @@ harborpage/
 ├── public/                          # 静态资源
 ├── screenshots/                     # 界面预览截图
 ├── samples/                         # 设计参考样例（纯 HTML）
-│   ├── CrystalBall.html             # 水晶球画法参考（边缘开关球 / 笔记球）
+│   ├── CrystalBall.html             # 水晶球画法参考（边缘入口球 / 笔记球）
 │   ├── Crystal_block.html           # 水晶方块（图标）边缘内高光参考
 │   ├── New.html / v3.html           # 界面版式参考
 ├── src/                             # 前端源代码
@@ -285,6 +325,7 @@ harborpage/
 │   │   │   ├── DraggableIconWrapper.tsx # 拖拽包装层
 │   │   │   ├── EditWebsite.tsx      # 网站/文件夹编辑表单（含调色板）
 │   │   │   ├── ErrorBoundary.tsx    # 错误边界
+│   │   │   ├── FeatureDock.tsx      # 功能 Dock：消费注册表，按槽位配置渲染共享入口球
 │   │   │   ├── FolderItem.tsx       # 文件夹图标
 │   │   │   ├── FolderNameDialog.tsx # 文件夹命名对话框
 │   │   │   ├── IconGrid.tsx         # 图标网格
@@ -294,6 +335,7 @@ harborpage/
 │   │   │   ├── MoveToPageDialog.tsx # 跨页移动对话框
 │   │   │   ├── Notes.tsx            # 笔记组件
 │   │   │   ├── PalettePicker.tsx    # 调色板（选择/设置模式，flex-wrap 自然换行）
+│   │   │   ├── PeekBall.tsx         # 共享「水晶球」入口球（纯呈现；样式 PeekBall.css）
 │   │   │   ├── SaveProgressIndicator.tsx / SavePrompt.tsx / SaveTooltip.tsx  # 保存反馈
 │   │   │   ├── Toast.tsx            # 轻提示
 │   │   │   ├── TodoList.tsx         # 待办列表
@@ -324,7 +366,7 @@ harborpage/
 │   ├── data/                        # 数据文件
 │   │   └── presetSites.json         # 预设站点数据
 │   ├── hooks/                       # 自定义 Hooks
-│   │   ├── useAuth / useAutoSave / useAutoSaveSettings / useClickOutside
+│   │   ├── useAuth / useAutoSave / useAutoSaveSettings / useClickOutside / useFeatureEntry
 │   │   ├── useDataInitialization / useDeleteIcon / useDragAndDrop / useIconDropHandler
 │   │   ├── useImport / useLongPress / useAddWebsiteShortcut / useTreeSelection
 │   │   └── useWallpaperInit / useWeather / useWeatherLocation / useWeatherLunar
@@ -335,6 +377,7 @@ harborpage/
 │   │   ├── IconManager / IconDownloadQueue / autoFetchService / iconUtils
 │   │   └── Services / serviceContainer
 │   ├── store/                       # 状态管理（Zustand）
+│   │   ├── useFeatureDockStore.ts   # 功能 Dock 注册中心（入口描述符 entries + 面板开合 open）
 │   │   ├── usePagesStore.ts         # 页面 + 页面级网站集合（真源）
 │   │   ├── useIconsStore.ts         # 当前页图标视图（派生）
 │   │   ├── usePaletteStore.ts       # 全局调色板（16 槽）
@@ -433,11 +476,21 @@ harborpage/
 ### 组件化开发
 项目采用组件化开发模式，每个功能模块都有独立的组件和样式文件。
 
+### 功能 Dock 架构（Peek 球入口体系）
+
+多页面 / 待办 / 便签的「边缘入口球」统一由一套倒置依赖体系驱动（映射 WPF 的"功能创建入口球 → 宿主配置并渲染"模型）：
+
+- **注册中心**：`useFeatureDockStore`（Zustand）持有 `entries`（入口描述符）与 `open`（面板开合）两张表
+- **功能侧注册**：功能组件通过 `useFeatureEntry(id, descriptor)` 在挂载时 `register`、卸载时 `unregister` —— 功能开关关闭（或未登录）→ 组件卸载 → 入口球自动消失、`open` 状态一并清理，宿主无需维护开关；每次渲染后 `updateEntry` 把最新 label / 角标 / 悬停回调同步进注册表
+- **宿主渲染**：`FeatureDock` 不 import 任何功能组件，只按静态槽位表消费注册表。每槽配置三项工作参数——放置位置（placement）、呈现方式（presentation）、交互方式（interaction），`entry` 缺失则对应槽不渲染
+- **共享入口球**：`PeekBall` 为纯呈现组件（与功能零耦合），只收 `entry`（内容）+ `slot`（工作参数）+ `active` + `onOpen/onToggle`
+- **开合联动**：`open` 是球与功能面板的单一事实源——球读它决定 `is-active` 视觉；面板读它决定挂载（`present`）与展开（`expanded`）。面板挂载/收起由定时器异步驱动（先以收起态挂载一帧 → 30ms 补展开滑入；关闭先收起 → 退场动画播完卸载并清理二次确认等瞬态），同步 setState 不放在 effect / 渲染期调整内，规避 React 19 首个交互偶发丢状态问题
+- **槽位与交互**：`pages` / `todos` = `panel-slide` + `click-toggle`（点击展开，打开后球旋转 180° 淡出让位、点面板外收起）；`notes` = `bar-reveal` + `hover-open`（悬停展开、经 `onHoverEnd` 离开即收，触屏点按兜底打开）
+
 ### 视觉设计（水晶球体系）
-- 页面（左缘）、待办（右缘）、笔记栏 peek（底缘）三个「边缘开关球」与笔记球统一采用 `samples/CrystalBall.html` 的水晶球画法
+- 页面（左缘）、待办（右缘）、笔记栏 peek（底缘）三个「边缘入口球」与笔记球统一采用 `samples/CrystalBall.html` 的水晶球画法
 - 水晶球 = 同一元素上的六层渐变（深色玻璃底 → 低透明身份色内部光 → 主/次高光 → 底部月牙反光）+ inset 内壁折射 + 底部身份色氛围光，**不使用白描边环**（避免塑料感）
-- 每颗球在自己的作用域声明 `--tint` / `--tint-2` 身份色与 7 个 `--ball-*` 派生变量（`color-mix` 生成）；CSS 变量不跨兄弟节点继承，兄弟节点（如侧边栏开关球）需本地重建颜色体系
-- 呼吸辉光直接动画元素自身 box-shadow（模糊/扩散值扩张↔回缩），光晕钉在球缘、不产生 O 型环空隙；hover 提亮用 `filter: brightness(1.12)` 而非 saturate
+- 三个边缘入口球由共享 `PeekBall` 组件统一渲染（`FeatureDock` 按槽位放置）：身份色 `--tint` / `--tint-2` 来自功能注册的描述符并内联到球根，7 个 `--ball-*` 派生变量在 PeekBall.css 内 `color-mix` 统一生成
 - 呼吸动画默认 `paused`（避免静止时持续 raster 占用 CPU），仅在 hover / 展开时运行
 - 网站 / 文件夹图标为「水晶方块」玻璃质感：由 `CrystalShell` 提供光效层、IconItem.css 的 `.icon-circle > .cc-*` 驱动，按 `samples/Crystal_block.html` 增加 inset 边缘内高光（玻璃厚度感），颜色以 `--c-hue/--c-sat/--c-lit` HSL 变量驱动并随调色板联动，hover 内光增强
 - 文件夹窗口配色随文件夹当前颜色（`--fc-hue/--fc-sat/--fc-lit`）做分层材质染色（顶部受光 / 中部透明 / 底部回光），仍保留半透明玻璃质感
@@ -489,6 +542,8 @@ harborpage/
 - 时钟组件使用 ref 直接 DOM 操作，避免每秒触发 React 重渲染
 - 图标下载使用信号量并发控制（3 并发）
 - URL 输入防抖（3 秒）后更新预览
+- 功能面板按需挂载：仅在打开时挂载、关闭后卸载，功能数据的订阅与渲染开销随卸载归零
+- `updateEntry` 无变化短路：patch 与当前 entry 逐字段相同时直接返回原 state 引用，阻断功能组件每次重渲染级联带动 FeatureDock / 入口球重渲染
 - Store 选择器使用 `useShallow` 减少不必要的重渲染
 - `useEffect` 依赖项精确控制，避免循环触发
 

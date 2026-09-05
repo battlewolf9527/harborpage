@@ -4,6 +4,8 @@ import { useShallow } from 'zustand/react/shallow';
 import './NoteBar.css';
 import { useNotesStore } from '../../store/useNotesStore';
 import { usePaletteStore } from '../../store/usePaletteStore';
+import { useFeatureDockStore } from '../../store/useFeatureDockStore';
+import { useFeatureEntry } from '../../hooks/useFeatureEntry';
 import type { Note, PaletteHexMap } from '../../types';
 import NotesManagerDialog from './NotesManagerDialog';
 import NoteEditorDialog from './NoteEditorDialog';
@@ -35,6 +37,11 @@ function elementLivesIn(el: Element | null, roots: Array<Element | null>): boole
 
 // 笔记栏中段最多显示的笔记球数量（不含 + 和 … 功能球）
 const MAX_NOTE_BALLS = 8;
+
+// 便签入口球身份（倒置依赖：入口内容由功能组件决定，宿主按槽位放置）
+const NOTES_GLYPH = '📝';
+const NOTES_TINT = '#34d399';
+const NOTES_TINT2 = '#f59e0b';
 
 /** 获取笔记球显示的"首字"：标题第一个非空白可见字符，空标题显示「无」。 */
 function firstGlyph(title: string): string {
@@ -78,7 +85,7 @@ const NoteBar: React.FC = () => {
   const portalRootRef = useRef<HTMLDivElement | null>(null);
   const ballRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
   const tooltipRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
-  // 功能球锚点：peek / + / ⚙︎ / +N badge（与 note 球并列，共用同一套 tooltip reposition 逻辑）
+  // 功能球锚点：+ / ⚙︎ / +N badge / tooltip 编辑（与 note 球并列，共用同一套 reposition 逻辑）
   const featureBallRefs = useRef<Map<string, HTMLElement | null>>(new Map());
 
   // 最后一次「真实鼠标坐标」记录，供 scheduleClose 到点时做真正的「鼠标是否仍在 bar
@@ -86,7 +93,9 @@ const NoteBar: React.FC = () => {
   // 「永远不关」的假阳性）。
   const lastMouseRef = useRef<{ x: number; y: number }>({ x: -1, y: -1 });
 
-  const [isOpen, setIsOpen] = useState(false);
+  // 栏开合：单一事实源在主界面 Dock（外部入口球与栏内 hover 调度共享同一状态）
+  const isOpen = useFeatureDockStore((s) => !!s.open.notes);
+  const setNotesOpen = useFeatureDockStore((s) => s.setOpen);
   const closeTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -117,10 +126,10 @@ const NoteBar: React.FC = () => {
           /* 异常时照常关，宁可关错也不要永远不关 */
         }
       }
-      setIsOpen(false);
+      setNotesOpen('notes', false);
     }, 260);
     closeTimerRef.current = id;
-  }, []);
+  }, [setNotesOpen]);
 
   const cancelClose = useCallback(() => {
     if (closeTimerRef.current !== null) {
@@ -135,8 +144,8 @@ const NoteBar: React.FC = () => {
 
   const handleBarEnter = useCallback(() => {
     cancelClose();
-    setIsOpen(true);
-  }, [cancelClose]);
+    setNotesOpen('notes', true);
+  }, [cancelClose, setNotesOpen]);
 
   const handleBarLeave = useCallback((e: React.MouseEvent) => {
     const related = e.relatedTarget;
@@ -154,8 +163,36 @@ const NoteBar: React.FC = () => {
   // 键盘无障碍：focus → 立即展开
   const handleBarFocus = useCallback(() => {
     cancelClose();
-    setIsOpen(true);
-  }, [cancelClose]);
+    setNotesOpen('notes', true);
+  }, [cancelClose, setNotesOpen]);
+
+  // 倒置依赖：向主界面注册入口描述 —— 宿主在 bottom 槽位渲染独立入口球。
+  // onHoverEnd：指针离开入口球时交给 scheduleClose（坐标探针会区分
+  // 「球→栏/portal 的连续移动」与「真离开」，避免收起动画中途误关）。
+  useFeatureEntry('notes', {
+    glyph: NOTES_GLYPH,
+    tint: NOTES_TINT,
+    tint2: NOTES_TINT2,
+    label: notes.length > 0 ? `${notes.length} 篇便签 · 悬停展开` : '便签 · 悬停展开',
+    badge: null,
+    onHoverEnd: scheduleClose,
+  });
+
+  // 打开期间：点击栏外任意处（含触屏 tap）→ 收起栏。
+  // 桌面端指针滑出由 scheduleClose 负责；这里补足「显式点击外部关闭」与
+  // 触屏没有 hover 时的关闭通道（入口球已让位隐藏，无法再承担关闭）。
+  useEffect(() => {
+    if (!isOpen) return;
+    const onDocPointerDown = (e: PointerEvent) => {
+      const t = e.target as Node | null;
+      if (!t) return;
+      if (barRef.current && barRef.current.contains(t)) return;
+      if (portalRootRef.current && portalRootRef.current.contains(t)) return;
+      setNotesOpen('notes', false);
+    };
+    document.addEventListener('pointerdown', onDocPointerDown, true);
+    return () => document.removeEventListener('pointerdown', onDocPointerDown, true);
+  }, [isOpen, setNotesOpen]);
 
   // ── 对话框：编辑器 + 管理窗口 ────────────────────────────────────────────
   const [editorOpen, setEditorOpen] = useState(false);
@@ -177,8 +214,8 @@ const NoteBar: React.FC = () => {
     setManagerOpen(true);
   }, []);
 
-  // ── Hover 气泡提示（两类：note 球的完整缩略预览 / peek、+、⚙︎、badge 等轻量文本气泡）
-  //     统一用 synthetic id 管：`note:${noteId}` / `__peek__` / `__add__` / `__more__` / `__badge__` / `__tip_edit__`
+  // ── Hover 气泡提示（两类：note 球的完整缩略预览 / +、⚙︎、badge 等轻量文本气泡）
+  //     统一用 synthetic id 管：`note:${noteId}` / `__add__` / `__more__` / `__badge__` / `__tip_edit__`
   const [activeBallId, setActiveBallId] = useState<string | null>(null);
   const tooltipLeaveTimerRef = useRef<number | null>(null);
 
@@ -382,13 +419,7 @@ const NoteBar: React.FC = () => {
     ? noteDisplayMeta(activeThumbNote, slots)
     : null;
 
-  // 生成 peek 球 / + 球 / 管理球 的气泡提示文案
-  const peekTipText = useMemo(
-    () => notes.length > 0
-      ? `${notes.length} 篇笔记 · 悬停展开笔记栏，点击立即新建`
-      : '悬停展开笔记栏，点击立即新建笔记',
-    [notes.length],
-  );
+  // 生成 + 球 / 管理球 的气泡提示文案
   const badgeTipText = useMemo(
     () => `还有 ${moreCount} 篇不在此栏内，右侧 ⚙︎ 打开笔记管理器可查看全部`,
     [moreCount],
@@ -410,7 +441,7 @@ const NoteBar: React.FC = () => {
     }
   }, [isOpen, activeBallId, repositionTooltip]);
 
-  // Portal 渲染的悬浮层：bubble tips（peek / + / more / badge / edit）
+  // Portal 渲染的悬浮层：bubble tips（+ / more / badge / edit）
   // + note 缩略预览本体。所有气泡统一 render 到 body，避免祖先 transform
   // 把 position:fixed 锁成 absolute relative 祖先 (CSS Transforms §3 containing-block)。
   const portalContent: React.ReactNode = (
@@ -419,18 +450,6 @@ const NoteBar: React.FC = () => {
       className="nb-portal-root"
       aria-hidden={activeBallId === null}
     >
-      {activeBallId === '__peek__' && (
-        <div
-          ref={(el) => { tooltipRefs.current.set('__peek__', el); }}
-          className="nb-bubble-tip nb-bubble-tip--brand"
-          onMouseEnter={() => { cancelTooltipHide(); showTooltipFor('__peek__'); }}
-          onMouseLeave={scheduleTooltipHide}
-        >
-          <div className="nb-bubble-tip-arrow" aria-hidden="true" />
-          <div className="nb-bubble-tip-title">便签球</div>
-          <div className="nb-bubble-tip-text">{peekTipText}</div>
-        </div>
-      )}
       {activeBallId === '__add__' && (
         <div
           ref={(el) => { tooltipRefs.current.set('__add__', el); }}
@@ -549,19 +568,6 @@ const NoteBar: React.FC = () => {
         role="toolbar"
         aria-label="笔记栏"
       >
-        {/* 隐藏态下露出的单个便签球（一半在屏幕下方）；鼠标放上即弹出完整笔记栏 */}
-        <button
-          type="button"
-          ref={(el) => { featureBallRefs.current.set('__peek__', el); }}
-          className="notebar-peek-ball"
-          onClick={openCreateEditor}
-          onMouseEnter={() => { handleBarEnter(); showTooltipFor('__peek__'); }}
-          onFocus={() => { handleBarEnter(); showTooltipFor('__peek__'); }}
-          onMouseLeave={(e) => handleSynthLeave('__peek__', e)}
-          onBlur={scheduleTooltipHide}
-          aria-label={`便签（${notes.length} 篇）`}
-        />
-
         <div className="notebar-inner">
           {/* 居中轨道：整排 +/分隔条/8 球/分隔条/⚙︎ 都在里面水平居中，像 macOS 状态栏图标 */}
           <div className="notebar-ball-track">

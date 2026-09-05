@@ -65,10 +65,13 @@ interface UseAddWebsiteShortcutOptions {
  * 当光标处在文本输入框中时，两个快捷键保持原有功能。
  */
 export function useAddWebsiteShortcut({ enabled, onTrigger }: UseAddWebsiteShortcutOptions) {
+  // 最新值在 effect 中同步（不在渲染期写 ref），事件监听器里读到的始终是最近一次的
   const onTriggerRef = useRef(onTrigger);
-  onTriggerRef.current = onTrigger;
   const enabledRef = useRef(enabled);
-  enabledRef.current = enabled;
+  useEffect(() => {
+    onTriggerRef.current = onTrigger;
+    enabledRef.current = enabled;
+  });
 
   useEffect(() => {
     const isAnyDialogOpen = () => {

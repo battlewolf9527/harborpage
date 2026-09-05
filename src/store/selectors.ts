@@ -18,6 +18,12 @@ const EMPTY_WEBSITES: Website[] = [];
 export const useSettingsSelector = () => useSettingsStore(useShallow((s) => ({
   siteTitle: s.siteTitle,
   iconColumns: s.iconColumns,
+  weatherEnabled: s.weatherEnabled,
+  searchEnabled: s.searchEnabled,
+  notesEnabled: s.notesEnabled,
+  todosEnabled: s.todosEnabled,
+  pagesEnabled: s.pagesEnabled,
+  settingsReady: s.settingsReady,
   setSiteTitle: s.setSiteTitle,
   setIconColumns: s.setIconColumns,
   initializeSettings: s.initialize,

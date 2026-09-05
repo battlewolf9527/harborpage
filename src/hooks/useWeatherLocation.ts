@@ -7,8 +7,17 @@ interface UseWeatherLocationParams {
   enabled?: boolean;
 }
 
+/** 将经纬度格式化为"东经 xx.xxxxxx，北纬 xx.xxxxxx"（西经/南纬时自动切换前缀） */
+function formatCoords(latitude: number, longitude: number): string {
+  const lonDir = longitude >= 0 ? '东经' : '西经';
+  const latDir = latitude >= 0 ? '北纬' : '南纬';
+  const trim = (n: number) => String(+n.toFixed(6));
+  return `${lonDir} ${trim(longitude)}，${latDir} ${trim(latitude)}`;
+}
+
 export function useWeatherLocation({ fetchWeatherData, enabled = true }: UseWeatherLocationParams) {
   const [locationMethod, setLocationMethod] = useState(enabled ? '定位中...' : '');
+  const [locationDetail, setLocationDetail] = useState<string | null>(null);
 
   const fetchWeatherDataRef = useRef(fetchWeatherData);
   useEffect(() => {
@@ -18,6 +27,7 @@ export function useWeatherLocation({ fetchWeatherData, enabled = true }: UseWeat
   const getIPLocation = useCallback(async () => {
     if (!enabled) return;
     setLocationMethod('IP定位');
+    setLocationDetail(null);
     try {
       const ipInfoResponse = await fetch('https://ipinfo.io/json');
       if (!ipInfoResponse.ok) {
@@ -25,6 +35,9 @@ export function useWeatherLocation({ fetchWeatherData, enabled = true }: UseWeat
       }
       const ipInfoData = await ipInfoResponse.json();
 
+      if (ipInfoData.ip) {
+        setLocationDetail(String(ipInfoData.ip));
+      }
       if (ipInfoData.loc) {
         const [lat, lon] = ipInfoData.loc.split(',').map(Number);
         await fetchWeatherDataRef.current(lat, lon);
@@ -44,6 +57,7 @@ export function useWeatherLocation({ fetchWeatherData, enabled = true }: UseWeat
         (position) => {
           const { latitude, longitude } = position.coords;
           setLocationMethod('浏览器定位');
+          setLocationDetail(formatCoords(latitude, longitude));
           fetchWeatherDataRef.current(latitude, longitude);
         },
         () => {
@@ -60,5 +74,5 @@ export function useWeatherLocation({ fetchWeatherData, enabled = true }: UseWeat
     initLocation();
   }, [initLocation]);
 
-  return { locationMethod };
+  return { locationMethod, locationDetail };
 }

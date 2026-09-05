@@ -30,8 +30,11 @@ const Toast: React.FC<ToastProps> = ({
   const delayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 用 ref 保存 onClose，避免内联函数引用变化导致 effect 重置
+  // （ref 更新放在 effect 中，不在渲染期写 ref）
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     startTimeRef.current = Date.now();

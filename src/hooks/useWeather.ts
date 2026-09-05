@@ -131,7 +131,7 @@ export function useWeather() {
     }
   }, [fetchCityName]);
 
-  const { locationMethod } = useWeatherLocation({
+  const { locationMethod, locationDetail } = useWeatherLocation({
     fetchWeatherData,
     enabled: weatherApiAvailable,
   });
@@ -149,6 +149,7 @@ export function useWeather() {
     weatherError,
     cityName,
     locationMethod,
+    locationDetail,
     showLunar,
     lunarInfo,
     currentDate,

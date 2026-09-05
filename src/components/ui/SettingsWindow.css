@@ -361,6 +361,82 @@ input:checked + .toggle-slider {
 }
 input:checked + .toggle-slider:before { transform: translateX(24px); }
 
+/* ── 功能开关：设置面板内移动端开关（scoped 自洽，避免与全局 .toggle-switch 冲突）── */
+.settings-feature-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.settings-feature-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--glass-surface-500);
+  border: var(--glass-border-subtle);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast);
+}
+.settings-feature-row:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+.settings-feature-name {
+  font-size: var(--font-md);
+  font-weight: 500;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+.settings-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+  flex-shrink: 0;
+}
+.settings-switch input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+.settings-switch-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  border: var(--glass-border-subtle);
+  transition: background var(--motion-normal), border-color var(--motion-normal);
+  pointer-events: none;
+}
+.settings-switch-track::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: transform var(--motion-normal);
+}
+.settings-switch input:checked + .settings-switch-track {
+  background: color-mix(in srgb, var(--aurora-2) 55%, transparent);
+  border-color: color-mix(in srgb, var(--aurora-2) 40%, transparent);
+}
+.settings-switch input:checked + .settings-switch-track::before {
+  transform: translateX(24px);
+}
+.settings-switch input:focus-visible + .settings-switch-track {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--aurora-2) 60%, transparent);
+}
+
 /* option / form 区块 */
 .option-item {
   margin-bottom: 14px;
