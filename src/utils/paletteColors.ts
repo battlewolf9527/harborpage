@@ -191,7 +191,8 @@ export function describeSlotLabel(
   const id = canonicalSlotId(slotId) || slotId;
   const alias = (aliases?.[id] ?? '').trim();
   const hex = normalizeHex(slots?.[id]) || DEFAULT_PALETTE_HEXES[id] || '';
-  const colorText = hex ? describeColor(hex) : '';
+  // 颜色名：优先 32 色预设中文名 → 出厂 16 色中文名 → hex 兜底
+  const colorText = hex ? describeQuickColor(hex) : '';
   return alias ? `${alias}（调色板 ${slotNumber(id)}）：${colorText}` : `调色板 ${slotNumber(id)}：${colorText}`;
 }
 
