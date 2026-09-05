@@ -45,7 +45,7 @@ const IconItem: React.FC<IconItemProps> = ({
   const iconContent = iconManager.getIconUrlSync(IconType.SITE, icon);
 
   const isUrl = iconContent && (iconContent.startsWith('http://') || iconContent.startsWith('https://') || iconContent.startsWith('/api/') || iconContent.startsWith('data:'));
-  // 水晶材质主色：绑定槽→槽当前色；旧 hex→静态；非十六进制（如 transparent）或未设置时走 CSS 缺省晶蓝
+  // 水晶材质主色：绑定槽→槽当前色；旧 hex→静态；未设置→缺省材质色（调色板 1 号槽）
   const crystalStyle = resolveIconHslVars(icon, slots) as React.CSSProperties | undefined;
 
   return (

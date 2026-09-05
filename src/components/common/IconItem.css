@@ -125,10 +125,11 @@ body.is-dragging-active .icon-item.dragging .icon-circle > .cc-glass {
    ├ .cc-texture       右下角暗部（样例 ::after 椭圆径向暗调）
    └ .crystal-content  中心图标内容（置于最上层）
    主色由 IconItem / FolderItem 按 iconColor 换算为 HSL 后，以
-   --c-hue / --c-sat / --c-lit 内联注入；未设置时回落为默认晶蓝。
+   --c-hue / --c-sat / --c-lit 内联注入（未设色时注入调色板 1 号槽色）；
+   此处默认值仅供内联变量缺失时兜底。
    ═══════════════════════════════════════════════════════════════ */
 .icon-circle {
-  /* 默认材质色 #9aa7ff ≈ hsl(232, 100%, 80%)，可被内联 --c-* 覆盖 */
+  /* 兜底材质色 #9aa7ff ≈ hsl(232, 100%, 80%)，可被内联 --c-* 覆盖 */
   --c-hue: 232;
   --c-sat: 100%;
   --c-lit: 80%;

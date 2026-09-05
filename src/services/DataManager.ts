@@ -1,10 +1,10 @@
-import type { UserData, Website, SearchEngine, Todo, Note, Settings, WallpaperType, Page, PaletteHexMap } from '../types';
+import type { UserData, Website, SearchEngine, Todo, Note, Settings, WallpaperType, Page, PaletteHexMap, PaletteAliasMap } from '../types';
 import ChangeTracker from './ChangeTracker';
 import DataRepository from './DataRepository';
 import { STORAGE_KEYS } from '../constants';
 import { mergeById } from '../utils/importExportUtils';
 import { generateId } from '../utils/idUtils';
-import { normalizePaletteMap } from '../utils/paletteColors';
+import { normalizeAliasMap, normalizePaletteMap } from '../utils/paletteColors';
 import { DEFAULT_PAGE_NAME } from '../store/usePagesStore';
 import createLogger from '../utils/logger';
 
@@ -172,6 +172,11 @@ class DataManager {
         notes: mergeById(current.notes, normalizedImported.notes ?? []),
         // 调色板字段级合并：导入覆盖、未导入保留；key 统一归一化为 palette-N
         palette: normalizePaletteMap({ ...(current.palette ?? {}), ...(normalizedImported.palette ?? {}) }),
+        // 调色板槽别名字段级合并：导入覆盖、未导入保留；key 归一化且仅保留非空别名
+        paletteAliases: normalizeAliasMap({
+          ...(current.paletteAliases ?? {}),
+          ...(normalizedImported.paletteAliases ?? {}),
+        }),
       };
       // 设置项字段级合并：导入字段覆盖，未导入字段保留
       if (normalizedImported.settings) {
@@ -209,6 +214,9 @@ class DataManager {
     ChangeTracker.markChanged('notes');
     if (normalizedImported.palette) {
       ChangeTracker.markChanged('palette');
+    }
+    if (normalizedImported.paletteAliases) {
+      ChangeTracker.markChanged('paletteAliases');
     }
 
     return merged;
@@ -384,6 +392,12 @@ class DataManager {
   public updatePalette(palette: PaletteHexMap): void {
     this.updateData('palette', () => {
       this.data = { ...this.data, palette };
+    });
+  }
+
+  public updatePaletteAliases(aliases: PaletteAliasMap): void {
+    this.updateData('paletteAliases', () => {
+      this.data = { ...this.data, paletteAliases: normalizeAliasMap(aliases) };
     });
   }
 

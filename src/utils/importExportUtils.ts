@@ -1,4 +1,4 @@
-import type { Website, ImportableWebsite, SearchEngine, Todo, Note, Settings, UserData, Page, PaletteHexMap } from '../types';
+import type { Website, ImportableWebsite, SearchEngine, Todo, Note, Settings, UserData, Page, PaletteHexMap, PaletteAliasMap } from '../types';
 import { EXPORT_FILE_PREFIX } from '../constants';
 import ConfigService from '../services/ConfigService';
 import { generateId } from './idUtils';
@@ -6,6 +6,7 @@ import { isNoteColorPresetName, isHexColor } from './noteColors';
 import {
   DEFAULT_PALETTE_HEXES,
   isPaletteSlotId,
+  normalizeAliasMap,
   normalizePaletteMap,
   PALETTE_SLOT_IDS,
 } from './paletteColors';
@@ -248,6 +249,8 @@ export interface FullExportData {
   notes?: Note[];
   /** 被修改的调色板槽位（仅导出与默认 16 色不同的槽，保持文件精简） */
   palette?: PaletteHexMap;
+  /** 调色板槽别名（palette-N → 用户自定义名称；仅导出设置了别名的槽，与 palette 同属「调色板」分类） */
+  paletteAliases?: PaletteAliasMap;
 }
 
 // 导出/导入数据勾选项
@@ -356,19 +359,26 @@ export const buildFullExportData = (data: UserData, selection: DataSelection): F
   if (selection.settings && cleaned.settings) {
     result.settings = cleaned.settings;
   }
-  if (selection.palette && cleaned.palette) {
-    // 只导出被修改的槽位（≠ 默认色）；导入合并时不影响未修改槽
-    // （key 先归一化：兼容旧预设名调色板数据，统一导出为 palette-N）
-    const normalized = normalizePaletteMap(cleaned.palette);
-    const modified: PaletteHexMap = {};
-    for (const id of PALETTE_SLOT_IDS) {
-      const hex = normalized[id];
-      if (hex && hex !== DEFAULT_PALETTE_HEXES[id]) {
-        modified[id] = hex;
+  if (selection.palette) {
+    if (cleaned.palette) {
+      // 只导出被修改的槽位（≠ 默认色）；导入合并时不影响未修改槽
+      // （key 先归一化：兼容旧预设名调色板数据，统一导出为 palette-N）
+      const normalized = normalizePaletteMap(cleaned.palette);
+      const modified: PaletteHexMap = {};
+      for (const id of PALETTE_SLOT_IDS) {
+        const hex = normalized[id];
+        if (hex && hex !== DEFAULT_PALETTE_HEXES[id]) {
+          modified[id] = hex;
+        }
+      }
+      if (Object.keys(modified).length > 0) {
+        result.palette = modified;
       }
     }
-    if (Object.keys(modified).length > 0) {
-      result.palette = modified;
+    // 调色板槽别名跟随「调色板」勾选项：key 归一化后仅保留真正设置了别名的槽
+    const aliases = normalizeAliasMap(cleaned.paletteAliases);
+    if (Object.keys(aliases).length > 0) {
+      result.paletteAliases = aliases;
     }
   }
   return result;
@@ -462,10 +472,21 @@ export const validateFullImportData = (data: unknown): data is FullExportData =>
       if (typeof hex !== 'string' || !isHexColor(hex)) return false;
     }
   }
+  // 调色板槽别名：对象，值为非空白字符串，槽 id 须属于 16 槽
+  if (d.paletteAliases !== undefined) {
+    if (typeof d.paletteAliases !== 'object' || d.paletteAliases === null || Array.isArray(d.paletteAliases)) return false;
+    const aliasEntries = Object.entries(d.paletteAliases as PaletteAliasMap);
+    if (aliasEntries.length === 0) return false;
+    for (const [slotId, alias] of aliasEntries) {
+      if (!isPaletteSlotId(slotId)) return false;
+      if (typeof alias !== 'string' || !alias.trim()) return false;
+    }
+  }
 
   // 至少要有一个数据字段
   const hasAnyData = d.websites !== undefined || d.pages !== undefined || d.searchEngines !== undefined ||
-    d.todos !== undefined || d.notes !== undefined || d.settings !== undefined || d.palette !== undefined;
+    d.todos !== undefined || d.notes !== undefined || d.settings !== undefined || d.palette !== undefined ||
+    d.paletteAliases !== undefined;
   if (!hasAnyData) return false;
 
   return true;

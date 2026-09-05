@@ -30,7 +30,7 @@
 /* ---------- 第二层：Folder Window 外壳 ---------- */
 .folder-window {
   position: relative; /* 承载 ::before 左竖条 */
-  /* 文件夹材质色（由 FolderWindow.tsx 按 effectiveFolderColor 换算内联注入；此处为缺省晶蓝兜底） */
+  /* 文件夹材质色（由 FolderWindow.tsx 按 effectiveFolderColor 换算内联注入，未设色时注入 1 号槽色；此处仅兜底） */
   --fc-hue: 232;
   --fc-sat: 100%;
   --fc-lit: 80%;

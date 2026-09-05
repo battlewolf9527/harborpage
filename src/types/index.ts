@@ -136,6 +136,9 @@ export interface Settings extends VisualSettings {
 // 全局调色板：槽 id（palette-N）→ 当前 hex（id 见 paletteColors.PALETTE_SLOT_IDS，缺省按默认 16 色补齐）
 export type PaletteHexMap = Record<string, string>;
 
+// 调色板槽别名：槽 id（palette-N）→ 用户自定义名称（可选；仅存设置了别名的槽）
+export type PaletteAliasMap = Record<string, string>;
+
 // 用户数据类型
 export interface UserData {
   settings?: Settings;
@@ -149,4 +152,6 @@ export interface UserData {
   wallpaper?: WallpaperData;
   /** 全局调色板（16 槽当前色）；未设置 = 全部使用默认 16 色 */
   palette?: PaletteHexMap;
+  /** 调色板槽别名（palette-N → 用户自定义名称）；未设置 = 无别名，按「调色板 N」展示 */
+  paletteAliases?: PaletteAliasMap;
 }

@@ -46,7 +46,7 @@ const FolderItem: React.FC<FolderItemProps> = ({
   const { iconManager } = getServices();
   const slots = usePaletteStore((s) => s.slots);
 
-  // 水晶材质主色：绑定槽→槽当前色；旧 hex→静态；未设置→CSS 缺省晶蓝
+  // 水晶材质主色：绑定槽→槽当前色；旧 hex→静态；未设置→缺省材质色（调色板 1 号槽）
   const crystalStyle = useMemo(
     () => resolveIconHslVars(icon, slots) as React.CSSProperties | undefined,
     [icon, slots],

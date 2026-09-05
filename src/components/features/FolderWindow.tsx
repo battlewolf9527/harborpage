@@ -6,7 +6,7 @@ import type { Website } from '../../types';
 import { useDragAndDrop } from '../../hooks/useDragAndDrop';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { usePaletteStore } from '../../store/usePaletteStore';
-import { resolveColorHex, type ColorSelection } from '../../utils/paletteColors';
+import { defaultMaterialHex, resolveColorHex, type ColorSelection } from '../../utils/paletteColors';
 import { hexToHsl } from '../../utils/colorUtils';
 
 interface FolderWindowProps {
@@ -89,8 +89,7 @@ FolderHeader.displayName = 'FolderHeader';
 
 /* ── 文件夹水晶材质色 ──
    取色走共享 Palette（选择模式，4×4 自动换行）：点槽选中；再点已选槽或「自定义颜色」弹取色器；
-   缺省色对齐 IconItem.css 的默认晶蓝 #9aa7ff */
-const DEFAULT_FOLDER_COLOR = '#9aa7ff';
+   未手动设色时展示缺省材质色（调色板 1 号槽当前色，见 paletteColors.defaultMaterialHex） */
 
 interface FolderColorControlProps {
   /** 颜色球展示色：未设置时由调用方传入缺省色 */
@@ -134,7 +133,7 @@ const FolderColorControl: React.FC<FolderColorControlProps> = memo(({ displayCol
             <button
               type="button"
               className="folder-color-reset-btn"
-              title="恢复为默认水晶蓝"
+              title="恢复为默认色（调色板 1）"
               onClick={() => onChange({})}
             >
               恢复默认
@@ -347,8 +346,8 @@ const FolderWindow: React.FC<FolderWindowProps> = memo(({
     return sel;
   }, [folderColor, folderColorSlot]);
 
-  // 颜色球展示的有效色：绑定槽→槽当前色；静态→解析快照；未设置（空串）→缺省水晶蓝
-  const effectiveFolderColor = resolveColorHex(folderSelection, slots) || DEFAULT_FOLDER_COLOR;
+  // 颜色球展示的有效色：绑定槽→槽当前色；静态→解析快照；未设置（空串）→缺省材质色（1 号槽）
+  const effectiveFolderColor = resolveColorHex(folderSelection, slots) || defaultMaterialHex(slots);
 
   // 文件夹窗口主题：把有效色换算为 --fc-hue/--fc-sat/--fc-lit，
   // 注入 .folder-window 供 CSS 派生半透明色系分层（底色/描边/内外光）

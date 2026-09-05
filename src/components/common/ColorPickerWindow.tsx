@@ -2,18 +2,19 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import './ColorPickerWindow.css';
 import {
-  DEFAULT_PALETTE_HEXES,
-  PALETTE_SLOT_IDS,
-  describeColor,
+  QUICK_PRESET_COLORS,
+  describeQuickColor,
   normalizeHex,
 } from '../../utils/paletteColors';
 
 /* ════════════════════════════════════════════════════════════════
    取色器窗口（模态居中弹窗）
-   输出单一颜色数据：用户可在「系统预设 16 色」中直接选择，
+   输出单一颜色数据：用户可在「预设颜色 32 色」中直接选择（按色系分区排列），
    也可点「自定义颜色」打开原生取色器自由调色；确定后输出所选 hex。
-   - 默认展示 16 个预设候选（中文色名提示，不暴露 RGB）
+   - 默认展示 32 个预设候选（中文色名提示，不暴露 RGB）
    - 传入 defaultHex 时显示「恢复默认」快捷按钮（用于重设全局调色板槽）
+   - 传入 alias + onAliasCommit 时（修改调色板槽场景）在顶部提供别名输入框：
+     用户可在改色的同时为该调色板命名/清除别名，随「确定」一并提交
    ════════════════════════════════════════════════════════════════ */
 
 interface ColorPickerWindowProps {
@@ -24,6 +25,10 @@ interface ColorPickerWindowProps {
   initialHex?: string;
   /** 槽位出厂默认色：提供时显示「恢复默认」 */
   defaultHex?: string;
+  /** 槽位当前别名（仅修改调色板槽场景传入；决定是否显示别名输入框） */
+  alias?: string;
+  /** 确定时提交别名（已去首尾空白；空串 = 清除别名） */
+  onAliasCommit?: (alias: string) => void;
   /** 确定：输出用户最终选择的颜色 hex（#rrggbb） */
   onConfirm: (hex: string) => void;
   /** 取消/关闭（不输出数据） */
@@ -35,17 +40,23 @@ const ColorPickerWindow: React.FC<ColorPickerWindowProps> = ({
   title,
   initialHex,
   defaultHex,
+  alias,
+  onAliasCommit,
   onConfirm,
   onClose,
 }) => {
   const [draft, setDraft] = useState(() => (open ? normalizeHex(initialHex) || '' : ''));
+  const [aliasDraft, setAliasDraft] = useState(() => (open ? (alias ?? '').trim() : ''));
   const [prevOpen, setPrevOpen] = useState(open);
   const customInputRef = useRef<HTMLInputElement>(null);
 
   // 每次打开时以当前值重置草稿：prop 变化时调整 state 的渲染期模式（避免在 effect 中 setState 引发级联渲染）
   if (open !== prevOpen) {
     setPrevOpen(open);
-    if (open) setDraft(normalizeHex(initialHex) || '');
+    if (open) {
+      setDraft(normalizeHex(initialHex) || '');
+      setAliasDraft((alias ?? '').trim());
+    }
   }
 
   // ESC 关闭（capture 阶段拦截：弹窗内按键不再冒泡给其下业务层级的 ESC 逻辑）
@@ -65,9 +76,15 @@ const ColorPickerWindow: React.FC<ColorPickerWindowProps> = ({
   if (!open) return null;
 
   const customHex = normalizeHex(draft);
+  // 修改调色板槽场景才显示别名输入框
+  const showAlias = typeof onAliasCommit === 'function';
 
   const handleConfirm = () => {
-    if (customHex) onConfirm(customHex);
+    if (!customHex) return;
+    onConfirm(customHex);
+    if (onAliasCommit) {
+      onAliasCommit(aliasDraft.trim());
+    }
   };
 
   return createPortal(
@@ -99,15 +116,34 @@ const ColorPickerWindow: React.FC<ColorPickerWindowProps> = ({
         </div>
 
         <div className="color-picker-body">
+          {showAlias && (
+            <div className="color-picker-alias">
+              <label className="color-picker-alias-label" htmlFor="color-picker-alias-input">
+                别名
+              </label>
+              <input
+                id="color-picker-alias-input"
+                type="text"
+                className="color-picker-alias-input"
+                value={aliasDraft}
+                onChange={(e) => setAliasDraft(e.target.value)}
+                placeholder="未设置（默认显示 调色板 N）"
+                maxLength={20}
+                autoComplete="off"
+                spellCheck={false}
+              />
+            </div>
+          )}
+
           <p className="color-picker-caption">预设颜色</p>
           <div className="color-picker-presets" role="radiogroup" aria-label="预设颜色">
-            {PALETTE_SLOT_IDS.map((id) => {
-              const hex = DEFAULT_PALETTE_HEXES[id];
-              const name = describeColor(hex);
+            {QUICK_PRESET_COLORS.map((preset) => {
+              const hex = preset.hex;
+              const name = preset.label;
               const active = customHex === hex;
               return (
                 <button
-                  key={id}
+                  key={hex}
                   type="button"
                   role="radio"
                   aria-checked={active}
@@ -130,7 +166,7 @@ const ColorPickerWindow: React.FC<ColorPickerWindowProps> = ({
               onClick={() => customInputRef.current?.click()}
             >
               <span
-                className={`color-picker-custom-swatch ${customHex && !PALETTE_SLOT_IDS.some((id) => DEFAULT_PALETTE_HEXES[id] === customHex) ? 'active' : ''}`}
+                className={`color-picker-custom-swatch ${customHex && !QUICK_PRESET_COLORS.some((p) => p.hex === customHex) ? 'active' : ''}`}
                 style={customHex ? { background: customHex } : undefined}
                 aria-hidden="true"
               />
@@ -152,7 +188,7 @@ const ColorPickerWindow: React.FC<ColorPickerWindowProps> = ({
               <>
                 当前颜色：
                 <b className="color-picker-current-name" style={{ color: customHex }}>
-                  {describeColor(customHex)}
+                  {describeQuickColor(customHex)}
                 </b>
               </>
             ) : (

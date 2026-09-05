@@ -8,7 +8,7 @@ import {
   PALETTE_SLOT_IDS,
   canonicalSlotId,
   customSelection,
-  describeColor,
+  describeSlotLabel,
   normalizeHex,
   resolveColorHex,
   slotNumber,
@@ -24,7 +24,8 @@ import {
    - select（选择模式，元素设色默认）：点槽 = 选中该槽颜色；
      再点已选中槽 = 弹取色器重设该槽颜色；「自定义」按钮同样弹取色器。
    - settings（设置模式，设置侧栏用）：点任意槽 = 弹取色器重设该槽颜色。
-   槽位 tooltip = 位置序号 + 当前颜色的文字描述（预设色显中文色名，自定义色显 hex）。
+   槽位 tooltip/aria = describeSlotLabel：有别名 → 「别名（调色板 N）：颜色」；
+   无别名 → 「调色板 N：颜色」（颜色为中文色名/hex）。
    ════════════════════════════════════════════════════════════════ */
 
 interface PaletteProps {
@@ -46,7 +47,9 @@ export const Palette: React.FC<PaletteProps> = ({
   className,
 }) => {
   const slots = usePaletteStore((s) => s.slots);
+  const aliases = usePaletteStore((s) => s.aliases);
   const setSlotColor = usePaletteStore((s) => s.setSlotColor);
+  const setSlotAlias = usePaletteStore((s) => s.setSlotAlias);
   const [pickerTarget, setPickerTarget] = useState<PickerTarget | null>(null);
 
   const boundSlot = value?.colorSlot ? canonicalSlotId(value.colorSlot) || null : null;
@@ -78,10 +81,16 @@ export const Palette: React.FC<PaletteProps> = ({
     setPickerTarget(null);
   };
 
+  /** 取色弹窗标题：有别名 → 「修改「别名（调色板 N）」」；无别名 → 「修改调色板 N 号」 */
+  const slotEditTitle = (slotId: string): string => {
+    const alias = (aliases[slotId] ?? '').trim();
+    return alias
+      ? `修改「${alias}（调色板 ${slotNumber(slotId)}）」`
+      : `修改调色板 ${slotNumber(slotId)} 号`;
+  };
+
   const pickerTitle =
-    pickerTarget?.kind === 'slot'
-      ? `修改调色板 ${slotNumber(pickerTarget.slotId)} 号`
-      : '自定义';
+    pickerTarget?.kind === 'slot' ? slotEditTitle(pickerTarget.slotId) : '自定义';
   const pickerInitialHex =
     pickerTarget?.kind === 'slot'
       ? slots[pickerTarget.slotId] || ''
@@ -100,8 +109,8 @@ export const Palette: React.FC<PaletteProps> = ({
           const hex = normalizeHex(slots[id]) || DEFAULT_PALETTE_HEXES[id];
           const active = mode === 'select' && boundSlot === id;
           const modified = mode === 'settings' && hex !== DEFAULT_PALETTE_HEXES[id];
-          // 提示 = 中性位置序号（身份不随颜色变化） + 当前颜色的文字描述
-          const hint = `调色板 ${slotNumber(id)} 号 · ${describeColor(hex)}`;
+          // 展示文案（tooltip/aria）：有别名 → 「别名（调色板 N）：颜色」；无别名 → 「调色板 N：颜色」
+          const hint = describeSlotLabel(id, slots, aliases);
           return (
             <button
               key={id}
@@ -140,6 +149,12 @@ export const Palette: React.FC<PaletteProps> = ({
         title={pickerTitle}
         {...(pickerInitialHex ? { initialHex: pickerInitialHex } : {})}
         {...(pickerDefaultHex ? { defaultHex: pickerDefaultHex } : {})}
+        {...(pickerTarget?.kind === 'slot'
+          ? {
+              alias: aliases[pickerTarget.slotId] ?? '',
+              onAliasCommit: (alias) => setSlotAlias(pickerTarget.slotId, alias),
+            }
+          : {})}
         onConfirm={handlePickerConfirm}
         onClose={() => setPickerTarget(null)}
       />

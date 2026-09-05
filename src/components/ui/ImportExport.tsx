@@ -13,10 +13,10 @@ import {
   type DataSelection,
 } from '../../utils/importExportUtils';
 import { EXPORT_FILE_PREFIX } from '../../constants';
-import type { UserData, Website, Page, PaletteHexMap } from '../../types';
+import type { UserData, Website, Page, PaletteHexMap, PaletteAliasMap } from '../../types';
 import { generateId } from '../../utils/idUtils';
 import { DEFAULT_PAGE_NAME } from '../../store/usePagesStore';
-import { DEFAULT_PALETTE_HEXES, PALETTE_SLOT_IDS, normalizePaletteMap } from '../../utils/paletteColors';
+import { DEFAULT_PALETTE_HEXES, PALETTE_SLOT_IDS, normalizeAliasMap, normalizePaletteMap } from '../../utils/paletteColors';
 import './ImportExport.css';
 
 // 数据分类配置
@@ -58,14 +58,36 @@ const countPaletteModifications = (palette?: PaletteHexMap): number => {
   return count;
 };
 
+/** 统计设置了别名的调色板槽位数（key 归一化后仅计非空别名） */
+const countPaletteAliases = (aliases?: PaletteAliasMap): number =>
+  Object.keys(normalizeAliasMap(aliases)).length;
+
+type CellCounts = Record<CategoryKey, number | null> & { pageSiteCount: number; paletteAliasCount: number };
+
+/** 生成分类行的数量文案；无数据返回 null（调色板行合并展示槽色与别名） */
+const formatCellCount = (key: CategoryKey, counts: CellCounts): string | null => {
+  const count = counts[key];
+  if (key === 'pages') {
+    return count ? `${count}页/${counts.pageSiteCount}站` : null;
+  }
+  if (key === 'palette') {
+    const parts: string[] = [];
+    if (count) parts.push(`${count} 槽`);
+    if (counts.paletteAliasCount) parts.push(`${counts.paletteAliasCount} 别名`);
+    return parts.length > 0 ? parts.join(' · ') : null;
+  }
+  if (count === null || count === 0) return null;
+  return `${count} 个`;
+};
+
 interface ImportPreview {
   raw: FullExportData;
   available: DataSelection;
-  counts: Record<CategoryKey, number | null> & { pageSiteCount: number };
+  counts: Record<CategoryKey, number | null> & { pageSiteCount: number; paletteAliasCount: number };
 }
 
 /** 导出对话框中各分类的现有数据量（settings 无数量概念，固定 null） */
-type ExportCounts = Record<CategoryKey, number | null> & { pageSiteCount: number };
+type ExportCounts = Record<CategoryKey, number | null> & { pageSiteCount: number; paletteAliasCount: number };
 
 const EMPTY_EXPORT_COUNTS: ExportCounts = {
   searchEngines: 0,
@@ -76,6 +98,7 @@ const EMPTY_EXPORT_COUNTS: ExportCounts = {
   notes: 0,
   settings: null,
   palette: 0,
+  paletteAliasCount: 0,
 };
 
 interface ToastState {
@@ -121,6 +144,7 @@ const computeExportCounts = (): ExportCounts => {
     notes: data.notes?.length ?? 0,
     settings: null,
     palette: countPaletteModifications(data.palette),
+    paletteAliasCount: countPaletteAliases(data.paletteAliases),
   };
 };
 
@@ -142,6 +166,8 @@ const buildImportSummary = (data: FullExportData): string => {
   if (data.settings) parts.push('设置项');
   const paletteCount = countPaletteModifications(data.palette);
   if (paletteCount > 0) parts.push(`调色板 ${paletteCount} 槽`);
+  const aliasCount = countPaletteAliases(data.paletteAliases);
+  if (aliasCount > 0) parts.push(`调色板别名 ${aliasCount} 个`);
   if (parts.length === 0) return '文件中无有效数据。';
   return `文件包含：${parts.join('，')}。`;
 };
@@ -214,7 +240,8 @@ const ImportExport: React.FC = () => {
         todos: !!(raw.todos?.length),
         notes: !!(raw.notes?.length),
         settings: !!raw.settings,
-        palette: countPaletteModifications(raw.palette) > 0,
+        // 调色板分类包含槽色与槽别名：任一存在即可勾选
+        palette: countPaletteModifications(raw.palette) > 0 || countPaletteAliases(raw.paletteAliases) > 0,
       };
       const counts: ImportPreview['counts'] = {
         searchEngines: raw.searchEngines?.length ?? null,
@@ -225,6 +252,7 @@ const ImportExport: React.FC = () => {
         notes: raw.notes?.length ?? null,
         settings: null,
         palette: countPaletteModifications(raw.palette) || null,
+        paletteAliasCount: countPaletteAliases(raw.paletteAliases),
       };
       setImportSelection({ ...available });
       setImportPreview({ raw, available, counts });
@@ -312,8 +340,14 @@ const ImportExport: React.FC = () => {
     if (importSelection.settings && raw.settings) {
       imported.settings = raw.settings;
     }
-    if (importSelection.palette && raw.palette) {
-      imported.palette = raw.palette;
+    // 调色板分类：槽色与槽别名一同导入
+    if (importSelection.palette) {
+      if (raw.palette) {
+        imported.palette = raw.palette;
+      }
+      if (raw.paletteAliases) {
+        imported.paletteAliases = raw.paletteAliases;
+      }
     }
 
     // 启动导入组件（ImportProgressOverlay），由其完成导入并显示进度
@@ -406,7 +440,11 @@ const ImportExport: React.FC = () => {
               <div className="ie-checkbox-group">
                 {DATA_CATEGORIES.map(({ key, label }) => {
                   const count = exportCounts[key];
-                  const hasData = key === 'settings' ? true : (count ?? 0) > 0;
+                  // settings 恒可勾选；调色板槽色或别名任一存在即可勾选
+                  const hasData = key === 'settings'
+                    ? true
+                    : (count ?? 0) > 0 || (key === 'palette' && exportCounts.paletteAliasCount > 0);
+                  const countText = formatCellCount(key, exportCounts);
                   return (
                     <label
                       key={key}
@@ -420,14 +458,8 @@ const ImportExport: React.FC = () => {
                       />
                       <span className="ie-checkbox-custom" />
                       <span className="ie-checkbox-label">{label}</span>
-                      {count !== null && count > 0 && (
-                        <span className="ie-checkbox-count">
-                          {key === 'pages'
-                            ? `${exportCounts.pages}页/${exportCounts.pageSiteCount}站`
-                            : key === 'palette'
-                              ? `${count} 槽`
-                              : `${count} 个`}
-                        </span>
+                      {countText && (
+                        <span className="ie-checkbox-count">{countText}</span>
                       )}
                     </label>
                   );
@@ -473,7 +505,7 @@ const ImportExport: React.FC = () => {
               <div className="ie-checkbox-group">
                 {DATA_CATEGORIES.map(({ key, label }) => {
                   const available = importPreview.available[key];
-                  const count = importPreview.counts[key];
+                  const countText = formatCellCount(key, importPreview.counts);
                   return (
                     <label
                       key={key}
@@ -487,14 +519,8 @@ const ImportExport: React.FC = () => {
                       />
                       <span className="ie-checkbox-custom" />
                       <span className="ie-checkbox-label">{label}</span>
-                      {count !== null && (
-                        <span className="ie-checkbox-count">
-                          {key === 'pages'
-                            ? `${importPreview.counts.pages}页/${importPreview.counts.pageSiteCount}站`
-                            : key === 'palette'
-                              ? `${count} 槽`
-                              : `${count} 个`}
-                        </span>
+                      {countText && (
+                        <span className="ie-checkbox-count">{countText}</span>
                       )}
                       {key === 'settings' && available && (
                         <span className="ie-checkbox-count">已包含</span>

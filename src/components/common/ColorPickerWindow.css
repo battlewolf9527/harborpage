@@ -106,7 +106,42 @@
   letter-spacing: 0.01em;
 }
 
-/* 预设 16 色：固定 8 列，横向居中（2 行 × 8） */
+/* ── 别名输入（修改调色板槽场景，位于预设色之上）── */
+.color-picker-alias {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.color-picker-alias-label {
+  flex-shrink: 0;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+.color-picker-alias-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--input-radius);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: var(--font-sm);
+  font-family: inherit;
+  box-shadow: var(--glass-inner-hl);
+  transition: all var(--motion-fast);
+}
+.color-picker-alias-input:focus {
+  outline: none;
+  border-color: var(--input-focus-border);
+  background: rgba(255, 255, 255, 0.075);
+  box-shadow: var(--input-focus-ring);
+}
+.color-picker-alias-input::placeholder {
+  color: var(--text-quaternary);
+}
+
+/* 预设 32 色：固定 8 列，横向居中（4 行 × 8，按色系分区顺序排列） */
 .color-picker-presets {
   display: grid;
   grid-template-columns: repeat(8, 24px);

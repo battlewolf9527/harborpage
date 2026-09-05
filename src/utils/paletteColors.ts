@@ -14,7 +14,7 @@
  *   不参与槽位联动。
  * ---------------------------------------------------------------
  */
-import type { PaletteHexMap } from '../types';
+import type { PaletteHexMap, PaletteAliasMap } from '../types';
 import { hexToHslCssVars } from './colorUtils';
 import { isHexColor, NOTE_COLOR_PRESETS, resolveNoteColor } from './noteColors';
 
@@ -85,6 +85,68 @@ export function normalizeHex(hex?: string): string {
 }
 
 /**
+ * 取色器「预设颜色」快速候选色板：32 色，按色系分区排列（白 → 红 → 橙 → 黄 →
+ * 黄绿/绿 → 翡翠/青 → 蓝 → 靛/紫 → 品红/粉），同色系内由浅到深，尽量拉开辨识度。
+ * 覆盖出厂 16 色并扩充 16 个同色系深浅变体；仅作取色快捷候选，**不参与**全局调色板槽位。
+ */
+export interface QuickPresetColor {
+  hex: string;
+  label: string;
+}
+
+export const QUICK_PRESET_COLORS: readonly QuickPresetColor[] = [
+  // 中性
+  { hex: '#ffffff', label: '白色' },
+  // 红
+  { hex: '#fca5a5', label: '浅红' },
+  { hex: '#f87171', label: '红色' },
+  { hex: '#ef4444', label: '深红' },
+  // 橙
+  { hex: '#fdba74', label: '浅橙' },
+  { hex: '#fb923c', label: '橙色' },
+  { hex: '#ea580c', label: '深橙' },
+  // 黄 / 琥珀
+  { hex: '#fde047', label: '浅黄' },
+  { hex: '#facc15', label: '黄色' },
+  { hex: '#f59e0b', label: '琥珀色' },
+  // 黄绿 / 绿
+  { hex: '#bef264', label: '浅黄绿' },
+  { hex: '#a3e635', label: '黄绿色' },
+  { hex: '#4ade80', label: '绿色' },
+  { hex: '#22c55e', label: '深绿' },
+  // 翡翠 / 青 / 青色
+  { hex: '#34d399', label: '翡翠色' },
+  { hex: '#2dd4bf', label: '青色' },
+  { hex: '#a5f3fc', label: '浅青' },
+  { hex: '#22d3ee', label: '青蓝色' },
+  // 蓝 / 天蓝
+  { hex: '#93c5fd', label: '浅蓝' },
+  { hex: '#38bdf8', label: '天蓝色' },
+  { hex: '#60a5fa', label: '蓝色' },
+  { hex: '#3b82f6', label: '宝蓝色' },
+  // 靛 / 紫
+  { hex: '#818cf8', label: '靛蓝色' },
+  { hex: '#6366f1', label: '深靛' },
+  { hex: '#d8b4fe', label: '淡紫色' },
+  { hex: '#c084fc', label: '紫色' },
+  { hex: '#a78bfa', label: '蓝紫色' },
+  // 品红 / 粉
+  { hex: '#f9a8d4', label: '浅粉' },
+  { hex: '#f472b6', label: '粉色' },
+  { hex: '#f0abfc', label: '浅品红' },
+  { hex: '#e879f9', label: '品红色' },
+  { hex: '#ec4899', label: '深粉' },
+];
+
+/** 取色器预设描述：命中 32 色候选 → 中文色名；否则走出厂 16 色名 / hex 兜底 */
+export function describeQuickColor(hex?: string): string {
+  const normalized = normalizeHex(hex);
+  if (!normalized) return '';
+  const hit = QUICK_PRESET_COLORS.find((c) => c.hex === normalized);
+  return hit ? hit.label : describeColor(normalized);
+}
+
+/**
  * 规范化调色板 map：
  * - key 统一为 palette-N（兼容旧预设名 key 的读取）
  * - 过滤非法槽位/非法 hex，缺省槽用出厂色补齐（返回始终含全部 16 槽）
@@ -98,6 +160,39 @@ export function normalizePaletteMap(palette?: PaletteHexMap): PaletteHexMap {
     if (id && normalized) result[id] = normalized;
   }
   return result;
+}
+
+/**
+ * 规范化调色板槽别名 map：
+ * - key 归一化为 palette-N（兼容旧预设名 key）
+ * - 别名去除首尾空白；空别名视为未设置，不保留（返回的 map 只含真正设置了别名的槽）
+ */
+export function normalizeAliasMap(aliases?: PaletteAliasMap): PaletteAliasMap {
+  const result: PaletteAliasMap = {};
+  if (!aliases) return result;
+  for (const [rawId, rawAlias] of Object.entries(aliases)) {
+    const id = canonicalSlotId(rawId);
+    const alias = typeof rawAlias === 'string' ? rawAlias.trim() : '';
+    if (id && alias) result[id] = alias;
+  }
+  return result;
+}
+
+/**
+ * 槽位的完整展示文案（title/aria 等）：
+ * - 设置了别名 → `别名（调色板 N）：颜色`
+ * - 未设置别名 → `调色板 N：颜色`
+ */
+export function describeSlotLabel(
+  slotId: string,
+  slots?: PaletteHexMap,
+  aliases?: PaletteAliasMap,
+): string {
+  const id = canonicalSlotId(slotId) || slotId;
+  const alias = (aliases?.[id] ?? '').trim();
+  const hex = normalizeHex(slots?.[id]) || DEFAULT_PALETTE_HEXES[id] || '';
+  const colorText = hex ? describeColor(hex) : '';
+  return alias ? `${alias}（调色板 ${slotNumber(id)}）：${colorText}` : `调色板 ${slotNumber(id)}：${colorText}`;
 }
 
 /**
@@ -165,13 +260,23 @@ export function randomSlotSelection(slots?: PaletteHexMap): ColorSelection {
 }
 
 /**
+ * 未手动设色的站点/文件夹缺省材质色：跟随调色板 1 号槽当前色
+ * （替代原 CSS 晶蓝兜底；槽位异常时回退出厂默认色，保证始终返回合法 hex）。
+ */
+export function defaultMaterialHex(slots?: PaletteHexMap): string {
+  const id = PALETTE_SLOT_IDS[0]; // 调色板 1 号槽
+  return normalizeHex(slots?.[id]) || DEFAULT_PALETTE_HEXES[id] || '';
+}
+
+/**
  * 把「图标/文件夹的颜色选择」（iconColor + colorSlot）解析成注入 .icon-circle 的 HSL CSS 变量；
- * 绑定槽→槽当前色；旧 hex→静态解析；未设置→undefined（CSS 缺省晶蓝）。
+ * 绑定槽→槽当前色；旧 hex→静态解析；未设置→缺省材质色（调色板 1 号槽，见 defaultMaterialHex）。
  */
 export function resolveIconHslVars(
   icon: { iconColor?: string; colorSlot?: string },
   slots?: PaletteHexMap,
 ): Record<string, string> | undefined {
-  const hex = resolveColorHex(buildSelection(icon.iconColor, icon.colorSlot), slots);
-  return hex ? hexToHslCssVars(hex) : undefined;
+  const hex =
+    resolveColorHex(buildSelection(icon.iconColor, icon.colorSlot), slots) || defaultMaterialHex(slots);
+  return hexToHslCssVars(hex);
 }

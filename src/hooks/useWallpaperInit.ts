@@ -10,20 +10,21 @@ import { fetchBingWallpaperUrl, getRandomBingWallpaperUrl } from '../utils/wallp
  */
 export function useWallpaperInit(isAuthenticated: boolean, isCheckingAuth: boolean) {
   const wallpaperType = useWallpaperStore((s) => s.wallpaperType);
+  const wallpaper = useWallpaperStore((s) => s.wallpaper);
   const setWallpaperSilent = useWallpaperStore((s) => s.setWallpaperSilent);
   const lastInitTypeRef = useRef<WallpaperType | null>(null);
 
   useEffect(() => {
     // 等待认证完成、数据初始化后再执行
     if (!isAuthenticated || isCheckingAuth) return;
-    // 同一类型只初始化一次
-    if (lastInitTypeRef.current === wallpaperType) return;
-    // 仅处理需要远程获取的壁纸类型
-    if (wallpaperType !== 'bing' && wallpaperType !== 'randomBing') {
-      lastInitTypeRef.current = wallpaperType;
-      return;
-    }
+
+    const isRemoteType = wallpaperType === 'bing' || wallpaperType === 'randomBing';
+    // 同一类型只初始化一次；但远程类型的 URL 不持久化到云端，登出后重新登录时
+    // store 会重新初始化把 wallpaper 置空，此时允许补拉，否则背景图会丢失
+    if (lastInitTypeRef.current === wallpaperType && !(isRemoteType && !wallpaper)) return;
     lastInitTypeRef.current = wallpaperType;
+    // 仅处理需要远程获取的壁纸类型
+    if (!isRemoteType) return;
 
     if (wallpaperType === 'bing') {
       (async () => {
@@ -33,5 +34,5 @@ export function useWallpaperInit(isAuthenticated: boolean, isCheckingAuth: boole
     } else if (wallpaperType === 'randomBing') {
       setWallpaperSilent(getRandomBingWallpaperUrl(), 'randomBing');
     }
-  }, [wallpaperType, setWallpaperSilent, isAuthenticated, isCheckingAuth]);
+  }, [wallpaperType, wallpaper, setWallpaperSilent, isAuthenticated, isCheckingAuth]);
 }

@@ -250,7 +250,8 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
             <button onClick={() => setShowIconSettings(true)}>桌面图标设置</button>
             <button onClick={() => setShowFaviconManager(true)}>管理图标源</button>
           </div>
-          {/* 调色板：全局 16 槽（设置模式 2×8）；点任意槽弹取色器改色，使用该槽位的元素自动跟随 */}
+          {/* 调色板：全局 16 槽（设置模式 2×8）；点任意槽弹取色器改色，
+              弹窗内可为该槽设置别名（显示为「别名（调色板 N）：颜色」），使用该槽位的元素自动跟随 */}
           <div className="palette-manage-block">
             <div className="palette-manage-head">
               <span className="palette-manage-title">调色板</span>
