@@ -141,7 +141,8 @@
   color: var(--text-quaternary);
 }
 
-/* 预设 32 色：固定 8 列，横向居中（4 行 × 8，按色系分区顺序排列） */
+/* 预设 32 色：8 列 × 4 行色阶矩阵，固定 8 列横向居中；按行序（淡彩→高饱和亮→宝石深→极深）填充，
+   2~8 列各为同色系逐档加深（深档保留饱和度、通透不闷），第 1 列为白灰黑中性灰阶 */
 .color-picker-presets {
   display: grid;
   grid-template-columns: repeat(8, 24px);

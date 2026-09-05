@@ -4,7 +4,7 @@ import DataRepository from './DataRepository';
 import { STORAGE_KEYS } from '../constants';
 import { mergeById } from '../utils/importExportUtils';
 import { generateId } from '../utils/idUtils';
-import { normalizeAliasMap, normalizePaletteMap } from '../utils/paletteColors';
+import { normalizeAliasMap, normalizeLightness, normalizePaletteMap } from '../utils/paletteColors';
 import { DEFAULT_PAGE_NAME } from '../store/usePagesStore';
 import createLogger from '../utils/logger';
 
@@ -178,6 +178,10 @@ class DataManager {
           ...(normalizedImported.paletteAliases ?? {}),
         }),
       };
+      // 全局明暗度：导入覆盖、未导入保留（undefined 不写，避免覆盖当前值）
+      if (normalizedImported.paletteLightness !== undefined) {
+        merged.paletteLightness = normalizeLightness(normalizedImported.paletteLightness);
+      }
       // 设置项字段级合并：导入字段覆盖，未导入字段保留
       if (normalizedImported.settings) {
         merged.settings = { ...(current.settings ?? {}), ...normalizedImported.settings };
@@ -398,6 +402,12 @@ class DataManager {
   public updatePaletteAliases(aliases: PaletteAliasMap): void {
     this.updateData('paletteAliases', () => {
       this.data = { ...this.data, paletteAliases: normalizeAliasMap(aliases) };
+    });
+  }
+
+  public updatePaletteLightness(lightness: number): void {
+    this.updateData('paletteLightness', () => {
+      this.data = { ...this.data, paletteLightness: normalizeLightness(lightness) };
     });
   }
 

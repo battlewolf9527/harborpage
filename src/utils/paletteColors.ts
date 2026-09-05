@@ -6,38 +6,67 @@
  *   16 色排列），**不含颜色语义**：颜色始终由「槽当前色」决定，用户可任意修改某槽颜色，
  *   id 不会随之失真（旧版曾以预设色名做 id，改色后语义错位，现已改为位置 id，
  *   并保留旧预设名的兼容读取）。
- * - 出厂默认 16 色 = DEFAULT_PALETTE_HEXES（palette-N → hex），是「恢复默认」的基准，
- *   也是旧数据的静态解析基准。
+ * - 出厂默认 16 色 = DEFAULT_PALETTE_HEXES（palette-N → hex，取值来自 4×8 取色矩阵），
+ *   是「恢复默认」与槽位缺省显示的基准。
  * - 元素（文件夹/站点图标/便签）取色时：选某个槽 → 写入 colorSlot=槽id + color=当前色快照；
  *   该元素实时跟随槽位当前色。选自定义 → 仅写 color=#rrggbb（无 colorSlot，静态）。
- * - 旧数据（无 colorSlot）一律视为静态自定义色：预设名按出厂默认色解析、hex 原样，
- *   不参与槽位联动。
+ * - 旧数据（无 colorSlot）一律视为静态自定义色：预设名按 noteColors 旧出厂色解析（不随
+ *   新槽默认色变化，保证老数据不跳色）、hex 原样，不参与槽位联动。
  * ---------------------------------------------------------------
  */
 import type { PaletteHexMap, PaletteAliasMap } from '../types';
 import { hexToHslCssVars } from './colorUtils';
 import { isHexColor, NOTE_COLOR_PRESETS, resolveNoteColor } from './noteColors';
 
-/** 出厂 16 色 hex（按 NOTE_COLOR_PRESETS 顺序：white…indigo） */
-const PRESET_PALETTE_HEXES: readonly string[] = NOTE_COLOR_PRESETS.map((p) => p.hex);
-
-/** 出厂 16 色的可描述中文名（与 PRESET_PALETTE_HEXES 顺序一一对应） */
-const PRESET_PALETTE_NAMES: readonly string[] = [
-  '白色', '黄色', '琥珀色', '橙色',
-  '粉色', '玫红色', '红色',
-  '绿色', '黄绿色', '翠绿色', '青色', '青蓝色',
-  '蓝色', '天蓝色', '紫色', '靛蓝色',
+/**
+ * 出厂 16 槽默认色 = 预设矩阵「第 1 行（淡彩糖果色）+ 第 3 行（宝石深色）」共 16 色，
+ * 按列序拼接（白 → … → 淡紫，深灰 → … → 深紫）。取值均为 QUICK_PRESET_COLORS 成员，
+ * 保证「恢复默认」的基准色必然是取色器中的一个预设，可精确命中并显示中文色名。
+ */
+const FACTORY_PALETTE_HEXES: readonly string[] = [
+  // 第 1 行（淡彩糖果色）
+  '#ffffff', // 白色
+  '#ff8a8a', // 粉红（糖果粉）
+  '#ffb366', // 淡橙（蜜桃）
+  '#ffe566', // 淡黄（香槟黄）
+  '#8cd98c', // 淡绿（嫩草绿）
+  '#7ad9d9', // 淡青（冰晶青）
+  '#7ab8ff', // 淡蓝（天蓝）
+  '#c28cff', // 淡紫（丁香紫）
+  // 第 3 行（宝石深色）
+  '#7a7a7a', // 深灰（金属灰）
+  '#d90000', // 深赤（宝石红）
+  '#d97000', // 深橙（柿子橙）
+  '#d9a800', // 深黄（金盏黄）
+  '#00a34a', // 深绿（翡翠绿）
+  '#0099a8', // 深青（深海青）
+  '#0055d9', // 深蓝（皇家蓝）
+  '#8a2be2', // 深紫（帝王紫）
 ];
 
 /** 16 槽稳定 id：palette-1 … palette-16（位置标识，不含颜色语义） */
 export const PALETTE_SLOT_IDS: readonly string[] = Array.from(
-  { length: NOTE_COLOR_PRESETS.length },
+  { length: FACTORY_PALETTE_HEXES.length },
   (_, i) => `palette-${i + 1}`,
 );
 
-/** 出厂默认 16 色：槽 id（palette-N）→ 出厂 hex（不可变基准） */
+/**
+ * 显示层全局明暗度偏移范围：-50..50，0 = 原色。
+ * 语义：不修改任何已存 hex，只在元素真实使用颜色（图标材质/文件夹窗口/便签表面）时
+ * 叠加到 HSL 亮度通道，实现整站颜色统一调亮（正值）/调暗（负值）。
+ */
+export const LIGHTNESS_MIN = -50;
+export const LIGHTNESS_MAX = 50;
+
+/** 规范化明暗度：非法/NaN → 0（原色）；越界收敛到 [LIGHTNESS_MIN, LIGHTNESS_MAX]；取整。 */
+export function normalizeLightness(value?: number): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return 0;
+  return Math.round(Math.min(LIGHTNESS_MAX, Math.max(LIGHTNESS_MIN, value)));
+}
+
+/** 出厂默认 16 色：槽 id（palette-N）→ 出厂 hex（不可变基准，均取自 32 色预设矩阵） */
 export const DEFAULT_PALETTE_HEXES: Readonly<Record<string, string>> = Object.fromEntries(
-  PALETTE_SLOT_IDS.map((id, i) => [id, PRESET_PALETTE_HEXES[i]]),
+  PALETTE_SLOT_IDS.map((id, i) => [id, FACTORY_PALETTE_HEXES[i]]),
 ) as Readonly<Record<string, string>>;
 
 /** 旧版槽 id（出厂预设名：white…indigo）→ 位置序号；仅供历史数据兼容读取 */
@@ -68,15 +97,11 @@ export function slotNumber(slotId: string): number {
 }
 
 /**
- * 颜色提示文本：
- * - 命中出厂 16 预设色 → 返回中文色名（如「蓝色」），不暴露 RGB；
- * - 非预设（自定义色）→ 返回 hex 文本。
+ * 颜色提示文本（兜底）：32 色预设与出厂槽色的中文名统一走 describeQuickColor；
+ * 本函数仅把两者都未命中的自定义色以 hex 文本形式返回（不暴露语义）。
  */
 export function describeColor(hex?: string): string {
-  const normalized = normalizeHex(hex);
-  if (!normalized) return '';
-  const i = PRESET_PALETTE_HEXES.indexOf(normalized);
-  return i >= 0 ? PRESET_PALETTE_NAMES[i] ?? normalized : normalized;
+  return normalizeHex(hex);
 }
 
 /** 归一化 hex：#RRGGBB / #rrggbb → 小写 */
@@ -85,9 +110,14 @@ export function normalizeHex(hex?: string): string {
 }
 
 /**
- * 取色器「预设颜色」快速候选色板：32 色，按色系分区排列（白 → 红 → 橙 → 黄 →
- * 黄绿/绿 → 翡翠/青 → 蓝 → 靛/紫 → 品红/粉），同色系内由浅到深，尽量拉开辨识度。
- * 覆盖出厂 16 色并扩充 16 个同色系深浅变体；仅作取色快捷候选，**不参与**全局调色板槽位。
+ * 取色器「预设颜色」快速候选色板：8 列 × 4 行色阶矩阵，主打「通透」高饱和风格。
+ * - 第 1 列为中性灰阶：白 → 银灰 → 金属灰 → 纯黑（固定四档，不随彩色列调整）。
+ * - 2~8 列为色系：红粉 / 橙 / 黄 / 绿 / 青 / 蓝 / 紫；行 = 明度档，自上而下：
+ *   淡彩糖果 → 高饱和亮色（iOS 系统色） → 浓郁宝石深色 → 带色相的通透极深暗调
+ *   （深档均保留饱和度、不发灰发闷）。
+ * 列表按「行序（明度档）」排列、由 8 列网格逐行填充后，同列自动对齐同一色系。
+ * 出厂 16 槽默认色取自本矩阵（FACTORY_PALETTE_HEXES），保证默认色与候选精确命中；
+ * 本组仅作取色快捷候选，**不参与**全局调色板槽位。
  */
 export interface QuickPresetColor {
   hex: string;
@@ -95,50 +125,45 @@ export interface QuickPresetColor {
 }
 
 export const QUICK_PRESET_COLORS: readonly QuickPresetColor[] = [
-  // 中性
+  // ── 第 1 行（淡彩糖果色，通透不寡淡）──
   { hex: '#ffffff', label: '白色' },
-  // 红
-  { hex: '#fca5a5', label: '浅红' },
-  { hex: '#f87171', label: '红色' },
-  { hex: '#ef4444', label: '深红' },
-  // 橙
-  { hex: '#fdba74', label: '浅橙' },
-  { hex: '#fb923c', label: '橙色' },
-  { hex: '#ea580c', label: '深橙' },
-  // 黄 / 琥珀
-  { hex: '#fde047', label: '浅黄' },
-  { hex: '#facc15', label: '黄色' },
-  { hex: '#f59e0b', label: '琥珀色' },
-  // 黄绿 / 绿
-  { hex: '#bef264', label: '浅黄绿' },
-  { hex: '#a3e635', label: '黄绿色' },
-  { hex: '#4ade80', label: '绿色' },
-  { hex: '#22c55e', label: '深绿' },
-  // 翡翠 / 青 / 青色
-  { hex: '#34d399', label: '翡翠色' },
-  { hex: '#2dd4bf', label: '青色' },
-  { hex: '#a5f3fc', label: '浅青' },
-  { hex: '#22d3ee', label: '青蓝色' },
-  // 蓝 / 天蓝
-  { hex: '#93c5fd', label: '浅蓝' },
-  { hex: '#38bdf8', label: '天蓝色' },
-  { hex: '#60a5fa', label: '蓝色' },
-  { hex: '#3b82f6', label: '宝蓝色' },
-  // 靛 / 紫
-  { hex: '#818cf8', label: '靛蓝色' },
-  { hex: '#6366f1', label: '深靛' },
-  { hex: '#d8b4fe', label: '淡紫色' },
-  { hex: '#c084fc', label: '紫色' },
-  { hex: '#a78bfa', label: '蓝紫色' },
-  // 品红 / 粉
-  { hex: '#f9a8d4', label: '浅粉' },
-  { hex: '#f472b6', label: '粉色' },
-  { hex: '#f0abfc', label: '浅品红' },
-  { hex: '#e879f9', label: '品红色' },
-  { hex: '#ec4899', label: '深粉' },
+  { hex: '#ff8a8a', label: '粉红' },
+  { hex: '#ffb366', label: '淡橙' },
+  { hex: '#ffe566', label: '淡黄' },
+  { hex: '#8cd98c', label: '淡绿' },
+  { hex: '#7ad9d9', label: '淡青' },
+  { hex: '#7ab8ff', label: '淡蓝' },
+  { hex: '#c28cff', label: '淡紫' },
+  // ── 第 2 行（高饱和亮色）──
+  { hex: '#d9d9d9', label: '银灰' },
+  { hex: '#ff3b30', label: '亮赤' },
+  { hex: '#ff9500', label: '亮橙' },
+  { hex: '#ffcc00', label: '亮黄' },
+  { hex: '#34c759', label: '亮绿' },
+  { hex: '#5ac8fa', label: '亮青' },
+  { hex: '#007aff', label: '亮蓝' },
+  { hex: '#af52de', label: '亮紫' },
+  // ── 第 3 行（浓郁宝石深色）──
+  { hex: '#7a7a7a', label: '深灰' },
+  { hex: '#d90000', label: '深赤' },
+  { hex: '#d97000', label: '深橙' },
+  { hex: '#d9a800', label: '深黄' },
+  { hex: '#00a34a', label: '深绿' },
+  { hex: '#0099a8', label: '深青' },
+  { hex: '#0055d9', label: '深蓝' },
+  { hex: '#8a2be2', label: '深紫' },
+  // ── 第 4 行（极深但保留色相的通透暗调）──
+  { hex: '#1a1a1a', label: '黑色' },
+  { hex: '#b30000', label: '极深赤' },
+  { hex: '#b35c00', label: '极深橙' },
+  { hex: '#8a7300', label: '极深黄' },
+  { hex: '#006b3d', label: '极深绿' },
+  { hex: '#006b6b', label: '极深青' },
+  { hex: '#0033b3', label: '极深蓝' },
+  { hex: '#5b1a8b', label: '极深紫' },
 ];
 
-/** 取色器预设描述：命中 32 色候选 → 中文色名；否则走出厂 16 色名 / hex 兜底 */
+/** 取色器预设描述：命中 32 色候选 → 中文色名；否则返回 hex（出厂 16 色均在候选内，无需单独兜底） */
 export function describeQuickColor(hex?: string): string {
   const normalized = normalizeHex(hex);
   if (!normalized) return '';
@@ -191,7 +216,7 @@ export function describeSlotLabel(
   const id = canonicalSlotId(slotId) || slotId;
   const alias = (aliases?.[id] ?? '').trim();
   const hex = normalizeHex(slots?.[id]) || DEFAULT_PALETTE_HEXES[id] || '';
-  // 颜色名：优先 32 色预设中文名 → 出厂 16 色中文名 → hex 兜底
+  // 颜色名：命中 32 色预设（含出厂 16 槽默认色）→ 中文色名；否则 hex 兜底
   const colorText = hex ? describeQuickColor(hex) : '';
   return alias ? `${alias}（调色板 ${slotNumber(id)}）：${colorText}` : `调色板 ${slotNumber(id)}：${colorText}`;
 }
@@ -272,12 +297,14 @@ export function defaultMaterialHex(slots?: PaletteHexMap): string {
 /**
  * 把「图标/文件夹的颜色选择」（iconColor + colorSlot）解析成注入 .icon-circle 的 HSL CSS 变量；
  * 绑定槽→槽当前色；旧 hex→静态解析；未设置→缺省材质色（调色板 1 号槽，见 defaultMaterialHex）。
+ * @param lightness 显示层亮度叠加偏移（0 = 原色，来自全局明暗度设置），仅作用于 --c-lit
  */
 export function resolveIconHslVars(
   icon: { iconColor?: string; colorSlot?: string },
   slots?: PaletteHexMap,
+  lightness = 0,
 ): Record<string, string> | undefined {
   const hex =
     resolveColorHex(buildSelection(icon.iconColor, icon.colorSlot), slots) || defaultMaterialHex(slots);
-  return hexToHslCssVars(hex);
+  return hexToHslCssVars(hex, lightness);
 }

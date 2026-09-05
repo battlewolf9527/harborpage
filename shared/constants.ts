@@ -1,4 +1,4 @@
-export const TRACKED_KEYS = ['settings', 'websites', 'searchEngines', 'todos', 'todoList', 'notes', 'wallpaper', 'pages', 'palette', 'paletteAliases'] as const;
+export const TRACKED_KEYS = ['settings', 'websites', 'searchEngines', 'todos', 'todoList', 'notes', 'wallpaper', 'pages', 'palette', 'paletteAliases', 'paletteLightness'] as const;
 
 export type TrackedKey = typeof TRACKED_KEYS[number];
 

@@ -3,13 +3,12 @@ import type { Note } from '../types';
 import { setupAutoPersist } from './persistence';
 import { getServices } from '../services/serviceContainer';
 import { generateId } from '../utils/idUtils';
-import { NOTE_COLOR_PRESETS } from '../utils/noteColors';
-import { canonicalSlotId, type ColorSelection } from '../utils/paletteColors';
+import { canonicalSlotId, DEFAULT_PALETTE_HEXES, type ColorSelection } from '../utils/paletteColors';
 
 type NotesUpdater = Note[] | ((prev: Note[]) => Note[]);
 
-// 预设便签颜色循环（新增笔记时随机分配，避免一排同色；随共享 16 色预设变化）
-const COLOR_ROTATION: string[] = NOTE_COLOR_PRESETS.map((p) => p.name);
+// 预设便签颜色循环（新增笔记时随机分配，避免一排同色；取出厂 16 槽默认色 hex，与调色板同一套颜色）
+const COLOR_ROTATION: string[] = Object.values(DEFAULT_PALETTE_HEXES);
 
 export interface NotesState {
   notes: Note[];

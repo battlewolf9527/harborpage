@@ -7,6 +7,7 @@ import type { Note } from '../../types';
 import NoteEditorDialog from './NoteEditorDialog';
 import ConfirmDialog from '../common/ConfirmDialog';
 import { noteHexStyleVars } from '../../utils/noteColors';
+import { adjustHexLightness } from '../../utils/colorUtils';
 import { buildSelection, resolveColorHex } from '../../utils/paletteColors';
 
 interface NotesManagerDialogProps {
@@ -27,6 +28,7 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
     })),
   );
   const slots = usePaletteStore((s) => s.slots);
+  const lightness = usePaletteStore((s) => s.lightness);
 
   // 关闭流程（同编辑器：先动画，再回调）
   const [isClosing, setIsClosing] = useState(false);
@@ -242,9 +244,12 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
           ) : (
             <ul className="notes-mgr-list">
               {visibleNotes.map((note, index) => {
-                // 绑定槽 → 槽当前色；旧数据静态解析；统一走解析后的内联变量，改色即时生效
+                // 绑定槽 → 槽当前色；旧数据静态解析；统一走解析后的内联变量，改色即时生效；
+                // lightness = 全局明暗度（不改存储 hex），表面色渲染时叠加亮度
                 const resolvedHex = resolveColorHex(buildSelection(note.color, note.colorSlot), slots);
-                const colorStyle = resolvedHex ? noteHexStyleVars(resolvedHex, 0.14) : undefined;
+                const colorStyle = resolvedHex
+                  ? noteHexStyleVars(adjustHexLightness(resolvedHex, lightness), 0.14)
+                  : undefined;
                 const isDragOver = dragOverIndex === index;
                 return (
                   <li

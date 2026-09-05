@@ -76,16 +76,58 @@ export function hexToRgba(hex: string, alpha: number): string {
 }
 
 /**
+ * 将 HSL（h∈[0,360]，s/l∈[0,100]）转换为 #rrggbb 小写 hex。
+ * 用作「显示层明暗度」：hex → HSL 加/减亮度 → 再转回 hex，不改动存储色。
+ */
+export function hslToHex(h: number, s: number, l: number): string {
+  const hue = ((h % 360) + 360) % 360;
+  const sat = Math.min(100, Math.max(0, s)) / 100;
+  const light = Math.min(100, Math.max(0, l)) / 100;
+  const c = (1 - Math.abs(2 * light - 1)) * sat;
+  const x = c * (1 - Math.abs(((hue / 60) % 2) - 1));
+  const m = light - c / 2;
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  if (hue < 60) { r = c; g = x; }
+  else if (hue < 120) { r = x; g = c; }
+  else if (hue < 180) { g = c; b = x; }
+  else if (hue < 240) { g = x; b = c; }
+  else if (hue < 300) { r = x; b = c; }
+  else { r = c; b = x; }
+  const toByte = (v: number): string =>
+    Math.round((v + m) * 255).toString(16).padStart(2, '0');
+  return `#${toByte(r)}${toByte(g)}${toByte(b)}`;
+}
+
+/**
+ * 在 hex 颜色的 HSL 亮度通道上叠加偏移（0 = 不变；正值调亮、负值调暗，结果夹在 0-100），
+ * 返回新的 hex。用于「显示层全局明暗度」：不改任何已存 hex，仅在渲染表面时整体调整。
+ * 非十六进制输入原样返回。
+ */
+export function adjustHexLightness(hex: string, offset: number): string {
+  const hsl = hexToHsl(hex);
+  if (!hsl) return hex;
+  const delta = Number.isFinite(offset) ? offset : 0;
+  return hslToHex(hsl.h, hsl.s, Math.min(100, Math.max(0, hsl.l + delta)));
+}
+
+/**
  * 将 iconColor 换算成注入 .icon-circle 的 HSL CSS 变量对象；
  * 非十六进制颜色（如 'transparent'）或未设置时返回 undefined（走 CSS 缺省）。
+ * @param lightnessOffset 显示层亮度叠加偏移（0 = 原色），仅改变 --c-lit，不改色相/饱和度
  */
-export function hexToHslCssVars(color?: string): Record<string, string> | undefined {
+export function hexToHslCssVars(
+  color?: string,
+  lightnessOffset = 0,
+): Record<string, string> | undefined {
   if (!color) return undefined;
   const hsl = hexToHsl(color);
   if (!hsl) return undefined;
+  const delta = Number.isFinite(lightnessOffset) ? lightnessOffset : 0;
   return {
     '--c-hue': String(Math.round(hsl.h)),
     '--c-sat': `${Math.round(hsl.s)}%`,
-    '--c-lit': `${Math.round(hsl.l)}%`,
+    '--c-lit': `${Math.round(Math.min(100, Math.max(0, hsl.l + delta)))}%`,
   };
 }

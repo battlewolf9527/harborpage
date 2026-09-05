@@ -53,9 +53,12 @@
   box-shadow: -12px 0 48px rgba(0,0,0,0.5);
   border-left: var(--glass-border);
   z-index: 1000;
+  /* 面板自身不滚动：左侧装饰亮线锚定在固定高度的面板上，始终完整显示；
+     内容超高时由内部 .settings-scroll 负责滚动 */
+  display: flex;
+  flex-direction: column;
   /* 起始位（挂载后还没加 open class 前）= 屏幕外右侧，避免闪现 */
   transform: translateX(100%);
-  overflow-y: auto;
   box-sizing: border-box;
   color: var(--text-primary);
   font-family: inherit;
@@ -80,22 +83,36 @@
   opacity: 0.9;
 }
 
+/* 内容滚动区：面板为 flex 列布局，滚动交给此区（min-height:0 让 flex 子项可收缩）。
+   右/下方向用负 margin 抵消面板内边距：滚动条贴面板右缘、滚动区铺满面板高度；
+   再由等量内部 padding 补回内容留白（滚动到最底时内容不贴边）。 */
+.settings-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-right: calc(-1 * clamp(22px, 3.5vw, 36px));
+  padding-right: clamp(22px, 3.5vw, 36px);
+  margin-bottom: calc(-1 * clamp(22px, 3.5vw, 36px));
+  padding-bottom: clamp(22px, 3.5vw, 36px);
+}
+
 /* 滚动条：局部级别与全局保持一致，轨道色提高到 0.10 确保可见 */
-.settings-panel::-webkit-scrollbar        { width: 8px; }
-.settings-panel::-webkit-scrollbar-track  {
+.settings-scroll::-webkit-scrollbar        { width: 8px; }
+.settings-scroll::-webkit-scrollbar-track  {
   background: rgba(255, 255, 255, 0.10);
   border-radius: 4px;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.28);
 }
-.settings-panel::-webkit-scrollbar-thumb  {
+.settings-scroll::-webkit-scrollbar-thumb  {
   background: rgba(255, 255, 255, 0.26);
   border-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   background-clip: padding-box;
 }
-.settings-panel::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.40); }
+.settings-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.40); }
 
-/* ── Header ── */
+/* ── Header：固定在滚动区上方，不随内容滚动 ── */
 .settings-panel .panel-header {
   display: flex;
   justify-content: space-between;
@@ -103,6 +120,7 @@
   margin-bottom: clamp(22px, 3.5vw, 36px);
   padding-bottom: clamp(14px, 2vw, 18px);
   border-bottom: var(--glass-border-subtle);
+  flex-shrink: 0;
 }
 .settings-panel h2 {
   font-size: clamp(18px, 2.2vw, 24px);
@@ -239,6 +257,82 @@
 .palette-manage-hint {
   font-size: var(--font-xs);
   color: var(--text-quaternary);
+}
+
+/* ── 全局明暗度调节（调色板块内）──
+   滑杆沿用 .settings-panel input[type="range"] 统一轨道/滑块样式；
+   头部右侧为「实时预览」开关：开 → 下方调色板色块预览叠加明暗度的观感。 */
+.palette-lightness-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px 8px;
+  border: var(--glass-border-subtle);
+  border-radius: var(--input-radius);
+  background: rgba(255, 255, 255, 0.03);
+}
+.palette-lightness-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.palette-lightness-title {
+  font-size: var(--font-md);
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-right: auto;
+  line-height: 1.4;
+}
+.palette-lightness-value {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  min-width: 64px;
+  text-align: right;
+}
+/* 实时预览开关：文字 + settings-switch 组合行 */
+.palette-lightness-preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 2px;
+}
+.palette-lightness-preview-label {
+  font-size: var(--font-xs);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  user-select: none;
+}
+.palette-lightness-preview-switch.settings-switch {
+  width: 44px;
+  height: 22px;
+}
+.palette-lightness-preview-switch .settings-switch-track::before {
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+}
+.palette-lightness-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+}
+.palette-lightness-mark {
+  font-size: var(--font-xs);
+  color: var(--text-quaternary);
+  user-select: none;
+}
+.palette-lightness-hint {
+  flex: 1;
+  text-align: center;
+  font-size: var(--font-xs);
+  color: var(--text-quaternary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ── 通用按钮：玻璃幽灵 + 10px 圆 ──

@@ -8,6 +8,7 @@ import ConfirmDialog from '../common/ConfirmDialog';
 import { Palette } from '../common/PalettePicker';
 import createLogger from '../../utils/logger';
 import { noteHexStyleVars } from '../../utils/noteColors';
+import { adjustHexLightness } from '../../utils/colorUtils';
 import {
   buildSelection,
   canonicalSlotId,
@@ -40,6 +41,7 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
     })),
   );
   const slots = usePaletteStore((s) => s.slots);
+  const lightness = usePaletteStore((s) => s.lightness);
 
   // ── 【关键】直接在 useState lazy init 里派生初值，彻底移除 effect 里同步 setState。
   //    父组件通过 key={noteId ?? 'new'} 切换上下文时会重挂载组件，
@@ -248,9 +250,12 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
   const isCreate = !activeId;
 
   // 编辑器主题色 = 当前选择解析后的 hex（绑定槽 → 槽当前色；旧数据静态解析）；
-  // 以 hex 直接注入 CSS 变量，槽位改色即改即生效
+  // 以 hex 直接注入 CSS 变量，槽位改色即改即生效；
+  // lightness = 全局明暗度（不改存储 hex），仅编辑表面的实际观感整体叠加亮度
   const editorDisplayHex = resolveColorHex(buildSelection(color, colorSlot), slots);
-  const colorStyleVars = editorDisplayHex ? noteHexStyleVars(editorDisplayHex, 0.1) : undefined;
+  const colorStyleVars = editorDisplayHex
+    ? noteHexStyleVars(adjustHexLightness(editorDisplayHex, lightness), 0.1)
+    : undefined;
   // 取色器展示值：旧数据预设名归一化显示为静态自定义色，便于高亮与原生取色器联动
   const pickerValue: ColorSelection = useMemo(() => {
     if (colorSlot) {

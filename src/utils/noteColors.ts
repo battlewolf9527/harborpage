@@ -2,9 +2,10 @@ import type { CSSProperties } from 'react';
 import { hexToRgba } from './colorUtils';
 
 /**
- * 16 色共享预设 —— 便签、站点图标、文件夹图标同用这一套。
- * 白色居首；其余按色相渐变排列。hex 与各 .color-* 的
- * --note-accent/--tint 取值一致（来源：NoteBar/NotesManagerDialog/NoteEditorDialog CSS）。
+ * 16 色预设 —— 英文名仅作为「历史存储标识」与旧数据兼容基准（老数据可能按名存色）。
+ * 注意：调色板 16 槽的出厂默认色已改由 paletteColors.FACTORY_PALETTE_HEXES 提供
+ * （取值来自新 4×8 取色矩阵）；本文件的 hex 保持旧出厂色不变，使「旧预设名 → 旧颜色」
+ * 的历史数据不因换色而跳色。新建/改色一律以 hex 快照流转，不再写入预设名。
  */
 export interface NoteColorPreset {
   name: string;

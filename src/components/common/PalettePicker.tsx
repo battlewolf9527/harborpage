@@ -3,6 +3,7 @@ import './PalettePicker.css';
 import ColorPickerWindow from './ColorPickerWindow';
 import { usePaletteStore } from '../../store/usePaletteStore';
 import { isHexColor } from '../../utils/noteColors';
+import { adjustHexLightness } from '../../utils/colorUtils';
 import {
   DEFAULT_PALETTE_HEXES,
   PALETTE_SLOT_IDS,
@@ -48,6 +49,9 @@ export const Palette: React.FC<PaletteProps> = ({
 }) => {
   const slots = usePaletteStore((s) => s.slots);
   const aliases = usePaletteStore((s) => s.aliases);
+  // 设置模式实时预览：受「实时预览」开关控制，可临时对比真实存储色
+  const lightness = usePaletteStore((s) => s.lightness);
+  const previewEnabled = usePaletteStore((s) => s.previewEnabled);
   const setSlotColor = usePaletteStore((s) => s.setSlotColor);
   const setSlotAlias = usePaletteStore((s) => s.setSlotAlias);
   const [pickerTarget, setPickerTarget] = useState<PickerTarget | null>(null);
@@ -111,12 +115,16 @@ export const Palette: React.FC<PaletteProps> = ({
           const modified = mode === 'settings' && hex !== DEFAULT_PALETTE_HEXES[id];
           // 展示文案（tooltip/aria）：有别名 → 「别名（调色板 N）：颜色」；无别名 → 「调色板 N：颜色」
           const hint = describeSlotLabel(id, slots, aliases);
+          // 设置模式：开关开启时，格子实时预览「全局明暗度叠加后的最终观感」，
+          // 便于拖动滑块直观看到效果；不改存储 hex，点击进取色器仍以真实色编辑
+          const displayHex =
+            mode === 'settings' && previewEnabled ? adjustHexLightness(hex, lightness) : hex;
           return (
             <button
               key={id}
               type="button"
               className={`palette-cell ${active ? 'active' : ''} ${modified ? 'modified' : ''}`}
-              style={{ background: hex }}
+              style={{ background: displayHex }}
               title={hint}
               aria-label={modified ? `${hint}（非默认色）` : hint}
               aria-pressed={active}

@@ -154,4 +154,10 @@ export interface UserData {
   palette?: PaletteHexMap;
   /** 调色板槽别名（palette-N → 用户自定义名称）；未设置 = 无别名，按「调色板 N」展示 */
   paletteAliases?: PaletteAliasMap;
+  /**
+   * 全局显示明暗度偏移（-50..50，0 = 原色）：不改动任何已存 hex，
+   * 仅在元素真实使用颜色（图标材质/文件夹窗口/便签表面）时叠加到 HSL 亮度通道，
+   * 实现整站颜色统一调亮/调暗；未设置 = 不调整。
+   */
+  paletteLightness?: number;
 }

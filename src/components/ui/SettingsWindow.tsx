@@ -135,7 +135,9 @@ const SettingsWindow = forwardRef<SettingsWindowRef, SettingsWindowProps>(({
             ✕
           </button>
         </div>
-        {children}
+        {/* 内容滚动区：面板本身不滚动（左侧装饰亮线锚定在固定高度的面板上），
+            内容超高时仅此区域滚动，亮线始终铺满整条侧边栏 */}
+        <div className="settings-scroll">{children}</div>
       </div>
     </>
   );

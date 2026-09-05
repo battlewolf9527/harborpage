@@ -41,6 +41,22 @@
   pointer-events: none;
 }
 
+/* 极光竖条：贴合 Pages 侧边栏的左滑入行为，右侧为与屏幕交界处。
+   与 Todo 侧边栏（右滑入、左缘）的竖条镜像对称。 */
+.pages-sidebar::before {
+  content: '';
+  position: absolute;
+  top: 10%;
+  bottom: 10%;
+  right: 0;
+  width: 3px;
+  background: var(--aurora-gradient);
+  border-radius: 3px 0 0 3px;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
 /* 侧边栏内容 */
 .pages-sidebar-content {
   flex: 1;

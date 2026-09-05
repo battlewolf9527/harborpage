@@ -11,20 +11,23 @@ import NotesManagerDialog from './NotesManagerDialog';
 import NoteEditorDialog from './NoteEditorDialog';
 import { noteHexStyleVars } from '../../utils/noteColors';
 import { buildSelection, resolveColorHex } from '../../utils/paletteColors';
+import { adjustHexLightness } from '../../utils/colorUtils';
 
 /**
  * 便签颜色渲染元数据：绑定槽 → 槽当前色；旧名/hex → 静态解析。
  * 一律以解析后的 hex 生成内联 CSS 变量（--tint/--note-accent/--note-soft），
  * 使调色板改色即时生效，不依赖静态 .color-* 类。
+ * @param lightness 全局明暗度（0 = 原色）：不改存储 hex，仅渲染表面时叠加亮度
  */
 function noteDisplayMeta(
   note: Pick<Note, 'color' | 'colorSlot'> | null | undefined,
   slots?: PaletteHexMap,
+  lightness = 0,
 ): { style?: React.CSSProperties } {
   if (!note) return {};
   const hex = resolveColorHex(buildSelection(note.color, note.colorSlot), slots);
   if (!hex) return {};
-  return { style: noteHexStyleVars(hex, 0.14) };
+  return { style: noteHexStyleVars(adjustHexLightness(hex, lightness), 0.14) };
 }
 
 /** 小工具：给定 lastMouseRef 的坐标，判断当前鼠标下是否有元素命中任一根节点。
@@ -67,6 +70,7 @@ const NoteBar: React.FC = () => {
     })),
   );
   const slots = usePaletteStore((s) => s.slots);
+  const lightness = usePaletteStore((s) => s.lightness);
 
   // 显示在笔记球区的前 8 条笔记（严格按 store 当前顺序截取；置顶已在 store 顺序里处于最前）
   const ballNotes: Note[] = useMemo(() => notes.slice(0, MAX_NOTE_BALLS), [notes]);
@@ -416,7 +420,7 @@ const NoteBar: React.FC = () => {
 
   // 缩略预览悬浮卡身份色：绑定槽 → 槽当前色；旧数据静态解析；统一走解析后的内联变量
   const activeThumbColorMeta = activeThumbNote
-    ? noteDisplayMeta(activeThumbNote, slots)
+    ? noteDisplayMeta(activeThumbNote, slots, lightness)
     : null;
 
   // 生成 + 球 / 管理球 的气泡提示文案
@@ -596,7 +600,7 @@ const NoteBar: React.FC = () => {
               </div>
             )}
             {ballNotes.map((note, index) => {
-              const { style: colorStyle } = noteDisplayMeta(note, slots);
+              const { style: colorStyle } = noteDisplayMeta(note, slots, lightness);
               const synthId = `note:${note.id}`;
               const isDragging = dragIndex === index;
               const isDragOver = dragOverIndex === index;

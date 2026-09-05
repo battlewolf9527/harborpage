@@ -7,7 +7,7 @@ import { useDragAndDrop } from '../../hooks/useDragAndDrop';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { usePaletteStore } from '../../store/usePaletteStore';
 import { defaultMaterialHex, resolveColorHex, type ColorSelection } from '../../utils/paletteColors';
-import { hexToHsl } from '../../utils/colorUtils';
+import { adjustHexLightness, hexToHsl } from '../../utils/colorUtils';
 
 interface FolderWindowProps {
   folderName: string;
@@ -337,6 +337,7 @@ const FolderWindow: React.FC<FolderWindowProps> = memo(({
   }, [folderName, editingName, isEditingName]);
 
   const slots = usePaletteStore((s) => s.slots);
+  const lightness = usePaletteStore((s) => s.lightness);
 
   // 当前颜色选择：绑定槽 + 快照（跟随槽位当前色），否则静态色；均无 = 未设置
   const folderSelection: ColorSelection = useMemo(() => {
@@ -349,14 +350,17 @@ const FolderWindow: React.FC<FolderWindowProps> = memo(({
   // 颜色球展示的有效色：绑定槽→槽当前色；静态→解析快照；未设置（空串）→缺省材质色（1 号槽）
   const effectiveFolderColor = resolveColorHex(folderSelection, slots) || defaultMaterialHex(slots);
 
+  // 全局明暗度：不改存储色，仅叠加到文件夹窗口实际使用的表面颜色（主题 HSL 亮度 + 头部颜色球）
+  const surfaceFolderColor = adjustHexLightness(effectiveFolderColor, lightness);
+
   // 文件夹窗口主题：把有效色换算为 --fc-hue/--fc-sat/--fc-lit，
-  // 注入 .folder-window 供 CSS 派生半透明色系分层（底色/描边/内外光）
+  // 注入 .folder-window 供 CSS 派生半透明色系分层（底色/描边/内外光）；lit 叠加全局明暗度
   const folderHsl = hexToHsl(effectiveFolderColor);
   const folderThemeStyle = folderHsl
     ? ({
         '--fc-hue': String(Math.round(folderHsl.h)),
         '--fc-sat': `${Math.round(folderHsl.s)}%`,
-        '--fc-lit': `${Math.round(folderHsl.l)}%`,
+        '--fc-lit': `${Math.round(Math.min(100, Math.max(0, folderHsl.l + lightness)))}%`,
       } as React.CSSProperties)
     : undefined;
 
@@ -580,7 +584,7 @@ const FolderWindow: React.FC<FolderWindowProps> = memo(({
           onClose={handleClose}
           headerActions={
             <FolderColorControl
-              displayColor={effectiveFolderColor}
+              displayColor={surfaceFolderColor}
               value={folderSelection}
               open={showColorMenu}
               onToggle={handleToggleColorMenu}

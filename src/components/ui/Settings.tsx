@@ -14,6 +14,8 @@ import AboutDialog from '../common/AboutDialog';
 import Toast from '../common/Toast';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { useIconsStore } from '../../store/useIconsStore';
+import { usePaletteStore } from '../../store/usePaletteStore';
+import { LIGHTNESS_MAX, LIGHTNESS_MIN } from '../../utils/paletteColors';
 import { getServices } from '../../services/serviceContainer';
 import DataRepository from '../../services/DataRepository';
 import { initializeAllStores, clearAllPendingDeletes } from '../../services/storeInitializer';
@@ -78,6 +80,15 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
   const authService = getServices().authService;
   const dataManager = getServices().dataManager;
   const { autoSaveDuration, autoSaveEnabled, setAutoSaveDuration, setAutoSaveEnabled } = useAutoSaveSettings();
+
+  // 全局显示明暗度：不改已存颜色，仅整体调亮/调暗实际使用的颜色表面（图标/文件夹/便签）
+  const lightness = usePaletteStore((s) => s.lightness);
+  const setLightness = usePaletteStore((s) => s.setLightness);
+  // 调色板实时预览开关：开 → 下方色块预览叠加明暗度的观感；关 → 显示真实存储色
+  const previewEnabled = usePaletteStore((s) => s.previewEnabled);
+  const setPreviewEnabled = usePaletteStore((s) => s.setPreviewEnabled);
+  const lightnessLabel =
+    lightness === 0 ? '原色' : lightness > 0 ? `变亮 +${lightness}` : `变暗 ${-lightness}`;
   
   // 从Zustand store获取状态和方法
   const {
@@ -256,6 +267,43 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
             <div className="palette-manage-head">
               <span className="palette-manage-title">调色板</span>
               <span className="palette-manage-hint">点击色块可重新设定该调色板颜色，使用该颜色的元素将自动更新</span>
+            </div>
+            {/* 全局明暗度：不修改各槽颜色，仅在实际使用（图标/文件夹/便签表面）时叠加亮度，
+                实现整站颜色统一调亮/调暗；下方滑杆 0 = 原色 */}
+            <div className="palette-lightness-block">
+              <div className="palette-lightness-head">
+                <span className="palette-lightness-title">全局明暗度</span>
+                <span className="palette-lightness-value">{lightnessLabel}</span>
+                <div
+                  className="palette-lightness-preview"
+                  title="开启后，下方调色板色块实时预览叠加明暗度的观感；关闭则显示真实存储色"
+                >
+                  <span className="palette-lightness-preview-label">实时预览</span>
+                  <label className="settings-switch palette-lightness-preview-switch">
+                    <input
+                      type="checkbox"
+                      checked={previewEnabled}
+                      onChange={(e) => setPreviewEnabled(e.target.checked)}
+                      aria-label="在下方调色板实时预览明暗度效果"
+                    />
+                    <span className="settings-switch-track" />
+                  </label>
+                </div>
+              </div>
+              <input
+                type="range"
+                min={LIGHTNESS_MIN}
+                max={LIGHTNESS_MAX}
+                step={1}
+                value={lightness}
+                onChange={(e) => setLightness(Number(e.target.value))}
+                aria-label="全局明暗度：整体调亮或调暗图标、文件夹与便签使用的颜色"
+              />
+              <div className="palette-lightness-foot">
+                <span className="palette-lightness-mark">调暗</span>
+                <span className="palette-lightness-hint">不改动已存颜色，仅调整实际使用的颜色明暗</span>
+                <span className="palette-lightness-mark">调亮</span>
+              </div>
             </div>
             <Palette mode="settings" />
           </div>

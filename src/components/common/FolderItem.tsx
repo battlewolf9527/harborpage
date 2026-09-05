@@ -45,11 +45,13 @@ const FolderItem: React.FC<FolderItemProps> = ({
 }) => {
   const { iconManager } = getServices();
   const slots = usePaletteStore((s) => s.slots);
+  const lightness = usePaletteStore((s) => s.lightness);
 
-  // 水晶材质主色：绑定槽→槽当前色；旧 hex→静态；未设置→缺省材质色（调色板 1 号槽）
+  // 水晶材质主色：绑定槽→槽当前色；旧 hex→静态；未设置→缺省材质色（调色板 1 号槽）；
+  // lightness = 全局明暗度（不改存储色，仅渲染时叠加到材质亮度通道）
   const crystalStyle = useMemo(
-    () => resolveIconHslVars(icon, slots) as React.CSSProperties | undefined,
-    [icon, slots],
+    () => resolveIconHslVars(icon, slots, lightness) as React.CSSProperties | undefined,
+    [icon, slots, lightness],
   );
 
   const [showContextMenu, setShowContextMenu] = useState(false);

@@ -42,11 +42,13 @@ const IconItem: React.FC<IconItemProps> = ({
 }) => {
   const { iconManager } = getServices();
   const slots = usePaletteStore((s) => s.slots);
+  const lightness = usePaletteStore((s) => s.lightness);
   const iconContent = iconManager.getIconUrlSync(IconType.SITE, icon);
 
   const isUrl = iconContent && (iconContent.startsWith('http://') || iconContent.startsWith('https://') || iconContent.startsWith('/api/') || iconContent.startsWith('data:'));
-  // 水晶材质主色：绑定槽→槽当前色；旧 hex→静态；未设置→缺省材质色（调色板 1 号槽）
-  const crystalStyle = resolveIconHslVars(icon, slots) as React.CSSProperties | undefined;
+  // 水晶材质主色：绑定槽→槽当前色；旧 hex→静态；未设置→缺省材质色（调色板 1 号槽）；
+  // lightness = 全局明暗度（不改存储色，仅渲染时叠加到材质亮度通道）
+  const crystalStyle = resolveIconHslVars(icon, slots, lightness) as React.CSSProperties | undefined;
 
   return (
     <DraggableIconWrapper

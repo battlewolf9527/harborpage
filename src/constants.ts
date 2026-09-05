@@ -11,6 +11,7 @@ export const STORAGE_KEYS = {
   DEFAULT_SEARCH_ENGINE_ID: `${STORAGE_PREFIX}defaultSearchEngineId`,
   AUTO_SAVE_DURATION: `${STORAGE_PREFIX}autoSaveDuration`,
   AUTO_SAVE_ENABLED: `${STORAGE_PREFIX}autoSaveEnabled`,
+  LIGHTNESS_PREVIEW_ENABLED: `${STORAGE_PREFIX}lightnessPreviewEnabled`,
 };
 
 // 导出文件名前缀
