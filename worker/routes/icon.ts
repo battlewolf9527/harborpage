@@ -304,6 +304,9 @@ async function handleDeleteIcon(_request: Request, url: URL, env: Env): Promise<
 const authenticatedHandlePostIcon = requireAuth(handlePostIcon);
 const authenticatedHandleDeleteIcon = requireAuth(handleDeleteIcon);
 const authenticatedHandleCacheSelectedIcon = requireAuth(handleCacheSelectedIcon);
+// 自动获取图标候选需鉴权：其按用户输入抓取任意外部页面并读取云端图标源配置，
+// 与同文件其他 /api/icon/* 端点保持一致，避免被匿名滥用为 SSRF 出口
+const authenticatedHandleAutoFetchIcons = requireAuth(handleAutoFetchIcons);
 const authenticatedHandleDownloadIcon = requireAuth(async (request: Request): Promise<Response> => {
   return handleDownloadIcon(request);
 });
@@ -762,7 +765,7 @@ export async function handleIconRoutes(request: Request, url: URL, env: Env): Pr
   // 自动获取图标候选列表
   if (url.pathname === '/api/icon/autofetch') {
     if (request.method === 'GET') {
-      return handleAutoFetchIcons(request, url, env);
+      return authenticatedHandleAutoFetchIcons(request, url, env);
     }
     return new Response('Method Not Allowed', { status: 405 });
   }
