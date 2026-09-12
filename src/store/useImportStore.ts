@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import i18n from '../i18n';
 import type { UserData } from '../types';
 
 export interface ImportTask {
@@ -33,7 +34,7 @@ export const useImportStore = create<ImportState>((set) => ({
     importTask: task,
     isImporting: true,
     importProgress: 0,
-    importMessage: '准备导入...',
+    importMessage: i18n.t('importExport:progress.readyForImport'),
   }),
   finishImport: () => set({
     importTask: null,

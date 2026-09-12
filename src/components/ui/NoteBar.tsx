@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import './NoteBar.css';
 import { useNotesStore } from '../../store/useNotesStore';
@@ -46,10 +47,10 @@ const NOTES_GLYPH = '📝';
 const NOTES_TINT = '#34d399';
 const NOTES_TINT2 = '#f59e0b';
 
-/** 获取笔记球显示的"首字"：标题第一个非空白可见字符，空标题显示「无」。 */
-function firstGlyph(title: string): string {
+/** 获取笔记球显示的"首字"：标题第一个非空白可见字符，空标题显示 emptyFallback。 */
+function firstGlyph(title: string, emptyFallback: string): string {
   const s = (title ?? '').trim();
-  if (!s) return '无';
+  if (!s) return emptyFallback;
   const cp = s.codePointAt(0);
   if (cp != null) return String.fromCodePoint(cp);
   return s.charAt(0);
@@ -63,6 +64,7 @@ function truncate(text: string, max = 120): string {
 }
 
 const NoteBar: React.FC = () => {
+  const { t } = useTranslation('notes');
   const { notes, reorderNotes } = useNotesStore(
     useShallow((s) => ({
       notes: s.notes,
@@ -177,7 +179,9 @@ const NoteBar: React.FC = () => {
     glyph: NOTES_GLYPH,
     tint: NOTES_TINT,
     tint2: NOTES_TINT2,
-    label: notes.length > 0 ? `${notes.length} 篇便签 · 悬停展开` : '便签 · 悬停展开',
+    label: notes.length > 0
+      ? t('entry.labelWithCount', { count: notes.length })
+      : t('entry.label'),
     badge: null,
     onHoverEnd: scheduleClose,
   });
@@ -425,10 +429,10 @@ const NoteBar: React.FC = () => {
 
   // 生成 + 球 / 管理球 的气泡提示文案
   const badgeTipText = useMemo(
-    () => `还有 ${moreCount} 篇不在此栏内，右侧 ⚙︎ 打开笔记管理器可查看全部`,
-    [moreCount],
+    () => t('bubble.badgeText', { count: moreCount }),
+    [moreCount, t],
   );
-  const editTipText = '在编辑器中打开笔记（全文查看、修改标题/颜色/内容、保存或删除）';
+  const editTipText = t('bubble.editText');
 
   /** 统一：synthetic id 激活 → 对应的 tooltip hide 处理；relatedTarget 仍在 tooltip 上不关闭。 */
   const handleSynthLeave = useCallback((synthId: string, e: React.MouseEvent | React.FocusEvent) => {
@@ -462,8 +466,8 @@ const NoteBar: React.FC = () => {
           onMouseLeave={scheduleTooltipHide}
         >
           <div className="nb-bubble-tip-arrow" aria-hidden="true" />
-          <div className="nb-bubble-tip-title">新建笔记</div>
-          <div className="nb-bubble-tip-text">打开空白编辑器，填写标题与内容后点「保存」才会真正创建。</div>
+          <div className="nb-bubble-tip-title">{t('newNote')}</div>
+          <div className="nb-bubble-tip-text">{t('bubble.addText')}</div>
         </div>
       )}
       {activeBallId === '__more__' && (
@@ -474,8 +478,8 @@ const NoteBar: React.FC = () => {
           onMouseLeave={scheduleTooltipHide}
         >
           <div className="nb-bubble-tip-arrow" aria-hidden="true" />
-          <div className="nb-bubble-tip-title">笔记管理器</div>
-          <div className="nb-bubble-tip-text">查看全部笔记、批量重排、重命名、调整颜色或删除。</div>
+          <div className="nb-bubble-tip-title">{t('bubble.moreTitle')}</div>
+          <div className="nb-bubble-tip-text">{t('bubble.moreText')}</div>
         </div>
       )}
       {activeBallId === '__badge__' && (
@@ -500,22 +504,22 @@ const NoteBar: React.FC = () => {
         >
           <div className="noteball-tooltip-arrow" aria-hidden="true" />
           <div className="noteball-tooltip-header">
-            <h4 aria-label={activeThumbNote.title || '无标题'}>
-              {activeThumbNote.title || <em>无标题</em>}
+            <h4 aria-label={activeThumbNote.title || t('untitled')}>
+              {activeThumbNote.title || <em>{t('untitled')}</em>}
             </h4>
           </div>
           <div className="noteball-tooltip-body">
             {activeThumbNote.content
               ? truncate(activeThumbNote.content, 140)
-              : <em className="empty">（无内容）</em>
+              : <em className="empty">{t('noContent')}</em>
             }
           </div>
           <div className="noteball-tooltip-footer">
             <span className="noteball-tooltip-time">
               {activeThumbNote.updatedAt
-                ? <>更新于 {new Date(activeThumbNote.updatedAt).toLocaleString()}</>
+                ? <>{t('updatedAt', { date: new Date(activeThumbNote.updatedAt).toLocaleString() })}</>
                 : activeThumbNote.createdAt
-                  ? <>创建于 {new Date(activeThumbNote.createdAt).toLocaleString()}</>
+                  ? <>{t('createdAt', { date: new Date(activeThumbNote.createdAt).toLocaleString() })}</>
                   : null
               }
             </span>
@@ -535,7 +539,7 @@ const NoteBar: React.FC = () => {
                     setActiveBallId(null);
                   }}
                 >
-                  编辑
+                  {t('edit')}
                 </button>
               </span>
             </div>
@@ -570,7 +574,7 @@ const NoteBar: React.FC = () => {
         onMouseLeave={handleBarLeave}
         onFocus={handleBarFocus}
         role="toolbar"
-        aria-label="笔记栏"
+        aria-label={t('bar.ariaLabel')}
       >
         <div className="notebar-inner">
           {/* 居中轨道：整排 +/分隔条/8 球/分隔条/⚙︎ 都在里面水平居中，像 macOS 状态栏图标 */}
@@ -585,7 +589,7 @@ const NoteBar: React.FC = () => {
             onFocus={() => showTooltipFor('__add__')}
             onMouseLeave={(e) => handleSynthLeave('__add__', e)}
             onBlur={scheduleTooltipHide}
-            aria-label="新建笔记"
+            aria-label={t('newNote')}
           >
             <span className="noteball-glyph">+</span>
           </button>
@@ -593,10 +597,10 @@ const NoteBar: React.FC = () => {
           <div className="notebar-sep" />
 
           {/* 中：最多 8 个笔记球（tooltip 已 portal 到 body，这里只渲染球本体） */}
-          <div className="noteball-row" ref={rowRef} aria-label="便签球">
+          <div className="noteball-row" ref={rowRef} aria-label={t('bar.ballRowAria')}>
             {ballNotes.length === 0 && (
               <div className="notebar-empty-hint" aria-hidden="true">
-                还没有笔记，点击左侧 <span className="mini-plus">+</span> 创建第一篇吧
+                {t('bar.emptyHintPrefix')}<span className="mini-plus">+</span>{t('bar.emptyHintSuffix')}
               </div>
             )}
             {ballNotes.map((note, index) => {
@@ -620,7 +624,7 @@ const NoteBar: React.FC = () => {
                     role="button"
                     tabIndex={0}
                     draggable
-                    aria-label={`便签：${note.title || '无标题'}`}
+                    aria-label={t('bar.ballAria', { title: note.title || t('untitled') })}
                     onClick={() => handleBallClick(note)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
@@ -639,7 +643,7 @@ const NoteBar: React.FC = () => {
                     onDrop={(e) => handleDrop(e, index)}
                     data-note-id={note.id}
                   >
-                    <span className="noteball-glyph">{firstGlyph(note.title)}</span>
+                    <span className="noteball-glyph">{firstGlyph(note.title, t('bar.emptyGlyph'))}</span>
                   </div>
                 </div>
               );
@@ -658,7 +662,7 @@ const NoteBar: React.FC = () => {
             onFocus={() => showTooltipFor('__more__')}
             onMouseLeave={(e) => handleSynthLeave('__more__', e)}
             onBlur={scheduleTooltipHide}
-            aria-label="笔记管理"
+            aria-label={t('manager.title')}
           >
             {moreCount > 0 && (
               <span

@@ -131,6 +131,8 @@ export interface Settings extends VisualSettings {
   todosEnabled?: boolean;
   /** 主界面功能开关（默认全部开启）：多页面入口 */
   pagesEnabled?: boolean;
+  /** 界面语言（如 'zh-CN' / 'en-US'）；未设置 = 按浏览器语言自动判断 */
+  language?: string;
 }
 
 // 全局调色板：槽 id（palette-N）→ 当前 hex（id 见 paletteColors.PALETTE_SLOT_IDS，缺省按默认 16 色补齐）

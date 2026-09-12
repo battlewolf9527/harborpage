@@ -1,0 +1,27 @@
+{
+  "savePrompt": {
+    "saveSuccess": "Saved",
+    "autoSaveSuccess": "Auto-saved"
+  },
+  "saveTooltip": {
+    "saveFailed": "Save failed",
+    "unsavedChanges": "Unsaved changes",
+    "unsavedChangesHint": "Your changes have not been saved to the cloud yet. Please save soon to avoid data loss.",
+    "saving": "Saving...",
+    "savingWithProgress": "Saving... {{current}}/{{total}}",
+    "retrySave": "Retry Save",
+    "saveNow": "Save Now",
+    "saveNowWithCountdown": "Save Now ({{seconds}}s)",
+    "autoSave": "Auto Save"
+  },
+  "saveProgress": {
+    "cleaningIconCache": "Cleaning up icon cache..."
+  },
+  "toast": {
+    "continue": "Continue"
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "retry": "Retry"
+  }
+}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface IconSettingsProps {
   iconColumns: number;
@@ -13,12 +14,14 @@ const IconSettings: React.FC<IconSettingsProps> = ({
   onCleanupIcons,
   isCleaningUp,
 }) => {
+  const { t } = useTranslation('icons');
+
   return (
     <div className="settings-section">
-      <h3>图标设置</h3>
+      <h3>{t('iconSettings.title')}</h3>
       <div className="option-item">
         <label>
-          最大列数: {iconColumns}
+          {t('iconSettings.maxColumns', { count: iconColumns })}
           <input 
             type="range" 
             min="3" 
@@ -34,7 +37,7 @@ const IconSettings: React.FC<IconSettingsProps> = ({
           onClick={onCleanupIcons}
           disabled={isCleaningUp}
         >
-          {isCleaningUp ? '清理中...' : '清理未使用的图标'}
+          {isCleaningUp ? t('iconSettings.cleaning') : t('iconSettings.cleanup')}
         </button>
       </div>
     </div>

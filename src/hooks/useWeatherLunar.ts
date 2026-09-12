@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import lunisolar from 'lunisolar';
 
+const WEEKDAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
+
 export function useWeatherLunar() {
+  const { t } = useTranslation('weather');
   const [showLunar, setShowLunar] = useState(false);
   const [lunarInfo, setLunarInfo] = useState('');
   const [currentDate, setCurrentDate] = useState('');
@@ -21,14 +25,14 @@ export function useWeatherLunar() {
       const now = new Date();
       const month = now.getMonth() + 1;
       const date = now.getDate();
-      const day = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][now.getDay()];
-      setCurrentDate(`${month}月${date}日 ${day}`);
+      const day = t(`date.weekdays.${WEEKDAY_KEYS[now.getDay()]}`);
+      setCurrentDate(t('date.current', { month, date, day }));
     };
 
     updateDate();
     const interval = setInterval(updateDate, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [t]);
 
   return {
     showLunar,

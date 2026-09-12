@@ -1,0 +1,29 @@
+{
+  "placeholder": "Search...",
+  "placeholderWithEngine": "Search with {{name}}",
+  "searchButton": "Search",
+  "manager": {
+    "title": "Search Settings",
+    "addEngine": "Add Search Engine",
+    "editEngine": "Edit Search Engine",
+    "engineList": "Search Engines",
+    "dragToSort": "Drag to reorder",
+    "defaultBadge": "Default",
+    "currentDefault": "Current default",
+    "setAsDefault": "Set as default",
+    "edit": "Edit",
+    "delete": "Delete",
+    "name": "Name",
+    "namePlaceholder": "Search engine name",
+    "url": "Search URL",
+    "urlHint": "Use {q} as the query parameter placeholder",
+    "urlRequiredHint": "Search URL must contain the {q} placeholder",
+    "icon": "Icon",
+    "iconPlaceholder": "Leave empty to auto-fetch favicon, or enter an icon URL/Emoji",
+    "add": "Add",
+    "save": "Save",
+    "cancel": "Cancel",
+    "deleteTitle": "Delete Search Engine",
+    "deleteMessage": "Are you sure you want to delete this search engine?"
+  }
+}

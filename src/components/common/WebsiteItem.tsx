@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import IconItem from './IconItem';
 import type { Website } from '../../types';
 import { isTouchDevice } from '../../utils/deviceUtils';
@@ -39,6 +40,7 @@ const WebsiteItem: React.FC<WebsiteItemProps> = ({
   onMoveToPage,
   onDragOverOutside,
 }) => {
+  const { t } = useTranslation('sites');
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   const menuRef = useRef<HTMLDivElement>(null);
@@ -152,7 +154,7 @@ const WebsiteItem: React.FC<WebsiteItemProps> = ({
           ref={menuRef}
           className="context-menu"
           role="menu"
-          aria-label="操作菜单"
+          aria-label={t('contextMenu.aria')}
           style={{
             top: `${menuPosition.y}px`,
             left: `${menuPosition.x}px`,
@@ -166,7 +168,7 @@ const WebsiteItem: React.FC<WebsiteItemProps> = ({
               onClick={handleEdit}
               onKeyDown={(e) => handleMenuKeyDown(e, 'edit')}
             >
-              修改
+              {t('contextMenu.edit')}
             </li>
             <li
               className="context-menu-item"
@@ -175,7 +177,7 @@ const WebsiteItem: React.FC<WebsiteItemProps> = ({
               onClick={handleMoveToPage}
               onKeyDown={(e) => handleMenuKeyDown(e, 'move')}
             >
-              移动到页面…
+              {t('contextMenu.moveToPage')}
             </li>
             <li
               className="context-menu-item context-menu-item-danger"
@@ -184,7 +186,7 @@ const WebsiteItem: React.FC<WebsiteItemProps> = ({
               onClick={handleDelete}
               onKeyDown={(e) => handleMenuKeyDown(e, 'delete')}
             >
-              删除
+              {t('contextMenu.delete')}
             </li>
           </ul>
         </div>

@@ -1,0 +1,112 @@
+{
+  "colorNames": {
+    "white": "白色",
+    "pink": "粉红",
+    "lightOrange": "淡橙",
+    "lightYellow": "淡黄",
+    "lightGreen": "淡绿",
+    "lightCyan": "淡青",
+    "lightBlue": "淡蓝",
+    "lightPurple": "淡紫",
+    "silver": "银灰",
+    "brightRed": "亮赤",
+    "brightOrange": "亮橙",
+    "brightYellow": "亮黄",
+    "brightGreen": "亮绿",
+    "brightCyan": "亮青",
+    "brightBlue": "亮蓝",
+    "brightPurple": "亮紫",
+    "darkGray": "深灰",
+    "darkRed": "深赤",
+    "darkOrange": "深橙",
+    "darkYellow": "深黄",
+    "darkGreen": "深绿",
+    "darkCyan": "深青",
+    "darkBlue": "深蓝",
+    "darkPurple": "深紫",
+    "black": "黑色",
+    "extraDarkRed": "极深赤",
+    "extraDarkOrange": "极深橙",
+    "extraDarkYellow": "极深黄",
+    "extraDarkGreen": "极深绿",
+    "extraDarkCyan": "极深青",
+    "extraDarkBlue": "极深蓝",
+    "extraDarkPurple": "极深紫"
+  },
+  "slotLabel": "调色板 {{number}}：{{color}}",
+  "slotLabelWithAlias": "{{alias}}（调色板 {{number}}）：{{color}}",
+  "palette": {
+    "aria": "颜色调色板",
+    "custom": "自定义",
+    "nonDefault": "（非默认色）",
+    "editSlot": "修改调色板 {{number}} 号",
+    "editSlotWithAlias": "修改「{{alias}}（调色板 {{number}}）」"
+  },
+  "picker": {
+    "close": "关闭",
+    "aliasLabel": "别名",
+    "aliasPlaceholder": "未设置（默认显示 调色板 N）",
+    "presetColors": "预设颜色",
+    "customColor": "自定义颜色",
+    "currentColor": "当前颜色：",
+    "selectColorPrompt": "请选择颜色",
+    "restoreDefault": "恢复默认"
+  },
+  "form": {
+    "urlLabel": "网站URL",
+    "urlPlaceholder": "例如：www.google.com",
+    "nameLabel": "网站名称",
+    "namePlaceholder": "例如：Google",
+    "fetching": "获取中...",
+    "iconLabel": "图标（可选）",
+    "iconPlaceholder": "留空则自动获取网站图标",
+    "iconTipAria": "图标输入说明",
+    "iconTipText": "支持三种输入方式：\n1. 图标URL：图片链接（如 https://.../icon.png）\n2. 文字：任意文字（如 \"Ba\"、\"ABC\"），将生成带颜色的文字图标（最多4字符）\n3. Emoji：emoji字符（如 🚀、⭐）\n\n留空则自动获取网站favicon",
+    "iconPreviewAlt": "图标预览",
+    "iconActionsLabel": "图标操作",
+    "iconColorLabel": "图标颜色",
+    "uploadTitle": "手动上传图标到R2",
+    "autoFetchTitle": "从多种渠道尝试获取图标",
+    "saveToR2Title": "将当前预览图标保存到R2并自动设置图标URL",
+    "uploadHint": "支持 PNG、JPG、GIF、WebP、SVG 格式，最大100KB",
+    "saveDisabledHint": "（预览图标正常显示后可保存到R2）"
+  },
+  "actions": {
+    "confirm": "确定",
+    "cancel": "取消",
+    "upload": "上传",
+    "uploading": "上传中...",
+    "save": "保存",
+    "saving": "保存中...",
+    "autoFetch": "智能获取"
+  },
+  "errors": {
+    "nameRequired": "请输入网站名称",
+    "nameTooLong": "网站名称不能超过80个字符",
+    "urlRequired": "请输入网站URL",
+    "urlInvalid": "请输入有效的URL",
+    "fileTooLarge": "文件大小不能超过100KB",
+    "uploadFailed": "上传失败，请重试",
+    "uploadFailedWithError": "上传失败: {{error}}",
+    "unknownError": "未知错误",
+    "saveFailed": "保存失败，请重试",
+    "saveFailedWithError": "保存失败: {{error}}",
+    "invalidUrlBeforeFetch": "请先填写有效的网站URL"
+  },
+  "toasts": {
+    "iconFetchSuccess": "图标获取成功",
+    "iconSavedToR2": "图标已保存到R2"
+  },
+  "logs": {
+    "fetchTitleFailed": "获取标题失败",
+    "uploadIconFailed": "上传图标失败",
+    "saveIconToR2Failed": "保存图标到R2失败"
+  },
+  "contextMenu": {
+    "aria": "操作菜单",
+    "edit": "修改",
+    "moveToPage": "移动到页面…",
+    "delete": "删除"
+  },
+  "gridAria": "网站图标列表"
+}

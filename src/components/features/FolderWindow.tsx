@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, memo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import './FolderWindow.css';
 import IconGrid from '../common/IconGrid';
 import { Palette } from '../common/PalettePicker';
@@ -53,37 +54,41 @@ const FolderHeader: React.FC<FolderHeaderProps> = memo(({
   onMouseLeave,
   onClose,
   headerActions,
-}) => (
-  <div className="folder-header">
-    <div className="folder-name-container">
-      <div
-        className="folder-name-display"
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
-      >
-        <h3 className="folder-title">{folderName}</h3>
-        {showEditButton && (
-          <button
-            className="folder-edit-btn"
-            onClick={onEditStart}
-            aria-label="编辑文件夹名称"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-            </svg>
-          </button>
-        )}
+}) => {
+  const { t } = useTranslation('folder');
+
+  return (
+    <div className="folder-header">
+      <div className="folder-name-container">
+        <div
+          className="folder-name-display"
+          onMouseEnter={onMouseEnter}
+          onMouseLeave={onMouseLeave}
+        >
+          <h3 className="folder-title">{folderName}</h3>
+          {showEditButton && (
+            <button
+              className="folder-edit-btn"
+              onClick={onEditStart}
+              aria-label={t('header.editNameAria')}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="folder-header-actions">
+        {headerActions}
+        <button className="folder-close-btn" onClick={onClose}>
+          ✕
+        </button>
       </div>
     </div>
-    <div className="folder-header-actions">
-      {headerActions}
-      <button className="folder-close-btn" onClick={onClose}>
-        ✕
-      </button>
-    </div>
-  </div>
-));
+  );
+});
 
 FolderHeader.displayName = 'FolderHeader';
 
@@ -102,6 +107,7 @@ interface FolderColorControlProps {
 }
 
 const FolderColorControl: React.FC<FolderColorControlProps> = memo(({ displayColor, value, open, onToggle, onChange }) => {
+  const { t } = useTranslation('folder');
   const controlRef = useRef<HTMLDivElement>(null);
 
   const handleClose = useCallback(() => {
@@ -119,24 +125,24 @@ const FolderColorControl: React.FC<FolderColorControlProps> = memo(({ displayCol
         type="button"
         className="folder-color-btn"
         onClick={onToggle}
-        aria-label="设置文件夹颜色"
+        aria-label={t('color.setAria')}
         aria-expanded={open}
-        title="文件夹颜色"
+        title={t('color.title')}
       >
         <span className="folder-color-ball" style={{ background: displayColor }} />
       </button>
       {open && (
-        <div className="folder-color-popover" role="dialog" aria-label="选择文件夹颜色">
-          <p className="folder-color-popover-title">文件夹颜色</p>
+        <div className="folder-color-popover" role="dialog" aria-label={t('color.pickerAria')}>
+          <p className="folder-color-popover-title">{t('color.title')}</p>
           <Palette value={value} onChange={onChange} />
           <div className="folder-color-popover-footer">
             <button
               type="button"
               className="folder-color-reset-btn"
-              title="恢复为默认色（调色板 1）"
+              title={t('color.resetTitle')}
               onClick={() => onChange({})}
             >
-              恢复默认
+              {t('color.reset')}
             </button>
           </div>
         </div>
@@ -157,26 +163,30 @@ const FolderActions: React.FC<FolderActionsProps> = memo(({
   iconsCount,
   onDisband,
   onDelete,
-}) => (
-  <div className="folder-actions">
-    {iconsCount > 0 && (
+}) => {
+  const { t } = useTranslation('folder');
+
+  return (
+    <div className="folder-actions">
+      {iconsCount > 0 && (
+        <button
+          className="folder-action-btn disband-btn"
+          onClick={onDisband}
+          title={t('actions.disbandTitle')}
+        >
+          📂 {t('actions.disband')}
+        </button>
+      )}
       <button
-        className="folder-action-btn disband-btn"
-        onClick={onDisband}
-        title="解散文件夹（释放所有图标）"
+        className="folder-action-btn delete-btn"
+        onClick={onDelete}
+        title={t('actions.deleteTitle')}
       >
-        📂 解散
+        🗑️ {t('actions.delete')}
       </button>
-    )}
-    <button
-      className="folder-action-btn delete-btn"
-      onClick={onDelete}
-      title="删除文件夹（包括所有图标）"
-    >
-      🗑️ 删除
-    </button>
-  </div>
-));
+    </div>
+  );
+});
 
 FolderActions.displayName = 'FolderActions';
 
@@ -194,38 +204,42 @@ const FolderConfirmDialog = memo(React.forwardRef<HTMLDivElement, FolderConfirmD
   onConfirm,
   onCancel,
   onOverlayClick,
-}, ref) => (
-  <div
-    ref={ref}
-    className="confirm-dialog-overlay"
-    onClick={onOverlayClick}
-  >
-    <div className="confirm-dialog">
-      <h4>
-        {confirmAction === 'disband' ? '确认解散文件夹？' : '确认删除文件夹？'}
-      </h4>
-      <p>
-        {confirmAction === 'disband'
-          ? `解散后，文件夹中的 ${iconsCount} 个图标将被释放到主界面。`
-          : `删除后，文件夹及其中的 ${iconsCount} 个图标将被永久删除，无法恢复。`}
-      </p>
-      <div className="confirm-dialog-buttons">
-        <button
-          className={`confirm-btn ${confirmAction === 'delete' ? 'danger' : ''}`}
-          onClick={onConfirm}
-        >
-          确认
-        </button>
-        <button
-          className="cancel-btn"
-          onClick={onCancel}
-        >
-          取消
-        </button>
+}, ref) => {
+  const { t } = useTranslation('folder');
+
+  return (
+    <div
+      ref={ref}
+      className="confirm-dialog-overlay"
+      onClick={onOverlayClick}
+    >
+      <div className="confirm-dialog">
+        <h4>
+          {confirmAction === 'disband' ? t('dialogs.confirm.disbandTitle') : t('dialogs.confirm.deleteTitle')}
+        </h4>
+        <p>
+          {confirmAction === 'disband'
+            ? t('dialogs.confirm.disbandMessage', { count: iconsCount })
+            : t('dialogs.confirm.deleteMessage', { count: iconsCount })}
+        </p>
+        <div className="confirm-dialog-buttons">
+          <button
+            className={`confirm-btn ${confirmAction === 'delete' ? 'danger' : ''}`}
+            onClick={onConfirm}
+          >
+            {t('dialogs.confirm.confirm')}
+          </button>
+          <button
+            className="cancel-btn"
+            onClick={onCancel}
+          >
+            {t('dialogs.confirm.cancel')}
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-)));
+  );
+}));
 FolderConfirmDialog.displayName = 'FolderConfirmDialog';
 
 interface FolderRenameDialogProps {
@@ -244,43 +258,47 @@ const FolderRenameDialog = memo(React.forwardRef<HTMLDivElement, FolderRenameDia
   onSave,
   onCancel,
   onOverlayClick,
-}, ref) => (
-  <div
-    ref={ref}
-    className="confirm-dialog-overlay"
-    onClick={onOverlayClick}
-  >
-    <div className="confirm-dialog">
-      <h4>重命名文件夹</h4>
-      <div className="rename-input-container">
-        <input
-          type="text"
-          value={editingName}
-          onChange={(e) => onEditingNameChange(e.target.value)}
-          onKeyDown={onKeyDown}
-          autoFocus
-          maxLength={20}
-          className="rename-input"
-          placeholder="输入新的文件夹名称"
-        />
-      </div>
-      <div className="confirm-dialog-buttons">
-        <button
-          className="confirm-btn"
-          onClick={onSave}
-        >
-          保存
-        </button>
-        <button
-          className="cancel-btn"
-          onClick={onCancel}
-        >
-          取消
-        </button>
+}, ref) => {
+  const { t } = useTranslation('folder');
+
+  return (
+    <div
+      ref={ref}
+      className="confirm-dialog-overlay"
+      onClick={onOverlayClick}
+    >
+      <div className="confirm-dialog">
+        <h4>{t('dialogs.rename.title')}</h4>
+        <div className="rename-input-container">
+          <input
+            type="text"
+            value={editingName}
+            onChange={(e) => onEditingNameChange(e.target.value)}
+            onKeyDown={onKeyDown}
+            autoFocus
+            maxLength={20}
+            className="rename-input"
+            placeholder={t('dialogs.rename.placeholder')}
+          />
+        </div>
+        <div className="confirm-dialog-buttons">
+          <button
+            className="confirm-btn"
+            onClick={onSave}
+          >
+            {t('dialogs.rename.save')}
+          </button>
+          <button
+            className="cancel-btn"
+            onClick={onCancel}
+          >
+            {t('dialogs.rename.cancel')}
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-)));
+  );
+}));
 FolderRenameDialog.displayName = 'FolderRenameDialog';
 
 const FolderWindow: React.FC<FolderWindowProps> = memo(({

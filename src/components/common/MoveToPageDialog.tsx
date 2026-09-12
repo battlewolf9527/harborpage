@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import { usePagesStore } from '../../store/usePagesStore';
 import './MoveToPageDialog.css';
@@ -16,6 +17,7 @@ const MoveToPageDialog: React.FC<MoveToPageDialogProps> = ({
   iconIds,
   onClose,
 }) => {
+  const { t } = useTranslation('pages');
   const { pages, moveWebsites, setCurrentPageId } = usePagesStore(
     useShallow((s) => ({
       pages: s.pages,
@@ -66,14 +68,14 @@ const MoveToPageDialog: React.FC<MoveToPageDialogProps> = ({
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <h3 className="move-to-page-title">移动到页面</h3>
+        <h3 className="move-to-page-title">{t('moveToPage.title')}</h3>
         <p className="move-to-page-subtitle">
-          已选择 {iconIds.length} 项，请选择要移动到的目标页面
+          {t('moveToPage.subtitle', { selected: iconIds.length })}
         </p>
 
         {targetPages.length === 0 ? (
           <div className="move-to-page-empty">
-            当前只有一个页面，无法跨页移动。请先新建一个页面。
+            {t('moveToPage.empty')}
           </div>
         ) : (
           <ul className="move-to-page-list">
@@ -88,15 +90,15 @@ const MoveToPageDialog: React.FC<MoveToPageDialogProps> = ({
                     <span className="move-to-page-item-name">{page.name}</span>
                   </div>
                   <span className="move-to-page-item-count">
-                    {page.websites.length} 项
+                    {t('moveToPage.itemCount', { total: page.websites.length })}
                   </span>
                 </button>
                 <button
                   className="move-to-page-item-jump"
-                  title="移动并跳转到目标页"
+                  title={t('moveToPage.moveAndJump')}
                   onClick={() => handleSelectTarget(page.id, true)}
                 >
-                  移动并跳转
+                  {t('moveToPage.moveAndJump')}
                 </button>
               </li>
             ))}
@@ -109,7 +111,7 @@ const MoveToPageDialog: React.FC<MoveToPageDialogProps> = ({
             className="move-to-page-cancel"
             onClick={onClose}
           >
-            取消
+            {t('moveToPage.cancel')}
           </button>
         </div>
       </div>

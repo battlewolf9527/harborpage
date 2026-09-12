@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import './Weather.css';
 import { useWeather } from '../../hooks/useWeather';
 
@@ -22,6 +23,7 @@ const Clock = memo(() => {
 });
 
 const Weather: React.FC = () => {
+  const { t } = useTranslation('weather');
   const {
     weather,
     weatherLoading,
@@ -52,7 +54,7 @@ const Weather: React.FC = () => {
       await navigator.clipboard.writeText(locationDetail);
     } catch (error) {
       // 剪贴板 API 不可用时（非安全上下文等）静默失败
-      console.warn('复制定位信息失败:', error);
+      console.warn(t('errors.copyLocationFailed'), error);
       return;
     }
     setCopied(true);
@@ -73,10 +75,10 @@ const Weather: React.FC = () => {
         {weatherApiAvailable && (
           <div
             className={`city${locationDetail ? ' city--clickable' : ''}`}
-            title={locationDetail ? `${locationMethod}：${locationDetail}` : locationMethod}
+            title={locationDetail ? t('location.detailTitle', { method: locationMethod, detail: locationDetail }) : locationMethod}
             onClick={locationDetail ? copyLocationDetail : undefined}
           >
-            {copied ? '已复制' : cityName || '定位中...'}
+            {copied ? t('location.copied') : cityName || t('location.locating')}
           </div>
         )}
       </div>
@@ -90,16 +92,16 @@ const Weather: React.FC = () => {
           <div className="weather-content">
             <i className="weather-icon qi-999"></i>
             <div className="weather-details">
-              <span className="temperature">加载中...</span>
-              <span className="weather-desc">请稍候</span>
+              <span className="temperature">{t('loading')}</span>
+              <span className="weather-desc">{t('pleaseWait')}</span>
             </div>
           </div>
         ) : weatherError ? (
           <div className="weather-content" title={weatherError}>
             <i className="weather-icon qi-999"></i>
             <div className="weather-details">
-              <span className="temperature">天气</span>
-              <span className="weather-desc">不可用</span>
+              <span className="temperature">{t('weatherLabel')}</span>
+              <span className="weather-desc">{t('unavailable')}</span>
             </div>
           </div>
         ) : weather ? (
@@ -116,8 +118,8 @@ const Weather: React.FC = () => {
           <div className="weather-content">
             <i className="weather-icon qi-999"></i>
             <div className="weather-details">
-              <span className="temperature">未知</span>
-              <span className="weather-desc">无法获取天气</span>
+              <span className="temperature">{t('unknown')}</span>
+              <span className="weather-desc">{t('unableToFetch')}</span>
             </div>
           </div>
         ))}

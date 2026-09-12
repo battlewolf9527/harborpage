@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { FaviconSource } from '../../types';
 import FaviconConfigService from '../../services/FaviconConfigService';
 import './FaviconSettings.css';
@@ -16,6 +17,7 @@ interface DialogState {
 }
 
 const FaviconSettings: React.FC<FaviconSettingsProps> = ({ onSourcesChange }) => {
+  const { t } = useTranslation('icons');
   const [sources, setSources] = useState<FaviconSource[]>(() => FaviconConfigService.getSources());
   const [dialog, setDialog] = useState<DialogState | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
@@ -123,25 +125,25 @@ const FaviconSettings: React.FC<FaviconSettingsProps> = ({ onSourcesChange }) =>
   return (
     <div className="favicon-settings">
       <div className="favicon-settings-header">
-        <span className="favicon-settings-title">图标源配置</span>
+        <span className="favicon-settings-title">{t('faviconSettings.title')}</span>
         <div className="favicon-settings-actions">
           <button
             className="favicon-btn favicon-btn-add"
             onClick={openAddDialog}
           >
-            添加源
+            {t('faviconSettings.addSource')}
           </button>
           <button
             className="favicon-btn favicon-btn-reset"
             onClick={handleResetDefaults}
           >
-            重置默认
+            {t('faviconSettings.resetDefaults')}
           </button>
         </div>
       </div>
 
       <p className="favicon-settings-hint">
-        配置图标获取源，支持拖拽调整顺序，按优先级依次尝试。URL 模板中使用 <code>{'{domain}'}</code> 作为域名占位符。
+        {t('faviconSettings.hintPrefix')}<code>{'{domain}'}</code>{t('faviconSettings.hintSuffix')}
       </p>
 
       <div className="favicon-sources-list">
@@ -155,7 +157,7 @@ const FaviconSettings: React.FC<FaviconSettingsProps> = ({ onSourcesChange }) =>
             onDrop={handleDrop}
             onDragEnd={handleDragEnd}
           >
-            <div className="favicon-source-drag" title="拖拽排序">⋮⋮</div>
+            <div className="favicon-source-drag" title={t('faviconSettings.dragToSort')}>⋮⋮</div>
 
             <div className="favicon-source-priority">
               {index + 1}
@@ -164,7 +166,7 @@ const FaviconSettings: React.FC<FaviconSettingsProps> = ({ onSourcesChange }) =>
             <div className="favicon-source-content">
               <div className="favicon-source-name">
                 {source.name}
-                {isBuiltIn(source) && <span className="favicon-builtin-badge">内置</span>}
+                {isBuiltIn(source) && <span className="favicon-builtin-badge">{t('faviconSettings.builtIn')}</span>}
               </div>
               <div className="favicon-source-url" title={source.urlTemplate}>
                 {source.urlTemplate}
@@ -177,14 +179,14 @@ const FaviconSettings: React.FC<FaviconSettingsProps> = ({ onSourcesChange }) =>
                   <button
                     className="favicon-icon-btn"
                     onClick={() => openEditDialog(index)}
-                    title="编辑"
+                    title={t('faviconSettings.edit')}
                   >
                     ✎
                   </button>
                   <button
                     className="favicon-icon-btn favicon-icon-btn-delete"
                     onClick={() => setDeleteTarget({ index, source })}
-                    title="删除"
+                    title={t('faviconSettings.delete')}
                   >
                     ×
                   </button>
@@ -207,27 +209,27 @@ const FaviconSettings: React.FC<FaviconSettingsProps> = ({ onSourcesChange }) =>
       {dialog && (
         <div className="favicon-add-overlay" onClick={closeDialog}>
           <div className="favicon-add-dialog" onClick={(e) => e.stopPropagation()}>
-            <h4>{dialog.mode === 'add' ? '添加图标源' : '编辑图标源'}</h4>
+            <h4>{dialog.mode === 'add' ? t('faviconSettings.addTitle') : t('faviconSettings.editTitle')}</h4>
             <div className="favicon-add-form">
               <div className="favicon-add-field">
-                <label>名称</label>
+                <label>{t('faviconSettings.name')}</label>
                 <input
                   type="text"
                   value={dialog.name}
                   onChange={(e) => setDialog({ ...dialog, name: e.target.value })}
-                  placeholder="例如: 我的图标源"
+                  placeholder={t('faviconSettings.namePlaceholder')}
                   autoFocus
                 />
               </div>
               <div className="favicon-add-field">
-                <label>URL 模板 <span className="favicon-required">*</span></label>
+                <label>{t('faviconSettings.urlTemplate')} <span className="favicon-required">*</span></label>
                 <input
                   type="text"
                   value={dialog.urlTemplate}
                   onChange={(e) => setDialog({ ...dialog, urlTemplate: e.target.value })}
-                  placeholder="https://example.com/favicon?domain={domain}"
+                  placeholder={t('faviconSettings.urlTemplatePlaceholder')}
                 />
-                <span className="favicon-field-hint">使用 {'{domain}'} 作为域名占位符</span>
+                <span className="favicon-field-hint">{t('faviconSettings.urlTemplateHint')}</span>
               </div>
             </div>
             <div className="favicon-add-actions">
@@ -236,13 +238,13 @@ const FaviconSettings: React.FC<FaviconSettingsProps> = ({ onSourcesChange }) =>
                 onClick={handleSaveDialog}
                 disabled={!isDialogValid}
               >
-                {dialog.mode === 'add' ? '添加' : '保存'}
+                {dialog.mode === 'add' ? t('faviconSettings.add') : t('faviconSettings.save')}
               </button>
               <button
                 className="favicon-btn favicon-btn-cancel"
                 onClick={closeDialog}
               >
-                取消
+                {t('faviconSettings.cancel')}
               </button>
             </div>
           </div>
@@ -252,24 +254,24 @@ const FaviconSettings: React.FC<FaviconSettingsProps> = ({ onSourcesChange }) =>
       {deleteTarget && (
         <div className="favicon-add-overlay" onClick={() => setDeleteTarget(null)}>
           <div className="favicon-add-dialog" onClick={(e) => e.stopPropagation()}>
-            <h4>删除图标源</h4>
+            <h4>{t('faviconSettings.deleteTitle')}</h4>
             <p className="favicon-confirm-text">
-              确定要删除 <strong>{deleteTarget.source.name}</strong> 吗？
+              {t('faviconSettings.deleteConfirmPrefix')}<strong>{deleteTarget.source.name}</strong>{t('faviconSettings.deleteConfirmSuffix')}
               <br />
-              删除后将无法恢复。
+              {t('faviconSettings.deleteIrreversible')}
             </p>
             <div className="favicon-add-actions">
               <button
                 className="favicon-btn favicon-btn-delete-confirm"
                 onClick={() => deleteSource(deleteTarget.index)}
               >
-                删除
+                {t('faviconSettings.delete')}
               </button>
               <button
                 className="favicon-btn favicon-btn-cancel"
                 onClick={() => setDeleteTarget(null)}
               >
-                取消
+                {t('faviconSettings.cancel')}
               </button>
             </div>
           </div>

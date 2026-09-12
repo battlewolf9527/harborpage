@@ -1,0 +1,83 @@
+{
+  "manager": {
+    "preloadFailed": "预下载图标失败",
+    "deleteFailed": "删除R2图标失败",
+    "deleteFailedWithStatus": "删除R2图标失败: {{status}}",
+    "deletePartialFailed": "{{failed}}/{{total}} 个图标删除失败"
+  },
+  "utils": {
+    "cacheRequestFailed": "缓存请求失败: {{status}}"
+  },
+  "faviconService": {
+    "loadDefaultsFailed": "从后端加载默认 favicon 源失败",
+    "loadSourcesFailed": "获取 favicon 源配置失败",
+    "saveSourcesFailed": "保存 favicon 源配置失败"
+  },
+  "store": {
+    "deleteFailedRetry": "删除图标失败，将在下次保存时重试"
+  },
+  "autoFetch": {
+    "candidatesFetchFailed": "获取候选列表失败: HTTP {{status}}",
+    "candidatesFetchFailedGeneric": "获取候选列表失败",
+    "analyzingPage": "正在分析页面结构...",
+    "downloadStart": "开始下载图标 (0/{{total}})",
+    "downloading": "下载中 ({{current}}/{{total}})",
+    "downloadDone": "完成，共获取 {{count}} 个有效图标",
+    "downloadFailed": "下载图标失败 {{url}}: HTTP {{status}}",
+    "downloadError": "下载图标异常 {{url}}: {{message}}",
+    "title": "自动获取图标",
+    "close": "关闭",
+    "websiteLabel": "网站：",
+    "loading": "正在获取图标...",
+    "retry": "重新获取",
+    "empty": "未找到可用图标",
+    "emptyHint": "该网站可能没有设置图标，或图标已被阻止",
+    "resultsInfoPrefix": "共找到 ",
+    "resultsInfoSuffix": " 个可用图标，点击选择一个",
+    "iconAlt": "图标 {{index}}",
+    "use": "使用",
+    "saving": "保存中...",
+    "saveToR2": "保存到R2",
+    "cancel": "取消",
+    "noIconsFound": "未能获取到图标，请检查网站URL是否正确",
+    "fetchFailed": "获取失败: {{message}}",
+    "networkError": "网络错误",
+    "cacheFailed": "缓存失败",
+    "cacheResultInvalid": "缓存返回异常",
+    "cacheFailedWithMessage": "缓存失败: {{message}}",
+    "unknownError": "未知错误",
+    "fetchIconsFailed": "自动获取图标失败",
+    "cacheIconFailed": "缓存图标失败"
+  },
+  "faviconSettings": {
+    "title": "图标源配置",
+    "addSource": "添加源",
+    "resetDefaults": "重置默认",
+    "hintPrefix": "配置图标获取源，支持拖拽调整顺序，按优先级依次尝试。URL 模板中使用 ",
+    "hintSuffix": " 作为域名占位符。",
+    "dragToSort": "拖拽排序",
+    "builtIn": "内置",
+    "edit": "编辑",
+    "delete": "删除",
+    "addTitle": "添加图标源",
+    "editTitle": "编辑图标源",
+    "name": "名称",
+    "namePlaceholder": "例如: 我的图标源",
+    "urlTemplate": "URL 模板",
+    "urlTemplatePlaceholder": "https://example.com/favicon?domain={domain}",
+    "urlTemplateHint": "使用 {domain} 作为域名占位符",
+    "add": "添加",
+    "save": "保存",
+    "cancel": "取消",
+    "deleteTitle": "删除图标源",
+    "deleteConfirmPrefix": "确定要删除 ",
+    "deleteConfirmSuffix": " 吗？",
+    "deleteIrreversible": "删除后将无法恢复。"
+  },
+  "iconSettings": {
+    "title": "图标设置",
+    "maxColumns": "最大列数: {{count}}",
+    "cleaning": "清理中...",
+    "cleanup": "清理未使用的图标"
+  }
+}

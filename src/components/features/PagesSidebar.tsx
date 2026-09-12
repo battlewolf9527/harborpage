@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import './PagesSidebar.css';
 import ConfirmDialog from '../common/ConfirmDialog';
 import { usePagesSelector } from '../../store/selectors';
@@ -30,6 +31,7 @@ interface EditingState {
 }
 
 const PagesSidebar: React.FC = () => {
+  const { t } = useTranslation('pages');
   // 面板开合：单一事实源在主界面 Dock（入口球与宿主共享）
   const isOpen = useFeatureDockStore((s) => !!s.open.pages);
   const setDockOpen = useFeatureDockStore((s) => s.setOpen);
@@ -219,7 +221,9 @@ const PagesSidebar: React.FC = () => {
     glyph: pagesGlyph,
     tint: PAGES_TINT,
     tint2: PAGES_TINT2,
-    label: currentPage ? `${currentPage.name}（共${pageCount}页）` : `（共${pageCount}页）`,
+    label: currentPage
+      ? t('entry.label', { name: currentPage.name, total: pageCount })
+      : t('entry.labelNoCurrent', { total: pageCount }),
     badge: null,
   });
 
@@ -232,9 +236,9 @@ const PagesSidebar: React.FC = () => {
         >
           <div className="pages-sidebar-content">
             <div className="pages-sidebar-header">
-              <h2>页面切换</h2>
+              <h2>{t('title')}</h2>
               <div style={{ fontSize: '0.55vw', color: 'var(--text-secondary)', fontFamily: "'Inter', sans-serif" }}>
-                共 {pageCount} 个页面
+                {t('pageCount', { total: pageCount })}
               </div>
             </div>
 
@@ -243,7 +247,7 @@ const PagesSidebar: React.FC = () => {
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
-              新建页面
+              {t('addPage')}
             </button>
 
             <div className="pages-list">
@@ -270,7 +274,7 @@ const PagesSidebar: React.FC = () => {
                     {!isEditing && (
                       <div
                         className="drag-handle"
-                        title="拖拽排序"
+                        title={t('actions.dragToSort')}
                         onMouseDown={(e) => e.stopPropagation()}
                         onClick={(e) => e.stopPropagation()}
                       >
@@ -309,7 +313,7 @@ const PagesSidebar: React.FC = () => {
                       <div className="page-item-actions">
                         <button
                           className="page-action-btn"
-                          title="重命名"
+                          title={t('actions.rename')}
                           onClick={(e) => handleStartRename(e, page)}
                         >
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -319,7 +323,7 @@ const PagesSidebar: React.FC = () => {
                         </button>
                         <button
                           className="page-action-btn delete"
-                          title={pageCount <= 1 ? '至少保留一个页面' : '删除页面'}
+                          title={pageCount <= 1 ? t('actions.deleteBlocked') : t('actions.delete')}
                           onClick={(e) => pageCount > 1 && handleDeleteClick(e, page)}
                           style={pageCount <= 1 ? { opacity: 0.3, cursor: 'not-allowed' } : undefined}
                         >
@@ -334,7 +338,7 @@ const PagesSidebar: React.FC = () => {
                     )}
 
                     {isActive && !isEditing && (
-                      <div className="current-page-badge" title="当前页面" />
+                      <div className="current-page-badge" title={t('actions.currentPage')} />
                     )}
                   </div>
                 );
@@ -347,14 +351,14 @@ const PagesSidebar: React.FC = () => {
       {/* 删除页面确认：统一使用全局 ConfirmDialog（Aurora 风格 + danger 语义红渐变） */}
       <ConfirmDialog
         isOpen={!!pendingDelete}
-        title="确认删除"
+        title={t('deleteConfirm.title')}
         message={
           pendingDelete
-            ? `确定要删除页面「${pendingDelete.name}」吗？该页面中的所有网站图标也会被删除。`
+            ? t('deleteConfirm.message', { name: pendingDelete.name })
             : ''
         }
         confirmType="danger"
-        confirmText="删除"
+        confirmText={t('deleteConfirm.confirm')}
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
       />

@@ -1,0 +1,44 @@
+{
+  "loading": "加载中...",
+  "pleaseWait": "请稍候",
+  "weatherLabel": "天气",
+  "unavailable": "不可用",
+  "unknown": "未知",
+  "unableToFetch": "无法获取天气",
+  "date": {
+    "current": "{{month}}月{{date}}日 {{day}}",
+    "weekdays": {
+      "sun": "周日",
+      "mon": "周一",
+      "tue": "周二",
+      "wed": "周三",
+      "thu": "周四",
+      "fri": "周五",
+      "sat": "周六"
+    }
+  },
+  "location": {
+    "locating": "定位中...",
+    "browser": "浏览器定位",
+    "ip": "IP定位",
+    "copied": "已复制",
+    "detailTitle": "{{method}}：{{detail}}",
+    "unknownCity": "未知城市",
+    "east": "东经",
+    "west": "西经",
+    "north": "北纬",
+    "south": "南纬",
+    "coords": "{{lonDir}} {{lon}}，{{latDir}} {{lat}}"
+  },
+  "errors": {
+    "apiNotConfigured": "天气API未配置",
+    "citySearchRequestFailed": "城市搜索API请求失败: {{status}} {{statusText}}",
+    "citySearchCodeFailed": "城市搜索API错误: {{code}}",
+    "cityNameFailed": "获取城市名称失败",
+    "weatherRequestFailed": "天气API请求失败: {{status}} {{statusText}}",
+    "fetchWeatherFailed": "获取天气数据失败: {{detail}}",
+    "copyLocationFailed": "复制定位信息失败:",
+    "ipLocationRequestFailed": "IP定位API请求失败",
+    "ipLocationFallback": "IP定位失败，使用默认位置:"
+  }
+}

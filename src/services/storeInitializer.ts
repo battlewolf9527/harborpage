@@ -9,6 +9,7 @@ import { usePaletteStore } from '../store/usePaletteStore';
 import { usePagesStore } from '../store/usePagesStore';
 import { getServices } from './serviceContainer';
 import createLogger from '../utils/logger';
+import i18n from '../i18n';
 
 const logger = createLogger('StoreInitializer');
 
@@ -27,7 +28,7 @@ function syncToDataManager(): void {
       fn();
       syncResults[name] = true;
     } catch (error) {
-      logger.error(`同步 ${name} 到 DataManager 失败`, error);
+      logger.error(i18n.t('system:store.syncToDataManagerFailed', { name }), error);
       syncResults[name] = false;
     }
   };
@@ -46,6 +47,7 @@ function syncToDataManager(): void {
     dataManager.updateNotesEnabled(s.notesEnabled);
     dataManager.updateTodosEnabled(s.todosEnabled);
     dataManager.updatePagesEnabled(s.pagesEnabled);
+    dataManager.updateLanguage(s.language);
     dataManager.updateDefaultSearchEngineId(useSearchStore.getState().defaultSearchEngineId);
   });
 
@@ -101,7 +103,7 @@ function syncToDataManager(): void {
     .map(([name]) => name);
 
   if (failedSyncs.length > 0) {
-    logger.warn(`以下数据同步到 DataManager 失败: ${failedSyncs.join(', ')}`);
+    logger.warn(i18n.t('system:store.syncFailedList', { names: failedSyncs.join(', ') }));
   }
 }
 
@@ -113,7 +115,7 @@ export function initializeAllStores(data: UserData): void {
       fn();
       initResults[name] = true;
     } catch (error) {
-      logger.error(`初始化 ${name} 失败`, error);
+      logger.error(i18n.t('system:store.initFailed', { name }), error);
       initResults[name] = false;
     }
   };
@@ -133,7 +135,7 @@ export function initializeAllStores(data: UserData): void {
     .map(([name]) => name);
 
   if (failedStores.length > 0) {
-    logger.warn(`以下 store 初始化失败: ${failedStores.join(', ')}`);
+    logger.warn(i18n.t('system:store.initFailedList', { names: failedStores.join(', ') }));
   }
 
   syncToDataManager();
@@ -152,21 +154,21 @@ export async function initializeAllStoresAsync(
       fn();
       initResults[name] = true;
     } catch (error) {
-      logger.error(`初始化 ${name} 失败`, error);
+      logger.error(i18n.t('system:store.initFailed', { name }), error);
       initResults[name] = false;
     }
   };
 
   const steps: Array<[string, number, string, () => void]> = [
-    ['settings', 15, '正在初始化设置...', () => useSettingsStore.getState().initialize(data.settings)],
-    ['pages', 30, '正在初始化页面...', () => usePagesStore.getState().initialize(data.pages, data.currentPageId, data.websites)],
+    ['settings', 15, i18n.t('system:store.progress.initializingSettings'), () => useSettingsStore.getState().initialize(data.settings)],
+    ['pages', 30, i18n.t('system:store.progress.initializingPages'), () => usePagesStore.getState().initialize(data.pages, data.currentPageId, data.websites)],
     // ⚠️ 注意：websites 由 pages 管理，这里不要再传 []（之前传 [] 会触发 icons initialize 把 pages 刚写入的网站清空！）
-    ['icons', 40, '正在初始化网站...', () => useIconsStore.getState().initialize()],
-    ['wallpaper', 50, '正在初始化壁纸...', () => useWallpaperStore.getState().initialize(data.wallpaper)],
-    ['search', 65, '正在初始化搜索引擎...', () => useSearchStore.getState().initialize(data.searchEngines, data.settings?.defaultSearchEngineId)],
-    ['todos', 77, '正在初始化待办列表...', () => useTodoStore.getState().initialize(data.todos ?? data.todoList ?? [])],
-    ['notes', 87, '正在初始化笔记...', () => useNotesStore.getState().initialize(data.notes)],
-    ['palette', 92, '正在初始化调色板...', () => usePaletteStore.getState().initialize(data.palette, data.paletteAliases, data.paletteLightness)],
+    ['icons', 40, i18n.t('system:store.progress.initializingWebsites'), () => useIconsStore.getState().initialize()],
+    ['wallpaper', 50, i18n.t('system:store.progress.initializingWallpaper'), () => useWallpaperStore.getState().initialize(data.wallpaper)],
+    ['search', 65, i18n.t('system:store.progress.initializingSearchEngines'), () => useSearchStore.getState().initialize(data.searchEngines, data.settings?.defaultSearchEngineId)],
+    ['todos', 77, i18n.t('system:store.progress.initializingTodos'), () => useTodoStore.getState().initialize(data.todos ?? data.todoList ?? [])],
+    ['notes', 87, i18n.t('system:store.progress.initializingNotes'), () => useNotesStore.getState().initialize(data.notes)],
+    ['palette', 92, i18n.t('system:store.progress.initializingPalette'), () => usePaletteStore.getState().initialize(data.palette, data.paletteAliases, data.paletteLightness)],
   ];
 
   for (const [name, percent, task, fn] of steps) {
@@ -180,14 +182,14 @@ export async function initializeAllStoresAsync(
     .map(([name]) => name);
 
   if (failedStores.length > 0) {
-    logger.warn(`以下 store 初始化失败: ${failedStores.join(', ')}`);
+    logger.warn(i18n.t('system:store.initFailedList', { names: failedStores.join(', ') }));
   }
 
-  onProgress?.('正在同步数据...', 92);
+  onProgress?.(i18n.t('system:store.progress.syncingData'), 92);
   await nextFrame();
   syncToDataManager();
 
-  onProgress?.('导入完成', 100);
+  onProgress?.(i18n.t('system:store.progress.importCompleted'), 100);
   await nextFrame();
 }
 
@@ -195,6 +197,6 @@ export function clearAllPendingDeletes(): void {
   try {
     useIconsStore.getState().clearPendingDeletes();
   } catch (error) {
-    logger.error('清理待删除项失败', error);
+    logger.error(i18n.t('system:store.clearPendingDeletesFailed'), error);
   }
 }

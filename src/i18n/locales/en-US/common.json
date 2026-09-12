@@ -1,0 +1,14 @@
+{
+  "appName": "HarborPage",
+  "settings": "Settings",
+  "addWebsite": "Add Website",
+  "editWebsite": "Edit Website",
+  "deleteConfirmTitle": "Delete",
+  "deleteConfirmMessage": "Delete this website?",
+  "confirm": "Confirm",
+  "cancel": "Cancel",
+  "close": "Close",
+  "loading": "Loading...",
+  "processing": "Processing...",
+  "defaultSiteTitle": "My Dashboard"
+}

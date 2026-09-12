@@ -1,0 +1,27 @@
+{
+  "title": "To-Do",
+  "entry": {
+    "label": "To-Do",
+    "labelWithCount": "To-Do · {{count}} remaining"
+  },
+  "add": {
+    "placeholder": "Add a to-do...",
+    "button": "Add"
+  },
+  "empty": "No to-dos yet — add one from the input above!",
+  "footer": {
+    "remaining": "{{count}} remaining",
+    "clearCompleted": "Clear completed"
+  },
+  "confirm": {
+    "delete": {
+      "title": "Delete",
+      "message": "Delete this to-do?",
+      "confirmText": "Delete"
+    },
+    "clear": {
+      "title": "Clear",
+      "message": "Clear all completed to-dos?"
+    }
+  }
+}

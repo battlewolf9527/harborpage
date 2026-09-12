@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import 'qweather-icons/font/qweather-icons.css';
 import { getServices } from '../services/serviceContainer';
 import DataRepository from '../services/DataRepository';
@@ -24,6 +25,7 @@ interface WeatherCacheEntry {
 }
 
 export function useWeather() {
+  const { t } = useTranslation('weather');
   const { configService } = getServices();
   const weatherApiAvailable = configService.isWeatherApiAvailable();
 
@@ -42,7 +44,7 @@ export function useWeather() {
       });
       DataRepository.handleAuthResponse(response);
       if (!response.ok) {
-        throw new Error(`城市搜索API请求失败: ${response.status} ${response.statusText}`);
+        throw new Error(t('errors.citySearchRequestFailed', { status: response.status, statusText: response.statusText }));
       }
       const data = await response.json();
       if (data.code === '200' && data.location && data.location.length > 0) {
@@ -50,21 +52,21 @@ export function useWeather() {
         const cityName = `${location.adm2 || ''}${location.adm2 && location.name ? ' - ' : ''}${location.name || ''}`;
         return cityName;
       } else {
-        throw new Error(`城市搜索API错误: ${data.code}`);
+        throw new Error(t('errors.citySearchCodeFailed', { code: data.code }));
       }
     } catch (error) {
-      logger.error('获取城市名称失败', error);
+      logger.error(t('errors.cityNameFailed'), error);
       return null;
     }
-  }, []);
+  }, [t]);
 
   const fetchWeatherData = useCallback(async (latitude: number, longitude: number) => {
     const { configService } = getServices();
 
     if (!configService.isWeatherApiAvailable()) {
-      setWeatherError('天气API未配置');
+      setWeatherError(t('errors.apiNotConfigured'));
       setWeatherLoading(false);
-      setCityName('未知城市');
+      setCityName(t('location.unknownCity'));
       return;
     }
 
@@ -92,7 +94,7 @@ export function useWeather() {
       setWeatherError(null);
 
       const city = await fetchCityName(latitude, longitude);
-      const displayCity = city ?? '未知城市';
+      const displayCity = city ?? t('location.unknownCity');
       setCityName(displayCity);
 
       const url = `/api/weather?lat=${latitude}&lon=${longitude}`;
@@ -101,7 +103,7 @@ export function useWeather() {
       });
       DataRepository.handleAuthResponse(response);
       if (!response.ok) {
-        throw new Error(`天气API请求失败: ${response.status} ${response.statusText}`);
+        throw new Error(t('errors.weatherRequestFailed', { status: response.status, statusText: response.statusText }));
       }
       const data = await response.json();
       if (data.code === '200') {
@@ -126,10 +128,10 @@ export function useWeather() {
       }
       setWeatherLoading(false);
     } catch (error) {
-      setWeatherError(`获取天气数据失败: ${error instanceof Error ? error.message : String(error)}`);
+      setWeatherError(t('errors.fetchWeatherFailed', { detail: error instanceof Error ? error.message : String(error) }));
       setWeatherLoading(false);
     }
-  }, [fetchCityName]);
+  }, [fetchCityName, t]);
 
   const { locationMethod, locationDetail } = useWeatherLocation({
     fetchWeatherData,

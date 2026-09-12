@@ -1,0 +1,45 @@
+{
+  "defaultName": "New Folder",
+  "header": {
+    "editNameAria": "Edit folder name"
+  },
+  "color": {
+    "setAria": "Set folder color",
+    "title": "Folder color",
+    "pickerAria": "Choose folder color",
+    "reset": "Reset",
+    "resetTitle": "Restore default color (palette slot 1)"
+  },
+  "actions": {
+    "disband": "Disband",
+    "disbandTitle": "Disband folder (release all icons)",
+    "delete": "Delete",
+    "deleteTitle": "Delete folder (including all icons)"
+  },
+  "contextMenu": {
+    "aria": "Actions menu",
+    "moveToPage": "Move to page…"
+  },
+  "dialogs": {
+    "create": {
+      "title": "Create New Folder",
+      "placeholder": "Enter a folder name",
+      "confirm": "OK",
+      "cancel": "Cancel"
+    },
+    "rename": {
+      "title": "Rename Folder",
+      "placeholder": "Enter a new folder name",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "confirm": {
+      "disbandTitle": "Disband this folder?",
+      "disbandMessage": "After disbanding, the {{count}} icons in this folder will be released to the main screen.",
+      "deleteTitle": "Delete this folder?",
+      "deleteMessage": "After deletion, the folder and its {{count}} icons will be permanently deleted and cannot be recovered.",
+      "confirm": "Confirm",
+      "cancel": "Cancel"
+    }
+  }
+}

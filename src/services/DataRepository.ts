@@ -2,6 +2,7 @@ import type { UserData } from '../types';
 import AuthService from './AuthService';
 import { STORAGE_KEYS, TRACKED_KEYS } from '../constants';
 import createLogger from '../utils/logger';
+import i18n from '../i18n';
 
 const logger = createLogger('DataRepository');
 
@@ -30,7 +31,7 @@ class DataRepository {
       if (!raw) return null;
       return JSON.parse(raw);
     } catch (e) {
-      logger.error('从本地加载数据失败', e);
+      logger.error(i18n.t('system:storage.loadLocalFailed'), e);
       return null;
     }
   }
@@ -45,7 +46,7 @@ class DataRepository {
       const data = await response.json();
       return data;
     } catch (e) {
-      logger.error('从API加载数据失败', e);
+      logger.error(i18n.t('system:storage.loadApiFailed'), e);
       return null;
     }
   }
@@ -70,7 +71,7 @@ class DataRepository {
       try {
         localStorage.setItem(STORAGE_KEYS.DATA, JSON.stringify(data));
       } catch (error) {
-        logger.error('保存本地数据失败', error);
+        logger.error(i18n.t('system:storage.saveLocalFailed'), error);
       }
       this.saveTimer = null;
     }, delay);
@@ -89,7 +90,7 @@ class DataRepository {
       this.handleAuthResponse(response);
       return response.ok;
     } catch (e) {
-      logger.error(`保存 ${key} 失败`, e);
+      logger.error(i18n.t('system:storage.saveKeyFailed', { key }), e);
       return false;
     }
   }
@@ -106,7 +107,7 @@ class DataRepository {
       }
       return true;
     } catch (e) {
-      logger.error('清除数据失败', e);
+      logger.error(i18n.t('system:storage.clearFailed'), e);
       return false;
     }
   }
@@ -119,7 +120,7 @@ class DataRepository {
     try {
       localStorage.setItem(key, value);
     } catch (error) {
-      logger.error(`保存配置 ${key} 失败`, error);
+      logger.error(i18n.t('system:storage.saveConfigFailed', { key }), error);
     }
   }
 
@@ -127,7 +128,7 @@ class DataRepository {
     try {
       return localStorage.getItem(key);
     } catch (error) {
-      logger.error(`加载配置 ${key} 失败`, error);
+      logger.error(i18n.t('system:storage.loadConfigFailed', { key }), error);
       return null;
     }
   }
@@ -136,7 +137,7 @@ class DataRepository {
     try {
       localStorage.removeItem(key);
     } catch (error) {
-      logger.error(`删除配置 ${key} 失败`, error);
+      logger.error(i18n.t('system:storage.removeConfigFailed', { key }), error);
     }
   }
 
@@ -144,7 +145,7 @@ class DataRepository {
     try {
       localStorage.setItem(STORAGE_KEYS.UNSAVED_CHANGES, JSON.stringify(changedKeys));
     } catch (error) {
-      logger.error('保存未保存状态失败', error);
+      logger.error(i18n.t('system:storage.saveUnsavedFailed'), error);
     }
   }
 
@@ -163,7 +164,7 @@ class DataRepository {
       }
       return null;
     } catch (error) {
-      logger.error('加载未保存状态失败', error);
+      logger.error(i18n.t('system:storage.loadUnsavedFailed'), error);
       return null;
     }
   }
@@ -172,7 +173,7 @@ class DataRepository {
     try {
       localStorage.setItem(key, JSON.stringify(data));
     } catch (error) {
-      logger.error(`保存缓存 ${key} 失败`, error);
+      logger.error(i18n.t('system:storage.saveCacheFailed', { key }), error);
     }
   }
 
@@ -182,7 +183,7 @@ class DataRepository {
       if (!raw) return null;
       return JSON.parse(raw) as T;
     } catch (error) {
-      logger.error(`加载缓存 ${key} 失败`, error);
+      logger.error(i18n.t('system:storage.loadCacheFailed', { key }), error);
       return null;
     }
   }

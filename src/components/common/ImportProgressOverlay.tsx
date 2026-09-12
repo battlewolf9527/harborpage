@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useImportStore } from '../../store/useImportStore';
 import { usePagesStore, DEFAULT_PAGE_NAME } from '../../store/usePagesStore';
 import { getServices } from '../../services/serviceContainer';
@@ -23,6 +24,7 @@ const ImportProgressOverlay: React.FC<ImportProgressOverlayProps> = ({
   importProgress,
   importMessage,
 }) => {
+  const { t } = useTranslation('importExport');
   const importTask = useImportStore((s) => s.importTask);
   const setImportProgress = useImportStore((s) => s.setImportProgress);
   const setImportMessage = useImportStore((s) => s.setImportMessage);
@@ -39,15 +41,15 @@ const ImportProgressOverlay: React.FC<ImportProgressOverlayProps> = ({
 
     const runImport = async () => {
       const dataManager = getServices().dataManager;
-      const modeText = importTask.mode === 'merge' ? '合并' : '覆盖';
+      const modeText = importTask.mode === 'merge' ? t('modes.merge') : t('modes.overwrite');
 
       try {
         setImportProgress(5);
-        setImportMessage('正在解析导入数据...');
+        setImportMessage(t('progress.parsing'));
         await nextFrame();
 
         setImportProgress(10);
-        setImportMessage(`正在${modeText}数据...`);
+        setImportMessage(t('progress.applying', { mode: modeText }));
         await nextFrame();
 
         dataManager.startInitialization();
@@ -62,7 +64,7 @@ const ImportProgressOverlay: React.FC<ImportProgressOverlayProps> = ({
           });
 
           setImportProgress(96);
-          setImportMessage('正在清理...');
+          setImportMessage(t('progress.cleaning'));
           await nextFrame();
           clearAllPendingDeletes();
 
@@ -85,17 +87,17 @@ const ImportProgressOverlay: React.FC<ImportProgressOverlayProps> = ({
         if (cancelled) return;
 
         setImportProgress(100);
-        setImportMessage('导入完成');
+        setImportMessage(t('progress.completed'));
         await delay(500);
 
         if (!cancelled) {
           finishImport();
-          setToast({ type: 'success', message: `导入成功（${modeText}），请保存以同步到云端` });
+          setToast({ type: 'success', message: t('toasts.importSuccess', { mode: modeText }) });
         }
       } catch {
         if (!cancelled) {
           finishImport();
-          setToast({ type: 'error', message: '导入失败，请重试' });
+          setToast({ type: 'error', message: t('toasts.importFailed') });
         }
       }
     };
@@ -106,7 +108,7 @@ const ImportProgressOverlay: React.FC<ImportProgressOverlayProps> = ({
       cancelled = true;
       executedRef.current = false;
     };
-  }, [isImporting, importTask, setImportProgress, setImportMessage, finishImport]);
+  }, [isImporting, importTask, setImportProgress, setImportMessage, finishImport, t]);
 
   // 导入期间阻止页面刷新/关闭
   useEffect(() => {
@@ -130,7 +132,7 @@ const ImportProgressOverlay: React.FC<ImportProgressOverlayProps> = ({
         <div className="fullscreen-progress-overlay">
           <div className="progress-container">
             <div className="progress-icon">📥</div>
-            <h2 className="progress-title">正在导入数据</h2>
+            <h2 className="progress-title">{t('progress.title')}</h2>
             <p className="progress-message">{importMessage}</p>
             <div className="import-progress-bar-container">
               <div className="import-progress-bar-large">
@@ -141,7 +143,7 @@ const ImportProgressOverlay: React.FC<ImportProgressOverlayProps> = ({
               </div>
               <span className="import-progress-percentage">{importProgress}%</span>
             </div>
-            <p className="progress-hint">请稍候，导入过程中请勿关闭或刷新页面</p>
+            <p className="progress-hint">{t('progress.hint')}</p>
           </div>
         </div>
       )}

@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import './Notes.css';
 import type { Note } from '../../types';
@@ -8,6 +9,7 @@ import { useNotesStore } from '../../store/useNotesStore';
 const EMPTY_NOTE = { title: '', content: '' };
 
 const Notes: React.FC = () => {
+  const { t } = useTranslation('notes');
   const { notes, setNotes } = useNotesStore(
     useShallow((s) => ({ notes: s.notes, setNotes: s.setNotes })),
   );
@@ -19,7 +21,7 @@ const Notes: React.FC = () => {
     if (newNote.title.trim() || newNote.content.trim()) {
       const note: Note = {
         id: generateId(),
-        title: newNote.title.trim() || '无标题',
+        title: newNote.title.trim() || t('untitled'),
         content: newNote.content.trim(),
         createdAt: new Date().toISOString(),
       };
@@ -27,13 +29,13 @@ const Notes: React.FC = () => {
       setNewNote(EMPTY_NOTE);
       setShowAddNote(false);
     }
-  }, [newNote, setNotes]);
+  }, [newNote, setNotes, t]);
 
   const handleEditNote = useCallback(() => {
     if (editingNote) {
       const updatedNote = {
         id: editingNote.id,
-        title: newNote.title.trim() || '无标题',
+        title: newNote.title.trim() || t('untitled'),
         content: newNote.content.trim(),
       };
       setNotes(prevNotes => prevNotes.map(note =>
@@ -44,7 +46,7 @@ const Notes: React.FC = () => {
       setEditingNote(null);
       setNewNote(EMPTY_NOTE);
     }
-  }, [editingNote, newNote, setNotes]);
+  }, [editingNote, newNote, setNotes, t]);
 
   const handleDeleteNote = useCallback((id: string) => {
     setNotes(prevNotes => prevNotes.filter(note => note.id !== id));
@@ -75,35 +77,35 @@ const Notes: React.FC = () => {
 
   return (
     <div className="notes">
-      <h3>笔记</h3>
+      <h3>{t('panel.title')}</h3>
 
       <button
         className="add-note-button"
         onClick={handleShowAdd}
       >
-        添加笔记
+        {t('addNote')}
       </button>
 
       {(showAddNote || editingNote) && (
         <div className="note-form">
-          <h4>{editingNote ? '编辑笔记' : '添加笔记'}</h4>
+          <h4>{editingNote ? t('editNote') : t('addNote')}</h4>
           <input
             type="text"
-            placeholder="标题"
+            placeholder={t('panel.titlePlaceholder')}
             value={newNote.title}
             onChange={handleTitleChange}
           />
           <textarea
-            placeholder="内容"
+            placeholder={t('panel.contentPlaceholder')}
             value={newNote.content}
             onChange={handleContentChange}
             rows={4}
           />
           <div className="form-buttons">
             <button onClick={editingNote ? handleEditNote : handleAddNote}>
-              {editingNote ? '保存' : '添加'}
+              {editingNote ? t('save') : t('add')}
             </button>
-            <button onClick={cancelEdit}>取消</button>
+            <button onClick={cancelEdit}>{t('cancel')}</button>
           </div>
         </div>
       )}

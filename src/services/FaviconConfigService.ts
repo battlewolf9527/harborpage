@@ -1,6 +1,7 @@
 import type { FaviconSource } from '../types';
 import DataManager from './DataManager';
 import createLogger from '../utils/logger';
+import i18n from '../i18n';
 
 const logger = createLogger('FaviconConfigService');
 
@@ -42,7 +43,7 @@ class FaviconConfigService {
       const data = (await resp.json()) as { sources: FaviconSource[] };
       this.cachedDefaults = data.sources;
     } catch (error) {
-      logger.error('从后端加载默认 favicon 源失败', error);
+      logger.error(i18n.t('icons:faviconService.loadDefaultsFailed'), error);
     }
   }
 
@@ -59,7 +60,7 @@ class FaviconConfigService {
         return userSources;
       }
     } catch (error) {
-      logger.error('获取 favicon 源配置失败', error);
+      logger.error(i18n.t('icons:faviconService.loadSourcesFailed'), error);
     }
     return this.cachedDefaults ?? [];
   }
@@ -105,7 +106,7 @@ class FaviconConfigService {
     try {
       DataManager.updateFaviconSources(sources);
     } catch (error) {
-      logger.error('保存 favicon 源配置失败', error);
+      logger.error(i18n.t('icons:faviconService.saveSourcesFailed'), error);
     }
   }
 }

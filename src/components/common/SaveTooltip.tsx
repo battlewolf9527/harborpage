@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface SaveTooltipProps {
   saveError: string | null;
@@ -23,6 +24,7 @@ const SaveTooltip: React.FC<SaveTooltipProps> = React.memo(({
   onMouseEnter,
   onMouseLeave,
 }) => {
+  const { t } = useTranslation('dock');
   return (
     <div
       className="save-tooltip"
@@ -32,24 +34,27 @@ const SaveTooltip: React.FC<SaveTooltipProps> = React.memo(({
       <div className={`tooltip-content ${saveError ? 'error' : ''}`}>
         {saveError ? (
           <>
-            <h3>保存失败</h3>
+            <h3>{t('saveTooltip.saveFailed')}</h3>
             <p>{saveError}</p>
             <button className="save-button" onClick={onManualSave} disabled={isSaving}>
-              {isSaving ? '保存中...' : '重试保存'}
+              {isSaving ? t('saveTooltip.saving') : t('saveTooltip.retrySave')}
             </button>
           </>
         ) : (
           <>
-            <h3>有未保存的更改</h3>
-            <p>您的更改尚未保存到云端，请及时保存避免数据丢失。</p>
+            <h3>{t('saveTooltip.unsavedChanges')}</h3>
+            <p>{t('saveTooltip.unsavedChangesHint')}</p>
             <button className="save-button" onClick={onManualSave} disabled={isSaving}>
               {isSaving
                 ? saveProgress.total > 0
-                  ? `保存中... ${saveProgress.current}/${saveProgress.total}`
-                  : '保存中...'
+                  ? t('saveTooltip.savingWithProgress', {
+                      current: saveProgress.current,
+                      total: saveProgress.total,
+                    })
+                  : t('saveTooltip.saving')
                 : autoSaveEnabled
-                ? `立即保存 (${countdown}s)`
-                : '立即保存'}
+                ? t('saveTooltip.saveNowWithCountdown', { seconds: countdown })
+                : t('saveTooltip.saveNow')}
             </button>
             {isSaving && saveProgress.total > 0 && (
               <div className="save-progress">
@@ -62,7 +67,7 @@ const SaveTooltip: React.FC<SaveTooltipProps> = React.memo(({
               </div>
             )}
             <div className="auto-save-control">
-              <span>自动保存</span>
+              <span>{t('saveTooltip.autoSave')}</span>
               <label className="toggle-switch">
                 <input
                   type="checkbox"

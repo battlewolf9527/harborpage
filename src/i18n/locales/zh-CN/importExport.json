@@ -1,0 +1,113 @@
+{
+  "categories": {
+    "searchEngines": "搜索引擎",
+    "pages": "页面（含网站）",
+    "websites": "网站（旧格式）",
+    "todos": "待办列表",
+    "notes": "笔记",
+    "settings": "其它设置",
+    "palette": "调色板"
+  },
+  "categoryCount": {
+    "pagesSites": "{{pages}}页/{{sites}}站",
+    "slots": "{{count}} 槽",
+    "aliases": "{{count}} 别名",
+    "items": "{{count}} 个"
+  },
+  "summary": {
+    "pagesWithSites": "页面 {{pages}} 个（共 {{sites}} 个站点）",
+    "sites": "站点 {{count}} 个",
+    "searchEngines": "搜索引擎 {{count}} 个",
+    "todos": "待办 {{count}} 条",
+    "notes": "笔记 {{count}} 条",
+    "settings": "设置项",
+    "paletteSlots": "调色板 {{count}} 槽",
+    "paletteAliases": "调色板别名 {{count}} 个",
+    "separator": "，",
+    "fileContains": "文件包含：{{list}}。",
+    "empty": "文件中无有效数据。"
+  },
+  "export": {
+    "trigger": "导出数据",
+    "title": "导出数据",
+    "filename": "文件名",
+    "content": "导出内容",
+    "hint": "不含壁纸与图标文件",
+    "success": "导出成功"
+  },
+  "import": {
+    "trigger": "导入数据",
+    "title": "确认导入数据",
+    "content": "导入内容",
+    "included": "已包含",
+    "hint": "壁纸与图标不受影响"
+  },
+  "actions": {
+    "export": "导出",
+    "merge": "合并",
+    "overwrite": "覆盖",
+    "cancel": "取消",
+    "close": "关闭"
+  },
+  "modes": {
+    "merge": "合并",
+    "overwrite": "覆盖",
+    "mergeHint": "保留现有数据，同 ID 项用导入项替换，其余追加",
+    "overwriteHint": "用导入数据整体替换当前对应数据"
+  },
+  "preset": {
+    "title": "导入预设站点",
+    "selectAll": "全选",
+    "deselectAll": "取消全选",
+    "selectedCount": "已选择 {{selected}} / {{total}} 项",
+    "importStructure": "导入目录结构",
+    "overwriteAll": "覆盖所有已存在的站点",
+    "importButton": "导入 ({{count}})"
+  },
+  "presetFolders": {
+    "search": "搜索引擎",
+    "social": "社交媒体",
+    "video": "视频网站",
+    "music": "音乐网站",
+    "shopping": "购物网站",
+    "news": "新闻网站",
+    "dev": "开发者工具",
+    "learning": "学习网站",
+    "tools": "工具网站",
+    "other": "常用网站"
+  },
+  "duplicate": {
+    "title": "发现重复站点",
+    "message": "以下站点已存在于您的桌面或目录中：",
+    "location": "位置：{{location}}",
+    "desktop": "桌面",
+    "folder": "目录「{{name}}」",
+    "ignore": "忽略重复站点",
+    "overwrite": "覆盖重复站点",
+    "confirm": "确认导入"
+  },
+  "progress": {
+    "title": "正在导入数据",
+    "hint": "请稍候，导入过程中请勿关闭或刷新页面",
+    "readyForImport": "准备导入...",
+    "preparing": "正在准备导入...",
+    "parsing": "正在解析导入数据...",
+    "applying": "正在{{mode}}数据...",
+    "creatingFolders": "正在创建目录...",
+    "importingSite": "正在导入: {{name}}",
+    "cleaning": "正在清理...",
+    "completed": "导入完成",
+    "failed": "导入失败: {{error}}"
+  },
+  "toasts": {
+    "importSuccess": "导入成功（{{mode}}），请保存以同步到云端",
+    "importFailed": "导入失败，请重试"
+  },
+  "errors": {
+    "invalidFile": "文件格式无效或数据不完整",
+    "readFailed": "读取文件失败"
+  },
+  "logs": {
+    "importFailed": "导入过程中发生错误"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "title": "Page Switcher",
+  "pageCount": "{{total}} pages in total",
+  "addPage": "New Page",
+  "entry": {
+    "label": "{{name}} ({{total}} pages)",
+    "labelNoCurrent": "({{total}} pages)"
+  },
+  "actions": {
+    "dragToSort": "Drag to sort",
+    "rename": "Rename",
+    "delete": "Delete page",
+    "deleteBlocked": "At least one page must be kept",
+    "currentPage": "Current page"
+  },
+  "deleteConfirm": {
+    "title": "Confirm Delete",
+    "message": "Delete page “{{name}}”? All website icons on this page will also be deleted.",
+    "confirm": "Delete"
+  },
+  "moveToPage": {
+    "title": "Move to Page",
+    "subtitle": "{{selected}} selected. Choose the target page to move to.",
+    "empty": "There is only one page, so items cannot be moved across pages. Create a new page first.",
+    "itemCount": "{{total}} items",
+    "moveAndJump": "Move & Jump",
+    "cancel": "Cancel"
+  },
+  "store": {
+    "defaultName": "Page {{index}}",
+    "atLeastOnePage": "At least one page must be kept"
+  }
+}

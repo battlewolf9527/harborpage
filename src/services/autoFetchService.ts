@@ -1,5 +1,6 @@
 import { getServices } from './serviceContainer';
 import createLogger from '../utils/logger';
+import i18n from '../i18n';
 
 const logger = createLogger('autoFetchService');
 
@@ -51,12 +52,12 @@ class AutoFetchService {
     });
 
     if (!response.ok) {
-      throw new Error(`获取候选列表失败: HTTP ${response.status}`);
+      throw new Error(i18n.t('icons:autoFetch.candidatesFetchFailed', { status: response.status }));
     }
 
     const result = await response.json();
     if (!result.success) {
-      throw new Error(result.error || '获取候选列表失败');
+      throw new Error(result.error || i18n.t('icons:autoFetch.candidatesFetchFailedGeneric'));
     }
 
     return result.candidates || [];
@@ -88,7 +89,7 @@ class AutoFetchService {
       phase: 'downloading',
       current: 0,
       total,
-      message: `开始下载图标 (0/${total})`,
+      message: i18n.t('icons:autoFetch.downloadStart', { total }),
     });
 
     const downloadOne = async (candidate: IconCandidate): Promise<void> => {
@@ -104,7 +105,7 @@ class AutoFetchService {
         });
 
         if (!response.ok) {
-          logger.warn(`下载图标失败 ${candidate.url}: HTTP ${response.status}`);
+          logger.warn(i18n.t('icons:autoFetch.downloadFailed', { url: candidate.url, status: response.status }));
           return;
         }
 
@@ -119,7 +120,12 @@ class AutoFetchService {
           });
         }
       } catch (err) {
-        logger.warn(`下载图标异常 ${candidate.url}:`, err instanceof Error ? err.message : String(err));
+        logger.warn(
+          i18n.t('icons:autoFetch.downloadError', {
+            url: candidate.url,
+            message: err instanceof Error ? err.message : String(err),
+          })
+        );
       }
     };
 
@@ -135,7 +141,7 @@ class AutoFetchService {
           phase: 'downloading',
           current: completedCount,
           total,
-          message: `下载中 (${completedCount}/${total})`,
+          message: i18n.t('icons:autoFetch.downloading', { current: completedCount, total }),
         });
       }
     };
@@ -147,7 +153,7 @@ class AutoFetchService {
       phase: 'done',
       current: total,
       total,
-      message: `完成，共获取 ${results.length} 个有效图标`,
+      message: i18n.t('icons:autoFetch.downloadDone', { count: results.length }),
     });
 
     return results;
@@ -164,7 +170,7 @@ class AutoFetchService {
       phase: 'fetching_candidates',
       current: 0,
       total: 0,
-      message: '正在分析页面结构...',
+      message: i18n.t('icons:autoFetch.analyzingPage'),
     });
 
     const candidates = await this.fetchCandidates(websiteUrl);

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import './SearchManager.css';
 import { useSearchSelector } from '../../store/selectors';
 import { IconType, getFaviconUrl } from '../../services/IconManager';
@@ -21,6 +22,7 @@ interface DialogState {
 }
 
 const SearchManager: React.FC = () => {
+  const { t } = useTranslation('search');
   const { iconManager } = getServices();
   const { searchEngines, defaultSearchEngineId, setSearchEngines, setDefaultSearchEngineId } = useSearchSelector();
 
@@ -62,7 +64,7 @@ const SearchManager: React.FC = () => {
     if (!dialog) return;
     if (!dialog.name.trim() || !dialog.url.trim()) return;
     if (!dialog.url.includes('{q}')) {
-      logger.error('搜索 URL 必须包含 {q} 占位符');
+      logger.error(t('manager.urlRequiredHint'));
       return;
     }
 
@@ -152,19 +154,19 @@ const SearchManager: React.FC = () => {
 
   return (
     <div className="search-manager">
-      <h3>搜索设置</h3>
+      <h3>{t('manager.title')}</h3>
 
       <div className="add-engine">
         <button
           className="action-button"
           onClick={openAddDialog}
         >
-          添加搜索引擎
+          {t('manager.addEngine')}
         </button>
       </div>
 
       <div className="engine-list">
-        <h4>搜索引擎列表</h4>
+        <h4>{t('manager.engineList')}</h4>
         <div className="engine-items">
           {searchEngines.map((engine, index) => (
             <div
@@ -176,7 +178,7 @@ const SearchManager: React.FC = () => {
               onDrop={handleDrop}
               onDragEnd={handleDragEnd}
             >
-              <div className="engine-drag-handle" title="拖拽排序">⋮⋮</div>
+              <div className="engine-drag-handle" title={t('manager.dragToSort')}>⋮⋮</div>
 
               <div className="engine-info">
                 {renderSearchEngineIcon(
@@ -187,7 +189,7 @@ const SearchManager: React.FC = () => {
                 )}
                 <span className="engine-name">{engine.name}</span>
                 {engine.id === selectedEngine && (
-                  <span className="default-badge">默认</span>
+                  <span className="default-badge">{t('manager.defaultBadge')}</span>
                 )}
               </div>
 
@@ -195,14 +197,14 @@ const SearchManager: React.FC = () => {
                 <button
                   className={`engine-action-btn engine-action-default ${engine.id === selectedEngine ? 'active' : ''}`}
                   onClick={() => handleSetDefault(engine.id)}
-                  title={engine.id === selectedEngine ? '当前默认' : '设为默认'}
+                  title={engine.id === selectedEngine ? t('manager.currentDefault') : t('manager.setAsDefault')}
                 >
                   {engine.id === selectedEngine ? '★' : '☆'}
                 </button>
                 <button
                   className="engine-action-btn engine-action-edit"
                   onClick={() => openEditDialog(engine)}
-                  title="编辑"
+                  title={t('manager.edit')}
                 >
                   ✎
                 </button>
@@ -210,7 +212,7 @@ const SearchManager: React.FC = () => {
                   className="engine-action-btn engine-action-delete"
                   onClick={() => handleDeleteEngine(engine.id)}
                   disabled={searchEngines.length <= 1}
-                  title="删除"
+                  title={t('manager.delete')}
                 >
                   ×
                 </button>
@@ -223,33 +225,33 @@ const SearchManager: React.FC = () => {
       {dialog && (
         <div className="engine-dialog-overlay" onClick={closeDialog}>
           <div className="engine-dialog" onClick={(e) => e.stopPropagation()}>
-            <h4>{dialog.mode === 'add' ? '添加搜索引擎' : '编辑搜索引擎'}</h4>
+            <h4>{dialog.mode === 'add' ? t('manager.addEngine') : t('manager.editEngine')}</h4>
             <div className="engine-dialog-form">
               <div className="engine-dialog-field">
-                <label>名称</label>
+                <label>{t('manager.name')}</label>
                 <input
                   type="text"
-                  placeholder="搜索引擎名称"
+                  placeholder={t('manager.namePlaceholder')}
                   value={dialog.name}
                   onChange={(e) => setDialog({ ...dialog, name: e.target.value })}
                   autoFocus
                 />
               </div>
               <div className="engine-dialog-field">
-                <label>搜索URL <span className="engine-required">*</span></label>
+                <label>{t('manager.url')} <span className="engine-required">*</span></label>
                 <input
                   type="text"
                   placeholder="https://example.com/search?q={q}"
                   value={dialog.url}
                   onChange={(e) => setDialog({ ...dialog, url: e.target.value })}
                 />
-                <span className="engine-field-hint">使用 {'{q}'} 作为查询参数占位符</span>
+                <span className="engine-field-hint">{t('manager.urlHint')}</span>
               </div>
               <div className="engine-dialog-field">
-                <label>图标</label>
+                <label>{t('manager.icon')}</label>
                 <input
                   type="text"
-                  placeholder="留空自动获取favicon，或输入图标URL/Emoji"
+                  placeholder={t('manager.iconPlaceholder')}
                   value={dialog.icon}
                   onChange={(e) => setDialog({ ...dialog, icon: e.target.value })}
                 />
@@ -261,13 +263,13 @@ const SearchManager: React.FC = () => {
                 onClick={handleSaveDialog}
                 disabled={!isDialogValid}
               >
-                {dialog.mode === 'add' ? '添加' : '保存'}
+                {dialog.mode === 'add' ? t('manager.add') : t('manager.save')}
               </button>
               <button
                 className="engine-btn engine-btn-cancel"
                 onClick={closeDialog}
               >
-                取消
+                {t('manager.cancel')}
               </button>
             </div>
           </div>
@@ -276,8 +278,8 @@ const SearchManager: React.FC = () => {
 
       <ConfirmDialog
         isOpen={showDeleteConfirm}
-        title="删除搜索引擎"
-        message="确定要删除这个搜索引擎吗？"
+        title={t('manager.deleteTitle')}
+        message={t('manager.deleteMessage')}
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
       />

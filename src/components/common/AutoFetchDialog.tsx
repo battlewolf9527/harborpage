@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import './AutoFetchDialog.css';
 import { getServices } from '../../services/serviceContainer';
 import autoFetchService, { type DownloadedIcon, type FetchProgress } from '../../services/autoFetchService';
@@ -22,6 +23,7 @@ const AutoFetchDialog: React.FC<AutoFetchDialogProps> = ({
   onSelect,
   onClose,
 }) => {
+  const { t } = useTranslation('icons');
   const { authService } = getServices();
   const [isLoading, setIsLoading] = useState(true);
   const [icons, setIcons] = useState<DownloadedIcon[]>([]);
@@ -44,7 +46,7 @@ const AutoFetchDialog: React.FC<AutoFetchDialogProps> = ({
   const fetchIcons = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    setProgress({ phase: 'fetching_candidates', current: 0, total: 0, message: '正在分析页面结构...' });
+    setProgress({ phase: 'fetching_candidates', current: 0, total: 0, message: t('autoFetch.analyzingPage') });
 
     try {
       const results = await autoFetchService.fetchAllIcons(websiteUrl, (p) => {
@@ -55,15 +57,17 @@ const AutoFetchDialog: React.FC<AutoFetchDialogProps> = ({
         setIcons(results);
         setSelectedIndex(0);
       } else {
-        setError('未能获取到图标，请检查网站URL是否正确');
+        setError(t('autoFetch.noIconsFound'));
       }
     } catch (err) {
-      logger.error('自动获取图标失败', err);
-      setError(`获取失败: ${err instanceof Error ? err.message : '网络错误'}`);
+      logger.error(t('autoFetch.fetchIconsFailed'), err);
+      setError(t('autoFetch.fetchFailed', {
+        message: err instanceof Error ? err.message : t('autoFetch.networkError'),
+      }));
     } finally {
       setIsLoading(false);
     }
-  }, [websiteUrl]);
+  }, [websiteUrl, t]);
 
   useEffect(() => {
     fetchIcons();
@@ -91,22 +95,24 @@ const AutoFetchDialog: React.FC<AutoFetchDialogProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error('缓存失败');
+        throw new Error(t('autoFetch.cacheFailed'));
       }
 
       const result = await response.json();
       if (result.success && result.iconUrl) {
         onSelect(null, result.iconUrl);
       } else {
-        throw new Error('缓存返回异常');
+        throw new Error(t('autoFetch.cacheResultInvalid'));
       }
     } catch (err) {
-      logger.error('缓存图标失败', err);
-      setError(`缓存失败: ${err instanceof Error ? err.message : '未知错误'}`);
+      logger.error(t('autoFetch.cacheIconFailed'), err);
+      setError(t('autoFetch.cacheFailedWithMessage', {
+        message: err instanceof Error ? err.message : t('autoFetch.unknownError'),
+      }));
     } finally {
       setIsCaching(false);
     }
-  }, [selectedIcon, websiteId, authService, onSelect]);
+  }, [selectedIcon, websiteId, authService, onSelect, t]);
 
   const handleUseDirectly = useCallback(() => {
     if (!selectedIcon) return;
@@ -149,11 +155,11 @@ const AutoFetchDialog: React.FC<AutoFetchDialogProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="auto-fetch-header">
-          <h3>自动获取图标</h3>
+          <h3>{t('autoFetch.title')}</h3>
           <button
             className="auto-fetch-close"
             onClick={onClose}
-            aria-label="关闭"
+            aria-label={t('autoFetch.close')}
           >
             ✕
           </button>
@@ -161,14 +167,14 @@ const AutoFetchDialog: React.FC<AutoFetchDialogProps> = ({
 
         <div className="auto-fetch-content">
           <div className="auto-fetch-info">
-            <span className="auto-fetch-info-label">网站：</span>
+            <span className="auto-fetch-info-label">{t('autoFetch.websiteLabel')}</span>
             <span className="auto-fetch-info-url" title={websiteUrl}>{websiteName || websiteUrl}</span>
           </div>
 
           {isLoading ? (
             <div className="auto-fetch-loading">
               <div className="auto-fetch-spinner" />
-              <p>正在获取图标...</p>
+              <p>{t('autoFetch.loading')}</p>
               {renderProgress()}
             </div>
           ) : error ? (
@@ -179,19 +185,19 @@ const AutoFetchDialog: React.FC<AutoFetchDialogProps> = ({
                 className="auto-fetch-retry"
                 onClick={fetchIcons}
               >
-                重新获取
+                {t('autoFetch.retry')}
               </button>
             </div>
           ) : icons.length === 0 ? (
             <div className="auto-fetch-empty">
               <div className="auto-fetch-empty-icon">🔍</div>
-              <p>未找到可用图标</p>
-              <p className="auto-fetch-empty-hint">该网站可能没有设置图标，或图标已被阻止</p>
+              <p>{t('autoFetch.empty')}</p>
+              <p className="auto-fetch-empty-hint">{t('autoFetch.emptyHint')}</p>
             </div>
           ) : (
             <>
               <div className="auto-fetch-results-info">
-                共找到 <strong>{icons.length}</strong> 个可用图标，点击选择一个
+                {t('autoFetch.resultsInfoPrefix')}<strong>{icons.length}</strong>{t('autoFetch.resultsInfoSuffix')}
               </div>
               <div className="auto-fetch-grid">
                 {icons.map((icon, index) => (
@@ -202,7 +208,7 @@ const AutoFetchDialog: React.FC<AutoFetchDialogProps> = ({
                   >
                     <img
                       src={icon.dataUrl}
-                      alt={`图标 ${index + 1}`}
+                      alt={t('autoFetch.iconAlt', { index: index + 1 })}
                       className="auto-fetch-item-img"
                     />
                     <div className="auto-fetch-item-meta">
@@ -225,20 +231,20 @@ const AutoFetchDialog: React.FC<AutoFetchDialogProps> = ({
             onClick={handleUseDirectly}
             disabled={!selectedIcon || isCaching || (selectedIcon && selectedIcon.size > 4096)}
           >
-            使用
+            {t('autoFetch.use')}
           </button>
           <button
             className="auto-fetch-btn auto-fetch-btn-primary"
             onClick={handleCacheToR2}
             disabled={!selectedIcon || isCaching}
           >
-            {isCaching ? '保存中...' : '保存到R2'}
+            {isCaching ? t('autoFetch.saving') : t('autoFetch.saveToR2')}
           </button>
           <button
             className="auto-fetch-btn auto-fetch-btn-secondary"
             onClick={onClose}
           >
-            取消
+            {t('autoFetch.cancel')}
           </button>
         </div>
       </div>

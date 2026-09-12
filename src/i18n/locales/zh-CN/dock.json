@@ -1,0 +1,27 @@
+{
+  "savePrompt": {
+    "saveSuccess": "保存成功",
+    "autoSaveSuccess": "自动保存成功"
+  },
+  "saveTooltip": {
+    "saveFailed": "保存失败",
+    "unsavedChanges": "有未保存的更改",
+    "unsavedChangesHint": "您的更改尚未保存到云端，请及时保存避免数据丢失。",
+    "saving": "保存中...",
+    "savingWithProgress": "保存中... {{current}}/{{total}}",
+    "retrySave": "重试保存",
+    "saveNow": "立即保存",
+    "saveNowWithCountdown": "立即保存 ({{seconds}}s)",
+    "autoSave": "自动保存"
+  },
+  "saveProgress": {
+    "cleaningIconCache": "正在清理图标缓存..."
+  },
+  "toast": {
+    "continue": "继续"
+  },
+  "errorBoundary": {
+    "title": "出错了",
+    "retry": "重试"
+  }
+}

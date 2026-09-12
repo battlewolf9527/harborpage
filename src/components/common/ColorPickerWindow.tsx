@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import './ColorPickerWindow.css';
 import {
   QUICK_PRESET_COLORS,
@@ -47,6 +48,7 @@ const ColorPickerWindow: React.FC<ColorPickerWindowProps> = ({
   onConfirm,
   onClose,
 }) => {
+  const { t } = useTranslation('sites');
   const [draft, setDraft] = useState(() => (open ? normalizeHex(initialHex) || '' : ''));
   const [aliasDraft, setAliasDraft] = useState(() => (open ? (alias ?? '').trim() : ''));
   const [prevOpen, setPrevOpen] = useState(open);
@@ -110,7 +112,7 @@ const ColorPickerWindow: React.FC<ColorPickerWindowProps> = ({
           <button
             type="button"
             className="color-picker-close"
-            aria-label="关闭"
+            aria-label={t('picker.close')}
             onClick={onClose}
           >
             ✕
@@ -121,7 +123,7 @@ const ColorPickerWindow: React.FC<ColorPickerWindowProps> = ({
           {showAlias && (
             <div className="color-picker-alias">
               <label className="color-picker-alias-label" htmlFor="color-picker-alias-input">
-                别名
+                {t('picker.aliasLabel')}
               </label>
               <input
                 id="color-picker-alias-input"
@@ -129,7 +131,7 @@ const ColorPickerWindow: React.FC<ColorPickerWindowProps> = ({
                 className="color-picker-alias-input"
                 value={aliasDraft}
                 onChange={(e) => setAliasDraft(e.target.value)}
-                placeholder="未设置（默认显示 调色板 N）"
+                placeholder={t('picker.aliasPlaceholder')}
                 maxLength={20}
                 autoComplete="off"
                 spellCheck={false}
@@ -137,11 +139,11 @@ const ColorPickerWindow: React.FC<ColorPickerWindowProps> = ({
             </div>
           )}
 
-          <p className="color-picker-caption">预设颜色</p>
-          <div className="color-picker-presets" role="radiogroup" aria-label="预设颜色">
+          <p className="color-picker-caption">{t('picker.presetColors')}</p>
+          <div className="color-picker-presets" role="radiogroup" aria-label={t('picker.presetColors')}>
             {QUICK_PRESET_COLORS.map((preset) => {
               const hex = preset.hex;
-              const name = preset.label;
+              const name = describeQuickColor(hex);
               const active = customHex === hex;
               return (
                 <button
@@ -172,7 +174,7 @@ const ColorPickerWindow: React.FC<ColorPickerWindowProps> = ({
                 style={customHex ? { background: customHex } : undefined}
                 aria-hidden="true"
               />
-              <span className="color-picker-custom-label">自定义颜色</span>
+              <span className="color-picker-custom-label">{t('picker.customColor')}</span>
             </button>
             <input
               ref={customInputRef}
@@ -188,13 +190,13 @@ const ColorPickerWindow: React.FC<ColorPickerWindowProps> = ({
           <p className="color-picker-current">
             {customHex ? (
               <>
-                当前颜色：
+                {t('picker.currentColor')}
                 <b className="color-picker-current-name" style={{ color: customHex }}>
                   {describeQuickColor(customHex)}
                 </b>
               </>
             ) : (
-              '请选择颜色'
+              t('picker.selectColorPrompt')
             )}
           </p>
         </div>
@@ -206,7 +208,7 @@ const ColorPickerWindow: React.FC<ColorPickerWindowProps> = ({
               className="color-picker-btn ghost"
               onClick={() => setDraft(defaultHex)}
             >
-              恢复默认
+              {t('picker.restoreDefault')}
             </button>
           )}
           <button
@@ -215,14 +217,14 @@ const ColorPickerWindow: React.FC<ColorPickerWindowProps> = ({
             disabled={!customHex}
             onClick={handleConfirm}
           >
-            确定
+            {t('actions.confirm')}
           </button>
           <button
             type="button"
             className="color-picker-btn secondary"
             onClick={onClose}
           >
-            取消
+            {t('actions.cancel')}
           </button>
         </div>
       </div>

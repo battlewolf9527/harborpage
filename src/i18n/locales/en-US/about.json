@@ -1,0 +1,18 @@
+{
+  "closeAria": "Close",
+  "subtitle": "Personal Dashboard",
+  "description": "A modern personal dashboard built with React + Vite + Cloudflare Workers, featuring website icon management, folder grouping, search engine switching, weather display, to-do lists, notes, and data import/export.",
+  "features": {
+    "icons": "Website icon management",
+    "folders": "Folder grouping",
+    "search": "Search engine switching",
+    "weather": "Weather display",
+    "todos": "To-do list",
+    "notes": "Notes",
+    "importExport": "Data import/export",
+    "wallpaper": "Wallpaper management"
+  },
+  "techStack": "Tech Stack",
+  "githubAria": "GitHub repository",
+  "close": "Close"
+}

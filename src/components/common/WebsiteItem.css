@@ -13,6 +13,10 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   padding: 8px 0;
   min-width: 120px;
+  /* 菜单挂在窄尺寸的图标卡片内，绝对定位的收缩宽度会被容器宽度限制导致文案换行；
+     改为按内容撑开且不换行，适配英文等更长文案 */
+  width: max-content;
+  white-space: nowrap;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }

@@ -4,6 +4,8 @@ import { setupAutoPersist } from './persistence';
 import { getServices } from '../services/serviceContainer';
 import { STORAGE_KEYS } from '../constants';
 import DataRepository from '../services/DataRepository';
+import i18n, { detectLanguage, changeAppLanguage, isSupportedLanguage } from '../i18n';
+import type { SupportedLanguage } from '../i18n';
 
 const DEFAULT_AUTO_SAVE_DURATION = 60;
 const DEFAULT_AUTO_SAVE_ENABLED = true;
@@ -18,6 +20,8 @@ interface SettingsState {
   pagesEnabled: boolean;
   weatherEnabled: boolean;
   searchEnabled: boolean;
+  /** 界面语言（与 i18next 当前语言保持一致） */
+  language: SupportedLanguage;
   /** 是否已完成设置初始化；防止功能入口在账号设置（异步加载）完成前按默认值挂载，
    *  避免天气关闭时仍触发定位/天气请求 */
   settingsReady: boolean;
@@ -31,6 +35,7 @@ interface SettingsState {
   setPagesEnabled: (enabled: boolean) => void;
   setWeatherEnabled: (enabled: boolean) => void;
   setSearchEnabled: (enabled: boolean) => void;
+  setLanguage: (language: SupportedLanguage) => void;
   initialize: (settings?: Settings) => void;
 }
 
@@ -50,8 +55,8 @@ const readAutoSaveFromStorage = (): { enabled: boolean; duration: number } => {
   }
 };
 
-const initialState: Omit<SettingsState, 'setSiteTitle' | 'setIconColumns' | 'setAutoSaveEnabled' | 'setAutoSaveDuration' | 'setNotesEnabled' | 'setTodosEnabled' | 'setPagesEnabled' | 'setWeatherEnabled' | 'setSearchEnabled' | 'initialize'> = {
-  siteTitle: '我的导航',
+const initialState: Omit<SettingsState, 'setSiteTitle' | 'setIconColumns' | 'setAutoSaveEnabled' | 'setAutoSaveDuration' | 'setNotesEnabled' | 'setTodosEnabled' | 'setPagesEnabled' | 'setWeatherEnabled' | 'setSearchEnabled' | 'setLanguage' | 'initialize'> = {
+  siteTitle: i18n.t('common:defaultSiteTitle'),
   iconColumns: 5,
   autoSaveEnabled: DEFAULT_AUTO_SAVE_ENABLED,
   autoSaveDuration: DEFAULT_AUTO_SAVE_DURATION,
@@ -60,6 +65,7 @@ const initialState: Omit<SettingsState, 'setSiteTitle' | 'setIconColumns' | 'set
   pagesEnabled: true,
   weatherEnabled: true,
   searchEnabled: true,
+  language: detectLanguage(),
   settingsReady: false,
 };
 
@@ -102,11 +108,19 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     set({ searchEnabled });
   },
 
+  setLanguage: (language) => {
+    if (!isSupportedLanguage(language)) return;
+    set({ language });
+    changeAppLanguage(language);
+  },
+
   initialize: (settings) => {
     const saved = readAutoSaveFromStorage();
+    const language = settings && isSupportedLanguage(settings.language) ? settings.language : detectLanguage();
+    changeAppLanguage(language);
     if (settings) {
       set({
-        siteTitle: settings.siteTitle || '我的导航',
+        siteTitle: settings.siteTitle || i18n.t('common:defaultSiteTitle'),
         iconColumns: settings.iconColumns ?? 5,
         autoSaveEnabled: settings.autoSaveEnabled ?? saved.enabled,
         autoSaveDuration: settings.autoSaveDuration ?? saved.duration,
@@ -115,6 +129,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
         pagesEnabled: settings.pagesEnabled ?? true,
         weatherEnabled: settings.weatherEnabled ?? true,
         searchEnabled: settings.searchEnabled ?? true,
+        language,
         settingsReady: true,
       });
     } else {
@@ -138,4 +153,5 @@ setupAutoPersist(useSettingsStore, [
   { key: 'notesEnabled', persist: (v) => getServices().dataManager.updateNotesEnabled(v as boolean) },
   { key: 'todosEnabled', persist: (v) => getServices().dataManager.updateTodosEnabled(v as boolean) },
   { key: 'pagesEnabled', persist: (v) => getServices().dataManager.updatePagesEnabled(v as boolean) },
+  { key: 'language', persist: (v) => getServices().dataManager.updateLanguage(v as string) },
 ]);

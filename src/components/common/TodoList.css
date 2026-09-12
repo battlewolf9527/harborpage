@@ -384,11 +384,11 @@
 }
 
 /* ============================================================
-   空状态：:empty 伪元素引导（删除 italic）
+   空状态：由 JSX 渲染真实文本节点（原 .todo-items:empty 伪元素文案已移除）
    ============================================================ */
-.todo-items:empty::before {
-  content: '还没有待办事项，使用上方添加栏输入吧！';
+.todo-empty {
   display: block;
+  margin: 0;
   text-align: center;
   padding: var(--space-6) var(--space-4);
   color: var(--text-tertiary);
@@ -401,7 +401,7 @@
   transition: all var(--motion-normal);
 }
 
-.todo-items:empty::after {
+.todo-empty::before {
   content: '✨';
   display: block;
   text-align: center;

@@ -1,4 +1,5 @@
 import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import WebsiteItem from '../common/WebsiteItem';
 import FolderItem from '../common/FolderItem';
 import type { Website } from '../../types';
@@ -63,6 +64,7 @@ const IconGrid: React.FC<IconGridProps> = ({
   allowFolders,
   onBeforeDrop,
 }) => {
+  const { t } = useTranslation('sites');
   const gridRef = useRef<HTMLDivElement>(null);
   // 测量得到的容器实际内容宽度（px），用于计算 safeCols
   const [containerWidth, setContainerWidth] = useState<number>(0);
@@ -124,7 +126,7 @@ const IconGrid: React.FC<IconGridProps> = ({
       className="icon-grid"
       data-click-area="grid"
       role="list"
-      aria-label="网站图标列表"
+      aria-label={t('gridAria')}
       style={{
         /* actualCols = min(用户设置7, 物理上限)。竖屏/窄屏下自动降到能容纳的列数，
            保证每列实际宽度 ≥ ~120px，图标圆圈和标签绝不被挤压/裁剪。

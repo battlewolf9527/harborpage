@@ -1,0 +1,113 @@
+{
+  "categories": {
+    "searchEngines": "Search Engines",
+    "pages": "Pages (with sites)",
+    "websites": "Sites (legacy format)",
+    "todos": "Todo List",
+    "notes": "Notes",
+    "settings": "Other Settings",
+    "palette": "Palette"
+  },
+  "categoryCount": {
+    "pagesSites": "{{pages}} pages / {{sites}} sites",
+    "slots": "{{count}} slots",
+    "aliases": "{{count}} aliases",
+    "items": "{{count}}"
+  },
+  "summary": {
+    "pagesWithSites": "{{pages}} pages ({{sites}} sites in total)",
+    "sites": "{{count}} sites",
+    "searchEngines": "{{count}} search engines",
+    "todos": "{{count}} todos",
+    "notes": "{{count}} notes",
+    "settings": "Settings",
+    "paletteSlots": "{{count}} palette slots",
+    "paletteAliases": "{{count}} palette aliases",
+    "separator": ", ",
+    "fileContains": "File contains: {{list}}.",
+    "empty": "The file contains no valid data."
+  },
+  "export": {
+    "trigger": "Export Data",
+    "title": "Export Data",
+    "filename": "File Name",
+    "content": "Export Content",
+    "hint": "Wallpapers and icon files are not included",
+    "success": "Export successful"
+  },
+  "import": {
+    "trigger": "Import Data",
+    "title": "Confirm Import",
+    "content": "Import Content",
+    "included": "Included",
+    "hint": "Wallpapers and icons are not affected"
+  },
+  "actions": {
+    "export": "Export",
+    "merge": "Merge",
+    "overwrite": "Overwrite",
+    "cancel": "Cancel",
+    "close": "Close"
+  },
+  "modes": {
+    "merge": "Merge",
+    "overwrite": "Overwrite",
+    "mergeHint": "Keep existing data; replace items with the same ID from the import and append the rest",
+    "overwriteHint": "Replace the current data entirely with the imported data"
+  },
+  "preset": {
+    "title": "Import Preset Sites",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "selectedCount": "Selected {{selected}} / {{total}} items",
+    "importStructure": "Import folder structure",
+    "overwriteAll": "Overwrite all existing sites",
+    "importButton": "Import ({{count}})"
+  },
+  "presetFolders": {
+    "search": "Search Engines",
+    "social": "Social Media",
+    "video": "Video Sites",
+    "music": "Music Sites",
+    "shopping": "Shopping Sites",
+    "news": "News Sites",
+    "dev": "Developer Tools",
+    "learning": "Learning Sites",
+    "tools": "Utility Sites",
+    "other": "Popular Sites"
+  },
+  "duplicate": {
+    "title": "Duplicate Sites Found",
+    "message": "The following sites already exist on your desktop or in folders:",
+    "location": "Location: {{location}}",
+    "desktop": "Desktop",
+    "folder": "Folder \"{{name}}\"",
+    "ignore": "Ignore duplicates",
+    "overwrite": "Overwrite duplicates",
+    "confirm": "Confirm Import"
+  },
+  "progress": {
+    "title": "Importing Data",
+    "hint": "Please wait. Do not close or refresh the page during import.",
+    "readyForImport": "Preparing import...",
+    "preparing": "Preparing import...",
+    "parsing": "Parsing imported data...",
+    "applying": "Importing data ({{mode}})...",
+    "creatingFolders": "Creating folders...",
+    "importingSite": "Importing: {{name}}",
+    "cleaning": "Cleaning up...",
+    "completed": "Import complete",
+    "failed": "Import failed: {{error}}"
+  },
+  "toasts": {
+    "importSuccess": "Import successful ({{mode}}). Save to sync to the cloud.",
+    "importFailed": "Import failed, please try again"
+  },
+  "errors": {
+    "invalidFile": "Invalid file format or incomplete data",
+    "readFailed": "Failed to read file"
+  },
+  "logs": {
+    "importFailed": "An error occurred during import"
+  }
+}

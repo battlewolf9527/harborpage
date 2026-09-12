@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import './NotesManagerDialog.css';
 import { useNotesStore } from '../../store/useNotesStore';
@@ -16,6 +17,7 @@ interface NotesManagerDialogProps {
 }
 
 const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation('notes');
   const {
     notes,
     deleteNote,
@@ -173,18 +175,18 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
         className={`notes-mgr-dialog ${isClosing ? 'closing' : ''}`}
         role="dialog"
         aria-modal="true"
-        aria-label="笔记管理"
+        aria-label={t('manager.title')}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="notes-mgr-header">
           <div className="notes-mgr-title-row">
-            <h2>📒 笔记管理</h2>
+            <h2>📒 {t('manager.title')}</h2>
             <button
               type="button"
               className="notes-mgr-close"
               onClick={runClose}
-              aria-label="关闭"
-              title="关闭 (Esc)"
+              aria-label={t('close')}
+              title={t('closeEsc')}
             >
               ✕
             </button>
@@ -198,7 +200,7 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
               </svg>
               <input
                 type="search"
-                placeholder="搜索标题或内容…"
+                placeholder={t('manager.searchPlaceholder')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -207,7 +209,7 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
                   type="button"
                   className="notes-mgr-search-clear"
                   onClick={() => setSearch('')}
-                  aria-label="清除搜索"
+                  aria-label={t('manager.clearSearch')}
                 >
                   ✕
                 </button>
@@ -215,9 +217,9 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
             </div>
             <div className="notes-mgr-stats">
               {filteredIds ? (
-                <span>命中 {visibleNotes.length} / 共 {notes.length} 篇</span>
+                <span>{t('manager.statsFiltered', { visible: visibleNotes.length, total: notes.length })}</span>
               ) : (
-                <span>共 {notes.length} 篇 · 拖拽列表行可排序</span>
+                <span>{t('manager.stats', { total: notes.length })}</span>
               )}
             </div>
             <button type="button" className="notes-mgr-add" onClick={handleCreate}>
@@ -225,7 +227,7 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
-              新建
+              {t('manager.create')}
             </button>
           </div>
         </div>
@@ -234,11 +236,11 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
           {visibleNotes.length === 0 ? (
             <div className="notes-mgr-empty">
               <div className="notes-mgr-empty-emoji">📭</div>
-              <h3>{filteredIds ? '没有匹配的笔记' : '还没有笔记'}</h3>
+              <h3>{filteredIds ? t('manager.emptyFilteredTitle') : t('manager.emptyTitle')}</h3>
               <p>
                 {filteredIds
-                  ? '试试换个关键词，或者清除搜索条件。'
-                  : '点击右上角「新建」创建你的第一篇笔记吧！'}
+                  ? t('manager.emptyFilteredHint')
+                  : t('manager.emptyHint')}
               </p>
             </div>
           ) : (
@@ -269,24 +271,24 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
                   >
                     <div
                       className="notes-mgr-dot"
-                      title="拖拽排序"
+                      title={t('manager.dragToSort')}
                       aria-hidden="true"
                     />
                     <div className="notes-mgr-item-body" onClick={() => handleOpenEditor(note.id)}>
                       <div className="notes-mgr-item-title-row">
-                        <span className="notes-mgr-item-title">{note.title || '无标题'}</span>
+                        <span className="notes-mgr-item-title">{note.title || t('untitled')}</span>
                       </div>
                       <div className="notes-mgr-item-content">
                         {note.content
-                          ? note.content.replace(/\s+/g, ' ').slice(0, 120) || '（空内容）'
-                          : <em>（无内容）</em>
+                          ? note.content.replace(/\s+/g, ' ').slice(0, 120) || t('blankContent')
+                          : <em>{t('noContent')}</em>
                         }
                       </div>
                       <div className="notes-mgr-item-meta">
                         {note.updatedAt
-                          ? <>更新于 {new Date(note.updatedAt).toLocaleString()}</>
+                          ? <>{t('updatedAt', { date: new Date(note.updatedAt).toLocaleString() })}</>
                           : note.createdAt
-                            ? <>创建于 {new Date(note.createdAt).toLocaleString()}</>
+                            ? <>{t('createdAt', { date: new Date(note.createdAt).toLocaleString() })}</>
                             : null
                         }
                       </div>
@@ -300,7 +302,7 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
                           e.stopPropagation();
                           handleOpenEditor(note.id);
                         }}
-                        title="编辑"
+                        title={t('edit')}
                       >
                         ✏️
                       </button>
@@ -308,7 +310,7 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
                         type="button"
                         className="notes-mgr-action delete"
                         onClick={(e) => handleDeleteClick(note.id, e)}
-                        title="删除"
+                        title={t('delete')}
                       >
                         🗑️
                       </button>
@@ -338,8 +340,8 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
 
       <ConfirmDialog
         isOpen={!!pendingDelete}
-        title="删除笔记"
-        message="确定要删除这篇笔记吗？删除后不可恢复。"
+        title={t('editor.deleteConfirmTitle')}
+        message={t('editor.deleteConfirmMessage')}
         onConfirm={() => {
           if (pendingDelete) deleteNote(pendingDelete);
           setPendingDelete(null);

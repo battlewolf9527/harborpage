@@ -6,6 +6,7 @@ import { setupAutoPersist } from './persistence';
 import { generateId } from '../utils/idUtils';
 import { mergeById } from '../utils/importExportUtils';
 import createLogger from '../utils/logger';
+import i18n from '../i18n';
 
 const logger = createLogger('PagesStore');
 
@@ -61,7 +62,7 @@ export const usePagesStore = create<PagesState>((set, get) => ({
     const { pages } = get();
     const newPage: Page = {
       id: generateId('page-'),
-      name: name || `页面 ${pages.length + 1}`,
+      name: name || i18n.t('pages:store.defaultName', { index: pages.length + 1 }),
       websites: [],
       createdAt: Date.now(),
     };
@@ -84,7 +85,7 @@ export const usePagesStore = create<PagesState>((set, get) => ({
   deletePage: (pageId) => {
     const { pages, currentPageId } = get();
     if (pages.length <= 1) {
-      logger.warn('至少保留一个页面');
+      logger.warn(i18n.t('pages:store.atLeastOnePage'));
       return;
     }
 

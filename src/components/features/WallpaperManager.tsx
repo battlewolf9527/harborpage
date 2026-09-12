@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import './WallpaperManager.css';
 import { useWallpaperStore } from '../../store/useWallpaperStore';
@@ -19,6 +20,7 @@ interface WallpaperSource {
 }
 
 const WallpaperManager: React.FC = () => {
+  const { t } = useTranslation('wallpaper');
   const { 
     setWallpaper, 
     setBlurLevel, 
@@ -52,12 +54,12 @@ const WallpaperManager: React.FC = () => {
   );
   
   const wallpapers = useMemo<WallpaperSource[]>(() => [
-    { id: '1', name: 'Bing每日壁纸', type: 'bing' },
-    { id: '2', name: '随机壁纸', type: 'randomBing' },
-    { id: '3', name: '本地壁纸', type: 'local' },
-    { id: '4', name: '纯色背景', type: 'solid', color: solidColor },
-    { id: '5', name: '自定义', type: 'custom' },
-  ], [solidColor]);
+    { id: '1', name: t('sources.bing'), type: 'bing' },
+    { id: '2', name: t('sources.randomBing'), type: 'randomBing' },
+    { id: '3', name: t('sources.local'), type: 'local' },
+    { id: '4', name: t('sources.solid'), type: 'solid', color: solidColor },
+    { id: '5', name: t('sources.custom'), type: 'custom' },
+  ], [solidColor, t]);
 
   const selectedSource = useMemo(() => {
     const source = wallpapers.find(w => w.type === wallpaperType);
@@ -115,23 +117,23 @@ const WallpaperManager: React.FC = () => {
   const handleApplyCustomUrl = useCallback(() => {
     const url = customUrl.trim();
     if (!url) {
-      setCustomUrlError('请输入图片地址');
+      setCustomUrlError(t('customUrl.empty'));
       return;
     }
     let parsed: URL;
     try {
       parsed = new URL(url);
     } catch {
-      setCustomUrlError('URL 格式无效');
+      setCustomUrlError(t('customUrl.invalidFormat'));
       return;
     }
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-      setCustomUrlError('仅支持 http/https 协议');
+      setCustomUrlError(t('customUrl.unsupportedProtocol'));
       return;
     }
     setCustomUrlError(null);
     setWallpaper(url, 'custom');
-  }, [customUrl, setWallpaper]);
+  }, [customUrl, setWallpaper, t]);
 
   const handleLocalUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -158,9 +160,9 @@ const WallpaperManager: React.FC = () => {
         return;
       }
       // R2 不可用（503）或其他错误，降级到浏览器存储
-      logger.warn('R2 上传失败，降级到浏览器存储', response.status);
+      logger.warn(t('errors.r2UploadFailed'), response.status);
     } catch (error) {
-      logger.warn('R2 上传请求失败，降级到浏览器存储', error);
+      logger.warn(t('errors.r2RequestFailed'), error);
     }
 
     // 降级：base64 存入 IndexedDB，store 直接用 data URL 渲染
@@ -171,11 +173,11 @@ const WallpaperManager: React.FC = () => {
         await saveLocalWallpaper(dataUrl);
         setWallpaper(dataUrl, 'local');
       } catch (err) {
-        logger.error('IndexedDB 存储失败', err);
+        logger.error(t('errors.indexedDbSaveFailed'), err);
       }
     };
     reader.readAsDataURL(file);
-  }, [setWallpaper, wallpaper]);
+  }, [setWallpaper, wallpaper, t]);
 
   const handleColorChange = useCallback((color: string) => {
     setSolidColor(color);
@@ -184,10 +186,10 @@ const WallpaperManager: React.FC = () => {
 
   return (
     <div className="wallpaper-manager">
-      <h3>壁纸设置</h3>
+      <h3>{t('title')}</h3>
       
       <div className="wallpaper-sources">
-        <h4>壁纸来源</h4>
+        <h4>{t('sources.title')}</h4>
         <div className="source-list">
           {wallpapers.map((source) => (
             <div 
@@ -225,7 +227,7 @@ const WallpaperManager: React.FC = () => {
         <div className="custom-url">
           <input
             type="text"
-            placeholder="粘贴图片 URL，如 https://example.com/wallpaper.jpg"
+            placeholder={t('customUrl.placeholder')}
             value={customUrl}
             onChange={(e) => {
               setCustomUrl(e.target.value);
@@ -235,7 +237,7 @@ const WallpaperManager: React.FC = () => {
               if (e.key === 'Enter') handleApplyCustomUrl();
             }}
           />
-          <button onClick={handleApplyCustomUrl}>应用</button>
+          <button onClick={handleApplyCustomUrl}>{t('customUrl.apply')}</button>
         </div>
       )}
       {customUrlError && selectedSource === '5' && (
@@ -243,17 +245,17 @@ const WallpaperManager: React.FC = () => {
       )}
 
       <div className="wallpaper-options">
-        <h4>壁纸选项</h4>
+        <h4>{t('options.title')}</h4>
 
         <div className="auto-change-block">
           <div className="auto-change-row">
-            <span className="auto-change-name">自动更换壁纸</span>
+            <span className="auto-change-name">{t('options.autoChange')}</span>
             <label className="settings-switch">
               <input
                 type="checkbox"
                 checked={autoChangeEnabled}
                 onChange={(e) => setAutoChangeEnabled(e.target.checked)}
-                aria-label="自动更换壁纸"
+                aria-label={t('options.autoChange')}
               />
               <span className="settings-switch-track" />
             </label>
@@ -262,7 +264,7 @@ const WallpaperManager: React.FC = () => {
           {autoChangeEnabled && (
             <div className="option-item auto-change-interval">
               <label>
-                <span>更换间隔：{autoChangeIntervalHours} 小时</span>
+                <span>{t('options.autoChangeInterval', { count: autoChangeIntervalHours })}</span>
                 <input
                   type="range"
                   min="1"
@@ -276,13 +278,13 @@ const WallpaperManager: React.FC = () => {
           )}
 
           <p className="auto-change-hint">
-            开启后到点自动更换壁纸（Bing每日 / 随机 / 自定义来源）；刷新页面后仍按上次更换时间到点更换。
+            {t('options.autoChangeHint')}
           </p>
         </div>
 
         <div className="option-item">
           <label>
-            模糊度: {Math.round(blurLevel)}%
+            {t('options.blurLevel', { value: Math.round(blurLevel) })}
             <input 
               type="range" 
               min="0" 
@@ -298,7 +300,7 @@ const WallpaperManager: React.FC = () => {
 
         <div className="option-item">
           <label>
-            遮罩浓度: {Math.round(overlayLevel * 100)}%
+            {t('options.overlayLevel', { value: Math.round(overlayLevel * 100) })}
             <input 
               type="range" 
               min="0" 
@@ -315,7 +317,7 @@ const WallpaperManager: React.FC = () => {
 
       {wallpaper && !wallpaper.startsWith('indexeddb://') && (
         <div className="wallpaper-preview">
-          <h4>预览</h4>
+          <h4>{t('preview')}</h4>
           <div 
             className="preview-image"
             style={{

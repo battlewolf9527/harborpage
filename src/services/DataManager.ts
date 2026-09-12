@@ -7,6 +7,7 @@ import { generateId } from '../utils/idUtils';
 import { normalizeAliasMap, normalizeLightness, normalizePaletteMap } from '../utils/paletteColors';
 import { DEFAULT_PAGE_NAME } from '../store/usePagesStore';
 import createLogger from '../utils/logger';
+import i18n from '../i18n';
 
 const logger = createLogger('DataManager');
 
@@ -42,7 +43,7 @@ class DataManager {
   }
 
   public async saveChanges(): Promise<{ performed: boolean; error?: string }> {
-    if (this.isSyncing) return { performed: false, error: '正在同步中' };
+    if (this.isSyncing) return { performed: false, error: i18n.t('system:data.syncing') };
     if (!ChangeTracker.hasChanges()) return { performed: false };
 
     try {
@@ -60,8 +61,8 @@ class DataManager {
           for (const savedKey of savedKeys) {
             ChangeTracker.markChanged(savedKey);
           }
-          logger.error(`保存 ${key} 失败，已回滚 ${savedKeys.length} 个已保存的 key`);
-          return { performed: false, error: '保存失败' };
+          logger.error(i18n.t('system:data.saveKeyFailedRollback', { key, savedCount: savedKeys.length }));
+          return { performed: false, error: i18n.t('system:data.saveFailed') };
         }
         savedKeys.push(key);
         ChangeTracker.clearChanged(key);
@@ -70,7 +71,7 @@ class DataManager {
       DataRepository.flushLocal(this.data);
       return { performed: true };
     } catch (error) {
-      logger.error('保存数据失败', error);
+      logger.error(i18n.t('system:data.saveDataFailed'), error);
       return { performed: false, error: error instanceof Error ? error.message : String(error) };
     } finally {
       this.isSyncing = false;
@@ -321,6 +322,10 @@ class DataManager {
     this.updateSettingsField('pagesEnabled', enabled);
   }
 
+  public updateLanguage(language: string): void {
+    this.updateSettingsField('language', language);
+  }
+
   public updateBlurLevel(blurLevel: number): void {
     this.updateData('wallpaper', () => {
       const current = this.data.wallpaper;
@@ -435,7 +440,7 @@ class DataManager {
       try {
         await DataRepository.saveKeyToAPI('settings', settingsSnapshot);
       } catch (err) {
-        logger.warn('defaultSearchEngineId 静默云同步失败（后续操作会自动重试）：', err);
+        logger.warn(i18n.t('system:data.silentSyncFailed'), err);
       }
     })();
   }

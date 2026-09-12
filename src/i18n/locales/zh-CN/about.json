@@ -1,0 +1,18 @@
+{
+  "closeAria": "关闭",
+  "subtitle": "个人导航页面",
+  "description": "一个基于 React + Vite + Cloudflare Workers 构建的现代化个人导航页面，支持网站图标管理、文件夹分类、搜索引擎切换、天气显示、待办事项、笔记、数据导入导出等功能。",
+  "features": {
+    "icons": "网站图标管理",
+    "folders": "文件夹分类",
+    "search": "搜索引擎切换",
+    "weather": "天气显示",
+    "todos": "待办事项",
+    "notes": "笔记功能",
+    "importExport": "数据导入导出",
+    "wallpaper": "壁纸管理"
+  },
+  "techStack": "技术栈",
+  "githubAria": "GitHub 仓库",
+  "close": "关闭"
+}

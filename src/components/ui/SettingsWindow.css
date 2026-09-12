@@ -201,7 +201,8 @@
 
 /* ── 输入框：统一 token ── */
 .settings-panel input[type="text"],
-.settings-panel input[type="number"] {
+.settings-panel input[type="number"],
+.settings-panel select {
   padding: 10px 13px;
   border: 1px solid var(--input-border);
   border-radius: var(--input-radius);
@@ -216,7 +217,8 @@
   font-family: inherit;
 }
 .settings-panel input[type="text"]:focus,
-.settings-panel input[type="number"]:focus {
+.settings-panel input[type="number"]:focus,
+.settings-panel select:focus {
   outline: none;
   border-color: var(--input-focus-border);
   background: rgba(255, 255, 255, 0.075);
@@ -225,6 +227,22 @@
 .settings-panel input[type="text"]::placeholder,
 .settings-panel input[type="number"]::placeholder {
   color: var(--text-quaternary);
+}
+
+/* 下拉框：原生箭头在深色背景下不可见，改用自绘箭头 */
+.settings-panel select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  padding-right: 34px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23ffffff' stroke-opacity='0.6' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+  background-size: 12px 8px;
+}
+.settings-panel select option {
+  background: #22262e;
+  color: #ffffff;
 }
 
 /* ── 工具按钮组 ── */

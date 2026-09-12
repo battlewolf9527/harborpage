@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import './ConfirmDialog.css';
 
 interface ConfirmDialogProps {
@@ -30,13 +31,14 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   onCancel,
   container = 'window',
   isLoading = false,
-  loadingText = '处理中...',
+  loadingText,
   confirmType = 'default',
-  confirmText = '确认',
-  cancelText = '取消',
+  confirmText,
+  cancelText,
   confirmClassName = '',
   cancelClassName = '',
 }) => {
+  const { t } = useTranslation('common');
   // 监听 ESC 键：阻断冒泡到父 Dialog 的 ESC 关闭逻辑
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -56,6 +58,9 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   if (!isOpen) return null;
 
   const isParentContainer = container === 'parent';
+  const resolvedLoadingText = loadingText ?? t('processing');
+  const resolvedConfirmText = confirmText ?? t('confirm');
+  const resolvedCancelText = cancelText ?? t('cancel');
 
   const dialogNode = (
     <div
@@ -82,7 +87,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             <div className="confirm-dialog-loading">
               <div className="confirm-dialog-loading-spinner">
                 <div className="confirm-dialog-spinner-icon" />
-                <span className="confirm-dialog-loading-text">{loadingText}</span>
+                <span className="confirm-dialog-loading-text">{resolvedLoadingText}</span>
               </div>
               <div className="confirm-dialog-progress-bar">
                 <div className="confirm-dialog-progress-fill" />
@@ -104,7 +109,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                 }}
                 className={`confirm-dialog-btn confirm-dialog-btn-primary confirm-type-${confirmType} ${confirmClassName}`.trim()}
               >
-                {confirmText}
+                {resolvedConfirmText}
               </button>
               <button
                 type="button"
@@ -115,7 +120,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                 }}
                 className={`confirm-dialog-btn confirm-dialog-btn-secondary ${cancelClassName}`.trim()}
               >
-                {cancelText}
+                {resolvedCancelText}
               </button>
             </div>
           )}

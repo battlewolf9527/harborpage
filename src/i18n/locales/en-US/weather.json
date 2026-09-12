@@ -1,0 +1,44 @@
+{
+  "loading": "Loading...",
+  "pleaseWait": "Please wait",
+  "weatherLabel": "Weather",
+  "unavailable": "Unavailable",
+  "unknown": "Unknown",
+  "unableToFetch": "Unable to fetch weather",
+  "date": {
+    "current": "{{day}}, {{month}}/{{date}}",
+    "weekdays": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    }
+  },
+  "location": {
+    "locating": "Locating...",
+    "browser": "Browser location",
+    "ip": "IP location",
+    "copied": "Copied",
+    "detailTitle": "{{method}}: {{detail}}",
+    "unknownCity": "Unknown city",
+    "east": "East",
+    "west": "West",
+    "north": "North",
+    "south": "South",
+    "coords": "{{lonDir}} {{lon}}, {{latDir}} {{lat}}"
+  },
+  "errors": {
+    "apiNotConfigured": "Weather API is not configured",
+    "citySearchRequestFailed": "City search API request failed: {{status}} {{statusText}}",
+    "citySearchCodeFailed": "City search API error: {{code}}",
+    "cityNameFailed": "Failed to get city name",
+    "weatherRequestFailed": "Weather API request failed: {{status}} {{statusText}}",
+    "fetchWeatherFailed": "Failed to fetch weather data: {{detail}}",
+    "copyLocationFailed": "Failed to copy location info:",
+    "ipLocationRequestFailed": "IP location API request failed",
+    "ipLocationFallback": "IP location failed, using default location:"
+  }
+}

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import './TodoSidebar.css';
 import TodoList from '../common/TodoList';
 import ConfirmDialog from '../common/ConfirmDialog';
@@ -19,6 +20,8 @@ const todosGlyph = (
 );
 
 const TodoSidebar: React.FC = () => {
+  const { t } = useTranslation('todos');
+
   // 面板开合：单一事实源在主界面 Dock（入口球与宿主共享）
   const isOpen = useFeatureDockStore((s) => !!s.open.todos);
   const setDockOpen = useFeatureDockStore((s) => s.setOpen);
@@ -119,7 +122,7 @@ const TodoSidebar: React.FC = () => {
     glyph: todosGlyph,
     tint: TODOS_TINT,
     tint2: TODOS_TINT2,
-    label: uncompletedCount > 0 ? `待办事项 · ${uncompletedCount} 项未完成` : '待办事项',
+    label: uncompletedCount > 0 ? t('entry.labelWithCount', { count: uncompletedCount }) : t('entry.label'),
     badge: uncompletedCount > 0 ? String(uncompletedCount) : null,
   });
 
@@ -132,7 +135,7 @@ const TodoSidebar: React.FC = () => {
         >
           <div className="sidebar-content">
             <div className="sidebar-header">
-              <h2>待办事项</h2>
+              <h2>{t('title')}</h2>
             </div>
             <TodoList
               onRequestDeleteTodo={handleRequestDeleteTodo}
@@ -147,14 +150,14 @@ const TodoSidebar: React.FC = () => {
          ⚠️ exactOptionalPropertyTypes: 不传 undefined；危险动作（删除）才 spreading confirmType/confirmText。 */}
       <ConfirmDialog
         isOpen={showConfirmDialog}
-        title={confirmAction === 'delete' ? '确认删除' : '确认清空'}
+        title={confirmAction === 'delete' ? t('confirm.delete.title') : t('confirm.clear.title')}
         message={
           confirmAction === 'delete'
-            ? '确定要删除这个待办事项吗？'
-            : '确定要清空所有已完成的待办事项吗？'
+            ? t('confirm.delete.message')
+            : t('confirm.clear.message')
         }
         {...(confirmAction === 'delete'
-          ? { confirmType: 'danger' as const, confirmText: '删除' }
+          ? { confirmType: 'danger' as const, confirmText: t('confirm.delete.confirmText') }
           : {})}
         onConfirm={handleConfirm}
         onCancel={handleCancel}

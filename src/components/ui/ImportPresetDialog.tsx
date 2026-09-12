@@ -1,5 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import presetData from '../../data/presetSites.json';
+import type { Website } from '../../types';
 import { useImport } from '../../hooks/useImport';
 import type { DuplicateSite } from '../../hooks/useImport';
 import { useTreeSelection } from '../../hooks/useTreeSelection';
@@ -7,12 +9,39 @@ import TreeSelector from '../common/TreeSelector';
 import { collectSelectedItems } from '../../utils/importExportUtils';
 import './ImportPresetDialog.css';
 
+type PresetFolderKey =
+  | 'search'
+  | 'social'
+  | 'video'
+  | 'music'
+  | 'shopping'
+  | 'news'
+  | 'dev'
+  | 'learning'
+  | 'tools'
+  | 'other';
+
+/** 预设分类文件夹 id → importExport.presetFolders 的 key（id 是稳定标识，名称走 i18n） */
+const PRESET_FOLDER_KEYS: Record<string, PresetFolderKey> = {
+  'preset-search': 'search',
+  'preset-social': 'social',
+  'preset-video': 'video',
+  'preset-music': 'music',
+  'preset-shopping': 'shopping',
+  'preset-news': 'news',
+  'preset-dev': 'dev',
+  'preset-learning': 'learning',
+  'preset-tools': 'tools',
+  'preset-other': 'other',
+};
+
 interface ImportPresetDialogProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 const ImportPresetDialog: React.FC<ImportPresetDialogProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation('importExport');
   const [importStructure, setImportStructure] = useState(true);
   const [overwriteAll, setOverwriteAll] = useState(false);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
@@ -20,12 +49,25 @@ const ImportPresetDialog: React.FC<ImportPresetDialogProps> = ({ isOpen, onClose
 
   const { findDuplicates, doImport, setDuplicateAction, duplicateAction } = useImport();
 
-  const selection = useTreeSelection(presetData.sites, true);
+  // 预设分类文件夹按当前语言本地化：选择树的展示、以及导入后落库的文件夹名都随之本地化
+  const localizedPresetSites = useMemo(() => {
+    const localize = (items: Website[]): Website[] =>
+      items.map((item) => {
+        const folderKey = PRESET_FOLDER_KEYS[item.id];
+        const name = folderKey ? t(`presetFolders.${folderKey}`) : item.name;
+        return item.children
+          ? { ...item, name, children: localize(item.children as Website[]) }
+          : { ...item, name };
+      });
+    return localize(presetData.sites as Website[]);
+  }, [t]);
+
+  const selection = useTreeSelection(localizedPresetSites, true);
   const { selectedItems, toggleAll, getAllItemCount } = selection;
 
   const sitesToImport = useMemo(
-    () => collectSelectedItems(presetData.sites, selectedItems, importStructure),
-    [selectedItems, importStructure]
+    () => collectSelectedItems(localizedPresetSites, selectedItems, importStructure),
+    [localizedPresetSites, selectedItems, importStructure]
   );
 
   const handleImport = useCallback(() => {
@@ -58,21 +100,21 @@ const ImportPresetDialog: React.FC<ImportPresetDialogProps> = ({ isOpen, onClose
     <div className="import-dialog-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="import-dialog">
         <div className="import-dialog-header">
-          <h2>导入预设站点</h2>
+          <h2>{t('preset.title')}</h2>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
 
         <div className="import-dialog-body">
           <div className="select-all-row">
             <button className="select-all-btn" onClick={toggleAll}>
-              {selectedItems.size === getAllItemCount() ? '取消全选' : '全选'}
+              {selectedItems.size === getAllItemCount() ? t('preset.deselectAll') : t('preset.selectAll')}
             </button>
             <span className="selected-count">
-              已选择 {selectedItems.size} / {getAllItemCount()} 项
+              {t('preset.selectedCount', { selected: selectedItems.size, total: getAllItemCount() })}
             </span>
           </div>
 
-          <TreeSelector data={presetData.sites} selection={selection} />
+          <TreeSelector data={localizedPresetSites} selection={selection} />
         </div>
 
         <div className="import-dialog-footer">
@@ -83,7 +125,7 @@ const ImportPresetDialog: React.FC<ImportPresetDialogProps> = ({ isOpen, onClose
                 checked={importStructure}
                 onChange={(e) => setImportStructure(e.target.checked)}
               />
-              <span className="label-text">导入目录结构</span>
+              <span className="label-text">{t('preset.importStructure')}</span>
             </label>
             <label className="checkbox-label">
               <input
@@ -91,7 +133,7 @@ const ImportPresetDialog: React.FC<ImportPresetDialogProps> = ({ isOpen, onClose
                 checked={overwriteAll}
                 onChange={(e) => setOverwriteAll(e.target.checked)}
               />
-              <span className="label-text">覆盖所有已存在的站点</span>
+              <span className="label-text">{t('preset.overwriteAll')}</span>
             </label>
           </div>
 
@@ -101,9 +143,9 @@ const ImportPresetDialog: React.FC<ImportPresetDialogProps> = ({ isOpen, onClose
               onClick={handleImport}
               disabled={selectedItems.size === 0}
             >
-              导入 ({selectedItems.size})
+              {t('preset.importButton', { count: selectedItems.size })}
             </button>
-            <button className="cancel-btn" onClick={onClose}>取消</button>
+            <button className="cancel-btn" onClick={onClose}>{t('actions.cancel')}</button>
           </div>
         </div>
       </div>
@@ -112,16 +154,20 @@ const ImportPresetDialog: React.FC<ImportPresetDialogProps> = ({ isOpen, onClose
         <div className="duplicate-dialog-overlay">
           <div className="duplicate-dialog">
             <div className="duplicate-dialog-header">
-              <h3>发现重复站点</h3>
+              <h3>{t('duplicate.title')}</h3>
             </div>
             <div className="duplicate-dialog-body">
-              <p>以下站点已存在于您的桌面或目录中：</p>
+              <p>{t('duplicate.message')}</p>
               <ul className="duplicate-list">
                 {duplicates.map((dup) => (
                   <li key={`${dup.name}-${dup.location}`}>
                     <span className="site-name">{dup.name}</span>
                     <span className="site-location">
-                      位置：{dup.location === 'desktop' ? '桌面' : `目录「${dup.location}」`}
+                      {t('duplicate.location', {
+                        location: dup.location === 'desktop'
+                          ? t('duplicate.desktop')
+                          : t('duplicate.folder', { name: dup.location }),
+                      })}
                     </span>
                   </li>
                 ))}
@@ -135,7 +181,7 @@ const ImportPresetDialog: React.FC<ImportPresetDialogProps> = ({ isOpen, onClose
                     checked={duplicateAction === 'ignore'}
                     onChange={() => handleSetDuplicateAction('ignore')}
                   />
-                  <span>忽略重复站点</span>
+                  <span>{t('duplicate.ignore')}</span>
                 </label>
                 <label className="radio-label">
                   <input
@@ -145,7 +191,7 @@ const ImportPresetDialog: React.FC<ImportPresetDialogProps> = ({ isOpen, onClose
                     checked={duplicateAction === 'overwrite'}
                     onChange={() => handleSetDuplicateAction('overwrite')}
                   />
-                  <span>覆盖重复站点</span>
+                  <span>{t('duplicate.overwrite')}</span>
                 </label>
               </div>
             </div>
@@ -154,13 +200,13 @@ const ImportPresetDialog: React.FC<ImportPresetDialogProps> = ({ isOpen, onClose
                 className="confirm-btn"
                 onClick={handleDuplicateConfirm}
               >
-                确认导入
+                {t('duplicate.confirm')}
               </button>
               <button
                 className="cancel-btn"
                 onClick={() => setShowDuplicateDialog(false)}
               >
-                取消
+                {t('actions.cancel')}
               </button>
             </div>
           </div>

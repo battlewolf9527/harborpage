@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Website, ImportableWebsite } from '../types';
 import { useIconsStore } from '../store/useIconsStore';
 import { useIconsUIStore } from '../store/useIconsUIStore';
@@ -26,6 +27,7 @@ export interface UseImportResult {
 }
 
 export const useImport = (): UseImportResult => {
+  const { t } = useTranslation('importExport');
   const [duplicates, setDuplicates] = useState<DuplicateSite[]>([]);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [duplicateAction, setDuplicateAction] = useState<'overwrite' | 'ignore'>('ignore');
@@ -94,7 +96,7 @@ export const useImport = (): UseImportResult => {
 
     setIsImporting(true);
     setImportProgress(0);
-    setImportMessage('正在准备导入...');
+    setImportMessage(t('progress.preparing'));
 
     try {
       // 让渡到下一个微任务，确保调用方（ImportPresetDialog）的 onClose() 先执行，
@@ -110,7 +112,7 @@ export const useImport = (): UseImportResult => {
         });
       }
 
-      setImportMessage('正在创建目录...');
+      setImportMessage(t('progress.creatingFolders'));
       const iconsState = useIconsStore.getState();
       const currentWebsites = iconsState.getWebsites();
       const { createFolderDirectly } = iconsState;
@@ -161,13 +163,13 @@ export const useImport = (): UseImportResult => {
 
         processedSites++;
         setImportProgress(Math.round((processedSites / totalSites) * 100));
-        setImportMessage(`正在导入: ${site.name}`);
+        setImportMessage(t('progress.importingSite', { name: site.name }));
       }
 
-      setImportMessage('导入完成');
+      setImportMessage(t('progress.completed'));
     } catch (error) {
-      logger.error('导入过程中发生错误', error);
-      setImportMessage(`导入失败: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(t('logs.importFailed'), error);
+      setImportMessage(t('progress.failed', { error: error instanceof Error ? error.message : String(error) }));
       // 失败时延长清理时间，让用户有时间阅读错误信息
       cleanupTimerRef.current = setTimeout(() => {
         setIsImporting(false);
@@ -198,6 +200,7 @@ export const useImport = (): UseImportResult => {
     checkDuplicate,
     setShowDuplicateDialog,
     setDuplicates,
+    t,
   ]);
   return {
     duplicates,

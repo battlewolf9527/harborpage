@@ -4,6 +4,7 @@ import { STORAGE_KEYS } from '../constants';
 import AuthService from './AuthService';
 import DataRepository from './DataRepository';
 import createLogger from '../utils/logger';
+import i18n from '../i18n';
 
 const logger = createLogger('ConfigService');
 
@@ -36,7 +37,7 @@ class ConfigService {
         this.config = JSON.parse(cachedData);
       }
     } catch (error) {
-      logger.error('加载配置失败', error);
+      logger.error(i18n.t('system:config.loadFailed'), error);
       this.config = null;
     }
   }
@@ -45,7 +46,7 @@ class ConfigService {
     try {
       DataRepository.saveConfigValue(STORAGE_KEYS.CONFIG, JSON.stringify(this.config));
     } catch (error) {
-      logger.error('保存配置失败', error);
+      logger.error(i18n.t('system:config.saveFailed'), error);
     }
   }
 
@@ -77,14 +78,14 @@ class ConfigService {
       });
       DataRepository.handleAuthResponse(response);
       if (!response.ok) {
-        throw new Error('获取配置失败');
+        throw new Error(i18n.t('system:config.fetchFailed'));
       }
       const config = await response.json() as AppConfig;
       this.config = config;
       this.saveConfigToStorage();
       return config;
     } catch (error) {
-      logger.error('获取配置失败', error);
+      logger.error(i18n.t('system:config.fetchFailed'), error);
       throw error;
     }
   }

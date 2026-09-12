@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import './PalettePicker.css';
 import ColorPickerWindow from './ColorPickerWindow';
 import { usePaletteStore } from '../../store/usePaletteStore';
@@ -47,6 +48,7 @@ export const Palette: React.FC<PaletteProps> = ({
   onChange,
   className,
 }) => {
+  const { t } = useTranslation('sites');
   const slots = usePaletteStore((s) => s.slots);
   const aliases = usePaletteStore((s) => s.aliases);
   // 设置模式实时预览：受「实时预览」开关控制，可临时对比真实存储色
@@ -89,12 +91,12 @@ export const Palette: React.FC<PaletteProps> = ({
   const slotEditTitle = (slotId: string): string => {
     const alias = (aliases[slotId] ?? '').trim();
     return alias
-      ? `修改「${alias}（调色板 ${slotNumber(slotId)}）」`
-      : `修改调色板 ${slotNumber(slotId)} 号`;
+      ? t('palette.editSlotWithAlias', { alias, number: slotNumber(slotId) })
+      : t('palette.editSlot', { number: slotNumber(slotId) });
   };
 
   const pickerTitle =
-    pickerTarget?.kind === 'slot' ? slotEditTitle(pickerTarget.slotId) : '自定义';
+    pickerTarget?.kind === 'slot' ? slotEditTitle(pickerTarget.slotId) : t('palette.custom');
   const pickerInitialHex =
     pickerTarget?.kind === 'slot'
       ? slots[pickerTarget.slotId] || ''
@@ -108,7 +110,7 @@ export const Palette: React.FC<PaletteProps> = ({
 
   return (
     <div className={`palette palette-${mode} ${className ?? ''}`}>
-      <div className="palette-grid" role="group" aria-label="颜色调色板">
+      <div className="palette-grid" role="group" aria-label={t('palette.aria')}>
         {PALETTE_SLOT_IDS.map((id) => {
           const hex = normalizeHex(slots[id]) || DEFAULT_PALETTE_HEXES[id];
           const active = mode === 'select' && boundSlot === id;
@@ -126,7 +128,7 @@ export const Palette: React.FC<PaletteProps> = ({
               className={`palette-cell ${active ? 'active' : ''} ${modified ? 'modified' : ''}`}
               style={{ background: displayHex }}
               title={hint}
-              aria-label={modified ? `${hint}（非默认色）` : hint}
+              aria-label={modified ? `${hint}${t('palette.nonDefault')}` : hint}
               aria-pressed={active}
               onClick={() => handleCellClick(id)}
             >
@@ -147,7 +149,7 @@ export const Palette: React.FC<PaletteProps> = ({
               style={customActive && isHexColor(colorHex) ? { background: colorHex } : undefined}
               aria-hidden="true"
             />
-            自定义
+            {t('palette.custom')}
           </button>
         )}
       </div>

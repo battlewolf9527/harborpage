@@ -1,0 +1,45 @@
+{
+  "defaultName": "新文件夹",
+  "header": {
+    "editNameAria": "编辑文件夹名称"
+  },
+  "color": {
+    "setAria": "设置文件夹颜色",
+    "title": "文件夹颜色",
+    "pickerAria": "选择文件夹颜色",
+    "reset": "恢复默认",
+    "resetTitle": "恢复为默认色（调色板 1）"
+  },
+  "actions": {
+    "disband": "解散",
+    "disbandTitle": "解散文件夹（释放所有图标）",
+    "delete": "删除",
+    "deleteTitle": "删除文件夹（包括所有图标）"
+  },
+  "contextMenu": {
+    "aria": "操作菜单",
+    "moveToPage": "移动到页面…"
+  },
+  "dialogs": {
+    "create": {
+      "title": "创建新文件夹",
+      "placeholder": "请输入文件夹名称",
+      "confirm": "确定",
+      "cancel": "取消"
+    },
+    "rename": {
+      "title": "重命名文件夹",
+      "placeholder": "输入新的文件夹名称",
+      "save": "保存",
+      "cancel": "取消"
+    },
+    "confirm": {
+      "disbandTitle": "确认解散文件夹？",
+      "disbandMessage": "解散后，文件夹中的 {{count}} 个图标将被释放到主界面。",
+      "deleteTitle": "确认删除文件夹？",
+      "deleteMessage": "删除后，文件夹及其中的 {{count}} 个图标将被永久删除，无法恢复。",
+      "confirm": "确认",
+      "cancel": "取消"
+    }
+  }
+}

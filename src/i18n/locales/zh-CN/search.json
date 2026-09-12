@@ -1,0 +1,29 @@
+{
+  "placeholder": "搜索...",
+  "placeholderWithEngine": "用 {{name}} 搜索",
+  "searchButton": "搜索",
+  "manager": {
+    "title": "搜索设置",
+    "addEngine": "添加搜索引擎",
+    "editEngine": "编辑搜索引擎",
+    "engineList": "搜索引擎列表",
+    "dragToSort": "拖拽排序",
+    "defaultBadge": "默认",
+    "currentDefault": "当前默认",
+    "setAsDefault": "设为默认",
+    "edit": "编辑",
+    "delete": "删除",
+    "name": "名称",
+    "namePlaceholder": "搜索引擎名称",
+    "url": "搜索URL",
+    "urlHint": "使用 {q} 作为查询参数占位符",
+    "urlRequiredHint": "搜索 URL 必须包含 {q} 占位符",
+    "icon": "图标",
+    "iconPlaceholder": "留空自动获取favicon，或输入图标URL/Emoji",
+    "add": "添加",
+    "save": "保存",
+    "cancel": "取消",
+    "deleteTitle": "删除搜索引擎",
+    "deleteMessage": "确定要删除这个搜索引擎吗？"
+  }
+}

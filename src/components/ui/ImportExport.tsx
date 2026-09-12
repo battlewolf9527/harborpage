@@ -1,5 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Toast from '../common/Toast';
+import i18n from '../../i18n';
 import { getServices } from '../../services/serviceContainer';
 import { useImportStore } from '../../store/useImportStore';
 import {
@@ -13,6 +15,7 @@ import {
   type DataSelection,
 } from '../../utils/importExportUtils';
 import { EXPORT_FILE_PREFIX } from '../../constants';
+import type importExportResources from '../../i18n/locales/zh-CN/importExport.json';
 import type { UserData, Website, Page, PaletteHexMap, PaletteAliasMap } from '../../types';
 import { generateId } from '../../utils/idUtils';
 import { DEFAULT_PAGE_NAME } from '../../store/usePagesStore';
@@ -22,19 +25,22 @@ import './ImportExport.css';
 // 数据分类配置
 type CategoryKey = keyof DataSelection;
 
+/** 分类展示名 i18n key（importExport:categories.*），由语言包结构推导，保证字面量类型合法 */
+type CategoryLabelKey = `categories.${keyof typeof importExportResources.categories}`;
+
 interface CategoryConfig {
   key: CategoryKey;
-  label: string;
+  labelKey: CategoryLabelKey;
 }
 
 const DATA_CATEGORIES: CategoryConfig[] = [
-  { key: 'searchEngines', label: '搜索引擎' },
-  { key: 'pages', label: '页面（含网站）' },
-  { key: 'websites', label: '网站（旧格式）' },
-  { key: 'todos', label: '待办列表' },
-  { key: 'notes', label: '笔记' },
-  { key: 'settings', label: '其它设置' },
-  { key: 'palette', label: '调色板' },
+  { key: 'searchEngines', labelKey: 'categories.searchEngines' },
+  { key: 'pages', labelKey: 'categories.pages' },
+  { key: 'websites', labelKey: 'categories.websites' },
+  { key: 'todos', labelKey: 'categories.todos' },
+  { key: 'notes', labelKey: 'categories.notes' },
+  { key: 'settings', labelKey: 'categories.settings' },
+  { key: 'palette', labelKey: 'categories.palette' },
 ];
 
 const ALL_SELECTED: DataSelection = {
@@ -68,16 +74,18 @@ type CellCounts = Record<CategoryKey, number | null> & { pageSiteCount: number; 
 const formatCellCount = (key: CategoryKey, counts: CellCounts): string | null => {
   const count = counts[key];
   if (key === 'pages') {
-    return count ? `${count}页/${counts.pageSiteCount}站` : null;
+    return count
+      ? i18n.t('importExport:categoryCount.pagesSites', { pages: count, sites: counts.pageSiteCount })
+      : null;
   }
   if (key === 'palette') {
     const parts: string[] = [];
-    if (count) parts.push(`${count} 槽`);
-    if (counts.paletteAliasCount) parts.push(`${counts.paletteAliasCount} 别名`);
+    if (count) parts.push(i18n.t('importExport:categoryCount.slots', { count }));
+    if (counts.paletteAliasCount) parts.push(i18n.t('importExport:categoryCount.aliases', { count: counts.paletteAliasCount }));
     return parts.length > 0 ? parts.join(' · ') : null;
   }
   if (count === null || count === 0) return null;
-  return `${count} 个`;
+  return i18n.t('importExport:categoryCount.items', { count });
 };
 
 interface ImportPreview {
@@ -155,24 +163,27 @@ const buildImportSummary = (data: FullExportData): string => {
     for (const page of data.pages) {
       totalSites += countWebsites(page.websites);
     }
-    parts.push(`页面 ${data.pages.length} 个（共 ${totalSites} 个站点）`);
+    parts.push(i18n.t('importExport:summary.pagesWithSites', { pages: data.pages.length, sites: totalSites }));
   } else {
     const siteCount = countWebsites(data.websites);
-    if (siteCount) parts.push(`站点 ${siteCount} 个`);
+    if (siteCount) parts.push(i18n.t('importExport:summary.sites', { count: siteCount }));
   }
-  if (data.searchEngines?.length) parts.push(`搜索引擎 ${data.searchEngines.length} 个`);
-  if (data.todos?.length) parts.push(`待办 ${data.todos.length} 条`);
-  if (data.notes?.length) parts.push(`笔记 ${data.notes.length} 条`);
-  if (data.settings) parts.push('设置项');
+  if (data.searchEngines?.length) parts.push(i18n.t('importExport:summary.searchEngines', { count: data.searchEngines.length }));
+  if (data.todos?.length) parts.push(i18n.t('importExport:summary.todos', { count: data.todos.length }));
+  if (data.notes?.length) parts.push(i18n.t('importExport:summary.notes', { count: data.notes.length }));
+  if (data.settings) parts.push(i18n.t('importExport:summary.settings'));
   const paletteCount = countPaletteModifications(data.palette);
-  if (paletteCount > 0) parts.push(`调色板 ${paletteCount} 槽`);
+  if (paletteCount > 0) parts.push(i18n.t('importExport:summary.paletteSlots', { count: paletteCount }));
   const aliasCount = countPaletteAliases(data.paletteAliases);
-  if (aliasCount > 0) parts.push(`调色板别名 ${aliasCount} 个`);
-  if (parts.length === 0) return '文件中无有效数据。';
-  return `文件包含：${parts.join('，')}。`;
+  if (aliasCount > 0) parts.push(i18n.t('importExport:summary.paletteAliases', { count: aliasCount }));
+  if (parts.length === 0) return i18n.t('importExport:summary.empty');
+  return i18n.t('importExport:summary.fileContains', {
+    list: parts.join(i18n.t('importExport:summary.separator')),
+  });
 };
 
 const ImportExport: React.FC = () => {
+  const { t } = useTranslation('importExport');
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [filename, setFilename] = useState('');
   const [exportSelection, setExportSelection] = useState<DataSelection>(ALL_SELECTED);
@@ -204,8 +215,8 @@ const ImportExport: React.FC = () => {
     const name = filename.trim() || buildDefaultFilename();
     downloadFullExportFile(exportData, name);
     setShowExportDialog(false);
-    setToast({ type: 'success', message: '导出成功' });
-  }, [filename, exportSelection]);
+    setToast({ type: 'success', message: t('export.success') });
+  }, [filename, exportSelection, t]);
 
   const handleCancelExport = useCallback(() => {
     setShowExportDialog(false);
@@ -223,7 +234,7 @@ const ImportExport: React.FC = () => {
     try {
       const raw = await readImportFile(file);
       if (!validateFullImportData(raw)) {
-        setToast({ type: 'error', message: '文件格式无效或数据不完整' });
+        setToast({ type: 'error', message: t('errors.invalidFile') });
         return;
       }
       // 统计 pages 中的总站点数
@@ -257,9 +268,9 @@ const ImportExport: React.FC = () => {
       setImportSelection({ ...available });
       setImportPreview({ raw, available, counts });
     } catch {
-      setToast({ type: 'error', message: '读取文件失败' });
+      setToast({ type: 'error', message: t('errors.readFailed') });
     }
-  }, []);
+  }, [t]);
 
   const hasImportSelection = useMemo(() => {
     if (!importPreview) return false;
@@ -387,14 +398,14 @@ const ImportExport: React.FC = () => {
           onClick={handleExportClick}
         >
           <span className="ie-trigger-icon">⇪</span>
-          <span>导出数据</span>
+          <span>{t('export.trigger')}</span>
         </button>
         <button
           className="ie-trigger-btn ie-trigger-btn--secondary"
           onClick={handleImportClick}
         >
           <span className="ie-trigger-icon">⇩</span>
-          <span>导入数据</span>
+          <span>{t('import.trigger')}</span>
         </button>
       </div>
 
@@ -413,14 +424,14 @@ const ImportExport: React.FC = () => {
         >
           <div className="ie-dialog">
             <div className="ie-dialog-header">
-              <h3>导出数据</h3>
-              <button className="ie-close-btn" onClick={handleCancelExport} aria-label="关闭">
+              <h3>{t('export.title')}</h3>
+              <button className="ie-close-btn" onClick={handleCancelExport} aria-label={t('actions.close')}>
                 ×
               </button>
             </div>
             <div className="ie-dialog-body">
               <label className="ie-label" htmlFor="ie-filename">
-                文件名
+                {t('export.filename')}
               </label>
               <input
                 id="ie-filename"
@@ -435,10 +446,10 @@ const ImportExport: React.FC = () => {
                 }}
               />
               <label className="ie-label ie-section-label">
-                导出内容
+                {t('export.content')}
               </label>
               <div className="ie-checkbox-group">
-                {DATA_CATEGORIES.map(({ key, label }) => {
+                {DATA_CATEGORIES.map(({ key, labelKey }) => {
                   const count = exportCounts[key];
                   // settings 恒可勾选；调色板槽色或别名任一存在即可勾选
                   const hasData = key === 'settings'
@@ -457,7 +468,7 @@ const ImportExport: React.FC = () => {
                         onChange={() => toggleExportItem(key)}
                       />
                       <span className="ie-checkbox-custom" />
-                      <span className="ie-checkbox-label">{label}</span>
+                      <span className="ie-checkbox-label">{t(labelKey)}</span>
                       {countText && (
                         <span className="ie-checkbox-count">{countText}</span>
                       )}
@@ -466,7 +477,7 @@ const ImportExport: React.FC = () => {
                 })}
               </div>
               <p className="ie-hint">
-                不含壁纸与图标文件
+                {t('export.hint')}
               </p>
             </div>
             <div className="ie-dialog-footer">
@@ -475,10 +486,10 @@ const ImportExport: React.FC = () => {
                 onClick={handleConfirmExport}
                 disabled={!hasExportSelection}
               >
-                导出
+                {t('actions.export')}
               </button>
               <button className="ie-btn ie-btn-secondary" onClick={handleCancelExport}>
-                取消
+                {t('actions.cancel')}
               </button>
             </div>
           </div>
@@ -492,18 +503,18 @@ const ImportExport: React.FC = () => {
         >
           <div className="ie-dialog">
             <div className="ie-dialog-header">
-              <h3>确认导入数据</h3>
-              <button className="ie-close-btn" onClick={handleCancelImport} aria-label="关闭">
+              <h3>{t('import.title')}</h3>
+              <button className="ie-close-btn" onClick={handleCancelImport} aria-label={t('actions.close')}>
                 ×
               </button>
             </div>
             <div className="ie-dialog-body">
               <p className="ie-summary">{buildImportSummary(importPreview.raw)}</p>
               <label className="ie-label ie-section-label">
-                导入内容
+                {t('import.content')}
               </label>
               <div className="ie-checkbox-group">
-                {DATA_CATEGORIES.map(({ key, label }) => {
+                {DATA_CATEGORIES.map(({ key, labelKey }) => {
                   const available = importPreview.available[key];
                   const countText = formatCellCount(key, importPreview.counts);
                   return (
@@ -518,12 +529,12 @@ const ImportExport: React.FC = () => {
                         onChange={() => toggleImportItem(key)}
                       />
                       <span className="ie-checkbox-custom" />
-                      <span className="ie-checkbox-label">{label}</span>
+                      <span className="ie-checkbox-label">{t(labelKey)}</span>
                       {countText && (
                         <span className="ie-checkbox-count">{countText}</span>
                       )}
                       {key === 'settings' && available && (
-                        <span className="ie-checkbox-count">已包含</span>
+                        <span className="ie-checkbox-count">{t('import.included')}</span>
                       )}
                     </label>
                   );
@@ -531,15 +542,15 @@ const ImportExport: React.FC = () => {
               </div>
               <div className="ie-mode-list">
                 <p className="ie-mode-hint">
-                  <span className="ie-mode-label">合并</span>
-                  保留现有数据，同 ID 项用导入项替换，其余追加
+                  <span className="ie-mode-label">{t('modes.merge')}</span>
+                  {t('modes.mergeHint')}
                 </p>
                 <p className="ie-mode-hint">
-                  <span className="ie-mode-label">覆盖</span>
-                  用导入数据整体替换当前对应数据
+                  <span className="ie-mode-label">{t('modes.overwrite')}</span>
+                  {t('modes.overwriteHint')}
                 </p>
               </div>
-              <p className="ie-hint">壁纸与图标不受影响</p>
+              <p className="ie-hint">{t('import.hint')}</p>
             </div>
             <div className="ie-dialog-footer">
               <button
@@ -547,17 +558,17 @@ const ImportExport: React.FC = () => {
                 onClick={() => handleApplyImport('merge')}
                 disabled={!hasImportSelection}
               >
-                合并
+                {t('actions.merge')}
               </button>
               <button
                 className="ie-btn ie-btn-danger"
                 onClick={() => handleApplyImport('overwrite')}
                 disabled={!hasImportSelection}
               >
-                覆盖
+                {t('actions.overwrite')}
               </button>
               <button className="ie-btn ie-btn-secondary" onClick={handleCancelImport}>
-                取消
+                {t('actions.cancel')}
               </button>
             </div>
           </div>

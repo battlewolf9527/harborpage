@@ -1,0 +1,83 @@
+{
+  "manager": {
+    "preloadFailed": "Failed to preload icon",
+    "deleteFailed": "Failed to delete R2 icon",
+    "deleteFailedWithStatus": "Failed to delete R2 icon: {{status}}",
+    "deletePartialFailed": "{{failed}}/{{total}} icons failed to delete"
+  },
+  "utils": {
+    "cacheRequestFailed": "Cache request failed: {{status}}"
+  },
+  "faviconService": {
+    "loadDefaultsFailed": "Failed to load default favicon sources from the backend",
+    "loadSourcesFailed": "Failed to get favicon source configuration",
+    "saveSourcesFailed": "Failed to save favicon source configuration"
+  },
+  "store": {
+    "deleteFailedRetry": "Failed to delete icons; will retry on the next save"
+  },
+  "autoFetch": {
+    "candidatesFetchFailed": "Failed to fetch candidate list: HTTP {{status}}",
+    "candidatesFetchFailedGeneric": "Failed to fetch candidate list",
+    "analyzingPage": "Analyzing page structure...",
+    "downloadStart": "Starting icon download (0/{{total}})",
+    "downloading": "Downloading ({{current}}/{{total}})",
+    "downloadDone": "Done, {{count}} valid icons retrieved",
+    "downloadFailed": "Failed to download icon {{url}}: HTTP {{status}}",
+    "downloadError": "Error downloading icon {{url}}: {{message}}",
+    "title": "Auto Fetch Icon",
+    "close": "Close",
+    "websiteLabel": "Website: ",
+    "loading": "Fetching icons...",
+    "retry": "Retry",
+    "empty": "No available icons found",
+    "emptyHint": "This website may not have an icon set, or the icon was blocked",
+    "resultsInfoPrefix": "Found ",
+    "resultsInfoSuffix": " available icons, click one to select",
+    "iconAlt": "Icon {{index}}",
+    "use": "Use",
+    "saving": "Saving...",
+    "saveToR2": "Save to R2",
+    "cancel": "Cancel",
+    "noIconsFound": "No icons were found. Please check whether the website URL is correct",
+    "fetchFailed": "Fetch failed: {{message}}",
+    "networkError": "Network error",
+    "cacheFailed": "Cache failed",
+    "cacheResultInvalid": "Unexpected cache response",
+    "cacheFailedWithMessage": "Cache failed: {{message}}",
+    "unknownError": "Unknown error",
+    "fetchIconsFailed": "Failed to auto fetch icons",
+    "cacheIconFailed": "Failed to cache icon"
+  },
+  "faviconSettings": {
+    "title": "Icon Source Configuration",
+    "addSource": "Add Source",
+    "resetDefaults": "Reset Defaults",
+    "hintPrefix": "Configure icon fetch sources. Drag to reorder them; they are tried in priority order. Use ",
+    "hintSuffix": " in the URL template as the domain placeholder.",
+    "dragToSort": "Drag to sort",
+    "builtIn": "Built-in",
+    "edit": "Edit",
+    "delete": "Delete",
+    "addTitle": "Add Icon Source",
+    "editTitle": "Edit Icon Source",
+    "name": "Name",
+    "namePlaceholder": "e.g. My Icon Source",
+    "urlTemplate": "URL Template",
+    "urlTemplatePlaceholder": "https://example.com/favicon?domain={domain}",
+    "urlTemplateHint": "Use {domain} as the domain placeholder",
+    "add": "Add",
+    "save": "Save",
+    "cancel": "Cancel",
+    "deleteTitle": "Delete Icon Source",
+    "deleteConfirmPrefix": "Delete ",
+    "deleteConfirmSuffix": "?",
+    "deleteIrreversible": "This action cannot be undone."
+  },
+  "iconSettings": {
+    "title": "Icon Settings",
+    "maxColumns": "Max columns: {{count}}",
+    "cleaning": "Cleaning up...",
+    "cleanup": "Clean Up Unused Icons"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "title": "Wallpaper Settings",
+  "sources": {
+    "title": "Wallpaper Source",
+    "bing": "Bing Daily Wallpaper",
+    "randomBing": "Random Wallpaper",
+    "local": "Local Wallpaper",
+    "solid": "Solid Color",
+    "custom": "Custom"
+  },
+  "customUrl": {
+    "placeholder": "Paste an image URL, e.g. https://example.com/wallpaper.jpg",
+    "apply": "Apply",
+    "empty": "Please enter an image URL",
+    "invalidFormat": "Invalid URL format",
+    "unsupportedProtocol": "Only http/https is supported"
+  },
+  "options": {
+    "title": "Wallpaper Options",
+    "autoChange": "Auto-change wallpaper",
+    "autoChangeInterval": "Change interval: {{count}} hours",
+    "autoChangeHint": "When enabled, the wallpaper changes automatically at the set time (Bing Daily / Random / Custom sources); after refreshing the page it still changes based on the last change time.",
+    "blurLevel": "Blur: {{value}}%",
+    "overlayLevel": "Overlay opacity: {{value}}%"
+  },
+  "preview": "Preview",
+  "errors": {
+    "r2UploadFailed": "R2 upload failed, falling back to browser storage",
+    "r2RequestFailed": "R2 upload request failed, falling back to browser storage",
+    "indexedDbSaveFailed": "Failed to save to IndexedDB",
+    "indexedDbLoadFailed": "Failed to load wallpaper from IndexedDB",
+    "fetchBingFailed": "Failed to fetch Bing wallpaper",
+    "bingApiRequestFailed": "Bing API request failed: {{status}}",
+    "bingApiInvalidData": "Unexpected Bing API response format"
+  }
+}

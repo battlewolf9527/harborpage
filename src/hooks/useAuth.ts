@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getServices } from '../services/serviceContainer';
 import createLogger from '../utils/logger';
+import i18n from '../i18n';
 
 const logger = createLogger('useAuth');
 
@@ -17,7 +18,7 @@ export function useAuth() {
         try {
           await configService.fetchConfig();
         } catch (error) {
-          logger.error('获取配置失败', error);
+          logger.error(i18n.t('system:config.fetchFailed'), error);
         }
       }
       setIsCheckingAuth(false);

@@ -1,4 +1,5 @@
 import React, { useMemo, memo, useState, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import './FolderItem.css';
 import { IconType } from '../../services/IconManager';
 import type { Website } from '../../types';
@@ -43,6 +44,7 @@ const FolderItem: React.FC<FolderItemProps> = ({
   onDragOverOutside,
   onMoveToPage,
 }) => {
+  const { t } = useTranslation('folder');
   const { iconManager } = getServices();
   const slots = usePaletteStore((s) => s.slots);
   const lightness = usePaletteStore((s) => s.lightness);
@@ -177,7 +179,7 @@ const FolderItem: React.FC<FolderItemProps> = ({
           ref={menuRef}
           className="context-menu"
           role="menu"
-          aria-label="操作菜单"
+          aria-label={t('contextMenu.aria')}
           style={{
             top: `${menuPosition.y}px`,
             left: `${menuPosition.x}px`,
@@ -196,7 +198,7 @@ const FolderItem: React.FC<FolderItemProps> = ({
                 }
               }}
             >
-              移动到页面…
+              {t('contextMenu.moveToPage')}
             </li>
           </ul>
         </div>

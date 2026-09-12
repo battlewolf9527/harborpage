@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import SettingsWindow from './SettingsWindow';
 import WallpaperManager from '../features/WallpaperManager';
@@ -20,6 +21,8 @@ import { getServices } from '../../services/serviceContainer';
 import DataRepository from '../../services/DataRepository';
 import { initializeAllStores, clearAllPendingDeletes } from '../../services/storeInitializer';
 import { useAutoSaveSettings } from '../../hooks/useAutoSaveSettings';
+import { LANGUAGE_OPTIONS } from '../../i18n';
+import type { SupportedLanguage } from '../../i18n';
 import createLogger from '../../utils/logger';
 
 const logger = createLogger('Settings');
@@ -30,6 +33,7 @@ interface SettingsProps {
 }
 
 const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation('settings');
   /* —— 延迟卸载机制（根治「滑出无动画」）
        关闭有 2 条路径：
          A) 子窗口内点 ✕ / ESC / overlay → 子 260ms 过渡 → 父 onClose() → 本组件 isOpen=false
@@ -88,7 +92,11 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
   const previewEnabled = usePaletteStore((s) => s.previewEnabled);
   const setPreviewEnabled = usePaletteStore((s) => s.setPreviewEnabled);
   const lightnessLabel =
-    lightness === 0 ? '原色' : lightness > 0 ? `变亮 +${lightness}` : `变暗 ${-lightness}`;
+    lightness === 0
+      ? t('lightness.original')
+      : lightness > 0
+        ? t('lightness.brighter', { value: lightness })
+        : t('lightness.darker', { value: -lightness });
   
   // 从Zustand store获取状态和方法
   const {
@@ -106,6 +114,8 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
     setTodosEnabled,
     pagesEnabled,
     setPagesEnabled,
+    language,
+    setLanguage,
   } = useSettingsStore(
     useShallow((s) => ({
       siteTitle: s.siteTitle,
@@ -122,6 +132,8 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
       setTodosEnabled: s.setTodosEnabled,
       pagesEnabled: s.pagesEnabled,
       setPagesEnabled: s.setPagesEnabled,
+      language: s.language,
+      setLanguage: s.setLanguage,
     })),
   );
 
@@ -149,13 +161,13 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
           dataManager.endInitialization();
         }
         window.dispatchEvent(new CustomEvent('dataLoadedFromCloud'));
-        setToast({ type: 'success', message: '数据加载成功' });
+        setToast({ type: 'success', message: t('toasts.loadSuccess') });
       } else {
-        setToast({ type: 'error', message: '加载失败，请重试' });
+        setToast({ type: 'error', message: t('toasts.loadFailed') });
       }
     } catch (error) {
-      logger.error('加载数据失败', error);
-      setToast({ type: 'error', message: '加载失败，请检查网络连接' });
+      logger.error(t('logs.loadDataFailed'), error);
+      setToast({ type: 'error', message: t('toasts.loadFailedNetwork') });
     } finally {
       setIsLoading(false);
     }
@@ -184,7 +196,7 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
   const handleConfirmClearAllSites = () => {
     setShowClearSitesConfirm(false);
     useIconsStore.getState().clearAllSites();
-    setToast({ type: 'success', message: '已清空所有站点' });
+    setToast({ type: 'success', message: t('toasts.sitesCleared') });
   };
 
   const handleConfirmCleanupIcons = async (cursor?: string, prefix?: string) => {
@@ -212,17 +224,17 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
             type: 'success', 
             message: result.message,
             onContinue: () => handleConfirmCleanupIcons(result.cursor, result.prefix),
-            continueText: '继续清理'
+            continueText: t('actions.continueCleanup')
           });
         } else {
           setToast({ type: 'success', message: result.message });
         }
       } else {
-        setToast({ type: 'error', message: '清理失败，请重试' });
+        setToast({ type: 'error', message: t('toasts.cleanupFailed') });
       }
     } catch (error) {
-      logger.error('清理图标失败', error);
-      setToast({ type: 'error', message: '清理失败，请检查网络连接' });
+      logger.error(t('logs.cleanupIconsFailed'), error);
+      setToast({ type: 'error', message: t('toasts.cleanupFailedNetwork') });
     } finally {
       setIsCleaningUp(false);
     }
@@ -239,52 +251,66 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
     <>
       {/* closing/!isOpen 任一为真 → 子进入关闭态 CSS class（transform translateX(100%) + overlay 淡出） */}
       <SettingsWindow 
-        title="设置"
+        title={t('title')}
         isClosing={closing || !isOpen}
         onClose={onClose}
       >
         {/* ── 第 1 组：个性化 ───────────────────────────────── */}
         <div className="settings-section">
-          <h3>个性化</h3>
+          <h3>{t('sections.personalization')}</h3>
           <div className="tool-buttons">
             <div className="setting-item">
-              <label>网站标题</label>
+              <label>{t('siteTitle.label')}</label>
               <input
                 type="text"
                 value={siteTitle}
                 onChange={(e) => setSiteTitle(e.target.value)}
-                placeholder="输入页面标题"
+                placeholder={t('siteTitle.placeholder')}
                 className="title-input"
               />
             </div>
-            <button onClick={() => setShowWallpaperManager(true)}>更改壁纸</button>
-            <button onClick={() => setShowIconSettings(true)}>桌面图标设置</button>
-            <button onClick={() => setShowFaviconManager(true)}>管理图标源</button>
+            <div className="setting-item">
+              <label htmlFor="settings-language">{t('language.label')}</label>
+              <select
+                id="settings-language"
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as SupportedLanguage)}
+              >
+                {LANGUAGE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button onClick={() => setShowWallpaperManager(true)}>{t('actions.changeWallpaper')}</button>
+            <button onClick={() => setShowIconSettings(true)}>{t('actions.iconSettings')}</button>
+            <button onClick={() => setShowFaviconManager(true)}>{t('actions.faviconSources')}</button>
           </div>
           {/* 调色板：全局 16 槽（设置模式 2×8）；点任意槽弹取色器改色，
               弹窗内可为该槽设置别名（显示为「别名（调色板 N）：颜色」），使用该槽位的元素自动跟随 */}
           <div className="palette-manage-block">
             <div className="palette-manage-head">
-              <span className="palette-manage-title">调色板</span>
-              <span className="palette-manage-hint">点击色块可重新设定该调色板颜色，使用该颜色的元素将自动更新</span>
+              <span className="palette-manage-title">{t('palette.title')}</span>
+              <span className="palette-manage-hint">{t('palette.hint')}</span>
             </div>
             {/* 全局明暗度：不修改各槽颜色，仅在实际使用（图标/文件夹/便签表面）时叠加亮度，
                 实现整站颜色统一调亮/调暗；下方滑杆 0 = 原色 */}
             <div className="palette-lightness-block">
               <div className="palette-lightness-head">
-                <span className="palette-lightness-title">全局明暗度</span>
+                <span className="palette-lightness-title">{t('lightness.title')}</span>
                 <span className="palette-lightness-value">{lightnessLabel}</span>
                 <div
                   className="palette-lightness-preview"
-                  title="开启后，下方调色板色块实时预览叠加明暗度的观感；关闭则显示真实存储色"
+                  title={t('lightness.previewHint')}
                 >
-                  <span className="palette-lightness-preview-label">实时预览</span>
+                  <span className="palette-lightness-preview-label">{t('lightness.previewLabel')}</span>
                   <label className="settings-switch palette-lightness-preview-switch">
                     <input
                       type="checkbox"
                       checked={previewEnabled}
                       onChange={(e) => setPreviewEnabled(e.target.checked)}
-                      aria-label="在下方调色板实时预览明暗度效果"
+                      aria-label={t('lightness.previewAria')}
                     />
                     <span className="settings-switch-track" />
                   </label>
@@ -297,12 +323,12 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
                 step={1}
                 value={lightness}
                 onChange={(e) => setLightness(Number(e.target.value))}
-                aria-label="全局明暗度：整体调亮或调暗图标、文件夹与便签使用的颜色"
+                aria-label={t('lightness.aria')}
               />
               <div className="palette-lightness-foot">
-                <span className="palette-lightness-mark">调暗</span>
-                <span className="palette-lightness-hint">不改动已存颜色，仅调整实际使用的颜色明暗</span>
-                <span className="palette-lightness-mark">调亮</span>
+                <span className="palette-lightness-mark">{t('lightness.dim')}</span>
+                <span className="palette-lightness-hint">{t('lightness.hint')}</span>
+                <span className="palette-lightness-mark">{t('lightness.bright')}</span>
               </div>
             </div>
             <Palette mode="settings" />
@@ -311,73 +337,73 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
 
         {/* ── 第 2 组：偏好设置 ───────────────────────────── */}
         <div className="settings-section">
-          <h3>偏好设置</h3>
+          <h3>{t('sections.preferences')}</h3>
           <div className="tool-buttons">
-            <button onClick={() => setShowSearchManager(true)}>管理搜索引擎</button>
-            <button onClick={() => setShowAutoSaveSettings(true)}>自动保存设置</button>
+            <button onClick={() => setShowSearchManager(true)}>{t('actions.searchEngines')}</button>
+            <button onClick={() => setShowAutoSaveSettings(true)}>{t('actions.autoSave')}</button>
           </div>
         </div>
 
         {/* ── 第 3 组：功能开关（控制主界面上各功能入口的显隐） ── */}
         <div className="settings-section">
-          <h3>功能开关</h3>
+          <h3>{t('sections.features')}</h3>
           <div className="settings-feature-list">
             <div className="settings-feature-row">
-              <span className="settings-feature-name">天气</span>
+              <span className="settings-feature-name">{t('features.weather')}</span>
               <label className="settings-switch">
                 <input
                   type="checkbox"
                   checked={weatherEnabled}
                   onChange={(e) => setWeatherEnabled(e.target.checked)}
-                  aria-label="显示天气组件"
+                  aria-label={t('features.weatherAria')}
                 />
                 <span className="settings-switch-track" />
               </label>
             </div>
             <div className="settings-feature-row">
-              <span className="settings-feature-name">搜索框</span>
+              <span className="settings-feature-name">{t('features.search')}</span>
               <label className="settings-switch">
                 <input
                   type="checkbox"
                   checked={searchEnabled}
                   onChange={(e) => setSearchEnabled(e.target.checked)}
-                  aria-label="显示搜索框"
+                  aria-label={t('features.searchAria')}
                 />
                 <span className="settings-switch-track" />
               </label>
             </div>
             <div className="settings-feature-row">
-              <span className="settings-feature-name">笔记</span>
+              <span className="settings-feature-name">{t('features.notes')}</span>
               <label className="settings-switch">
                 <input
                   type="checkbox"
                   checked={notesEnabled}
                   onChange={(e) => setNotesEnabled(e.target.checked)}
-                  aria-label="显示笔记入口"
+                  aria-label={t('features.notesAria')}
                 />
                 <span className="settings-switch-track" />
               </label>
             </div>
             <div className="settings-feature-row">
-              <span className="settings-feature-name">待办事项</span>
+              <span className="settings-feature-name">{t('features.todos')}</span>
               <label className="settings-switch">
                 <input
                   type="checkbox"
                   checked={todosEnabled}
                   onChange={(e) => setTodosEnabled(e.target.checked)}
-                  aria-label="显示待办事项入口"
+                  aria-label={t('features.todosAria')}
                 />
                 <span className="settings-switch-track" />
               </label>
             </div>
             <div className="settings-feature-row">
-              <span className="settings-feature-name">多页面</span>
+              <span className="settings-feature-name">{t('features.pages')}</span>
               <label className="settings-switch">
                 <input
                   type="checkbox"
                   checked={pagesEnabled}
                   onChange={(e) => setPagesEnabled(e.target.checked)}
-                  aria-label="显示多页面入口"
+                  aria-label={t('features.pagesAria')}
                 />
                 <span className="settings-switch-track" />
               </label>
@@ -387,40 +413,40 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
 
         {/* ── 第 4 组：数据管理 ───────────────────────────── */}
         <div className="settings-section">
-          <h3>数据管理</h3>
+          <h3>{t('sections.data')}</h3>
           <div className="tool-buttons">
             <button
               onClick={handleLoadFromKV}
               disabled={isLoading}
             >
-              {isLoading ? '加载中...' : '从云端加载数据'}
+              {isLoading ? t('actions.loading') : t('actions.loadFromCloud')}
             </button>
             <button
               onClick={handleImportPreset}
             >
-              导入预设站点
+              {t('actions.importPreset')}
             </button>
             <ImportExport />
             <button
               onClick={handleClearAllSites}
               className="logout-button"
             >
-              清空所有站点
+              {t('actions.clearAllSites')}
             </button>
           </div>
         </div>
 
         {/* ── 第 5 组：账户与关于 ─────────────────────────── */}
         <div className="settings-section">
-          <h3>账户与关于</h3>
+          <h3>{t('sections.account')}</h3>
           <div className="tool-buttons">
             <button
               onClick={() => setShowLogoutConfirm(true)}
               className="logout-button"
             >
-              注销登录
+              {t('actions.logout')}
             </button>
-            <button onClick={() => setShowAboutDialog(true)}>关于 HarborPage</button>
+            <button onClick={() => setShowAboutDialog(true)}>{t('actions.about')}</button>
           </div>
         </div>
       </SettingsWindow>
@@ -428,8 +454,8 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
       {/* 确认对话框 */}
       <ConfirmDialog
         isOpen={showConfirmDialog}
-        title="确认加载数据"
-        message="确定要从云端加载数据吗？这将覆盖当前的本地更改。"
+        title={t('dialogs.loadDataTitle')}
+        message={t('dialogs.loadDataMessage')}
         onConfirm={handleConfirmLoadFromKV}
         onCancel={handleCancelLoadFromKV}
       />
@@ -437,8 +463,8 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
       {/* 注销确认对话框 */}
       <ConfirmDialog
         isOpen={showLogoutConfirm}
-        title="确认注销"
-        message="确定要注销登录吗？注销后需要重新登录才能继续使用应用。"
+        title={t('dialogs.logoutTitle')}
+        message={t('dialogs.logoutMessage')}
         onConfirm={() => {
           setShowLogoutConfirm(false);
           authService.logout();
@@ -449,8 +475,8 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
       {/* 清理图标确认对话框 */}
       <ConfirmDialog
         isOpen={showCleanupConfirm}
-        title="确认清理"
-        message="确定要清理未使用的图标吗？这将删除R2存储中所有未被网站引用的图标文件，此操作不可恢复。"
+        title={t('dialogs.cleanupTitle')}
+        message={t('dialogs.cleanupMessage')}
         onConfirm={handleConfirmCleanupIcons}
         onCancel={handleCancelCleanupIcons}
       />
@@ -458,8 +484,8 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
       {/* 清空所有站点确认对话框 */}
       <ConfirmDialog
         isOpen={showClearSitesConfirm}
-        title="确认清空所有站点"
-        message="确定要清空所有站点吗？这将删除所有网站快捷方式和文件夹，此操作不可恢复。"
+        title={t('dialogs.clearSitesTitle')}
+        message={t('dialogs.clearSitesMessage')}
         onConfirm={handleConfirmClearAllSites}
         onCancel={() => setShowClearSitesConfirm(false)}
       />
@@ -492,7 +518,7 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
       {/* 壁纸管理面板 */}
       {showWallpaperManager && (
         <SettingsWindow 
-          title="壁纸管理"
+          title={t('windows.wallpaper')}
           onClose={() => setShowWallpaperManager(false)}
         >
           <WallpaperManager />
@@ -502,7 +528,7 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
       {/* 搜索管理面板 */}
       {showSearchManager && (
         <SettingsWindow
-          title="搜索管理"
+          title={t('windows.search')}
           onClose={() => setShowSearchManager(false)}
         >
           <SearchManager />
@@ -512,7 +538,7 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
       {/* 图标源管理面板 */}
       {showFaviconManager && (
         <SettingsWindow
-          title="图标源管理"
+          title={t('windows.favicon')}
           onClose={() => setShowFaviconManager(false)}
         >
           <FaviconSettings />
@@ -522,7 +548,7 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
       {/* 桌面图标设置面板 */}
       {showIconSettings && (
         <SettingsWindow
-          title="桌面图标设置"
+          title={t('windows.icon')}
           onClose={() => setShowIconSettings(false)}
         >
           <IconSettings
@@ -537,7 +563,7 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
       {/* 自动保存设置面板 */}
       {showAutoSaveSettings && (
         <SettingsWindow
-          title="自动保存设置"
+          title={t('windows.autoSave')}
           onClose={() => setShowAutoSaveSettings(false)}
         >
           <AutoSaveSettings

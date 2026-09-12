@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import './FolderNameDialog.css';
 
 interface FolderNameDialogProps {
@@ -7,7 +8,8 @@ interface FolderNameDialogProps {
 }
 
 const FolderNameDialog: React.FC<FolderNameDialogProps> = ({ isOpen, onClose }) => {
-  const [folderName, setFolderName] = useState('新文件夹');
+  const { t } = useTranslation('folder');
+  const [folderName, setFolderName] = useState(() => t('defaultName'));
   const inputRef = useRef<HTMLInputElement>(null);
   const focusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -63,7 +65,7 @@ const FolderNameDialog: React.FC<FolderNameDialogProps> = ({ isOpen, onClose }) 
   return (
     <div className="folder-name-dialog-overlay" onClick={handleOverlayClick}>
       <div className="folder-name-dialog">
-        <h3>创建新文件夹</h3>
+        <h3>{t('dialogs.create.title')}</h3>
         <input
           ref={inputRef}
           type="text"
@@ -71,15 +73,15 @@ const FolderNameDialog: React.FC<FolderNameDialogProps> = ({ isOpen, onClose }) 
           className="folder-name-input"
           value={folderName}
           onChange={(e) => setFolderName(e.target.value)}
-          placeholder="请输入文件夹名称"
+          placeholder={t('dialogs.create.placeholder')}
           maxLength={20}
         />
         <div className="folder-name-buttons">
           <button type="button" className="folder-name-button folder-name-button-primary" onClick={handleSubmit}>
-            确定
+            {t('dialogs.create.confirm')}
           </button>
           <button type="button" className="folder-name-button folder-name-button-secondary" onClick={handleCancel}>
-            取消
+            {t('dialogs.create.cancel')}
           </button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getServices } from '../../services/serviceContainer';
 import './LoginModal.css';
 
@@ -7,6 +8,7 @@ interface LoginModalProps {
 }
 
 function LoginModal({ onLogin }: LoginModalProps) {
+  const { t } = useTranslation('auth');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -27,7 +29,7 @@ function LoginModal({ onLogin }: LoginModalProps) {
     if (result.success) {
       onLogin();
     } else {
-      setError(result.error || '密码错误，请重试');
+      setError(result.error || t('defaultError'));
     }
 
     setIsLoading(false);
@@ -38,19 +40,19 @@ function LoginModal({ onLogin }: LoginModalProps) {
       <div className="login-modal">
         <div className="login-header">
           <div className="login-icon">🔐</div>
-          <h2 className="login-title">欢迎回来</h2>
-          <p className="login-subtitle">请输入密码以访问您的个人主页</p>
+          <h2 className="login-title">{t('welcome')}</h2>
+          <p className="login-subtitle">{t('subtitle')}</p>
         </div>
         
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="login-input-group">
-            <label className="login-label" htmlFor="password">密码</label>
+            <label className="login-label" htmlFor="password">{t('passwordLabel')}</label>
             <input
               id="password"
               ref={passwordInputRef}
               className="login-input"
               type="password"
-              placeholder="请输入密码"
+              placeholder={t('passwordPlaceholder')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={isLoading}
@@ -64,10 +66,10 @@ function LoginModal({ onLogin }: LoginModalProps) {
             {isLoading ? (
               <span className="login-loading">
                 <span className="login-spinner"></span>
-                登录中...
+                {t('loggingIn')}
               </span>
             ) : (
-              '登录'
+              t('login')
             )}
           </button>
         </form>

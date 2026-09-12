@@ -1,0 +1,36 @@
+{
+  "title": "壁纸设置",
+  "sources": {
+    "title": "壁纸来源",
+    "bing": "Bing每日壁纸",
+    "randomBing": "随机壁纸",
+    "local": "本地壁纸",
+    "solid": "纯色背景",
+    "custom": "自定义"
+  },
+  "customUrl": {
+    "placeholder": "粘贴图片 URL，如 https://example.com/wallpaper.jpg",
+    "apply": "应用",
+    "empty": "请输入图片地址",
+    "invalidFormat": "URL 格式无效",
+    "unsupportedProtocol": "仅支持 http/https 协议"
+  },
+  "options": {
+    "title": "壁纸选项",
+    "autoChange": "自动更换壁纸",
+    "autoChangeInterval": "更换间隔：{{count}} 小时",
+    "autoChangeHint": "开启后到点自动更换壁纸（Bing每日 / 随机 / 自定义来源）；刷新页面后仍按上次更换时间到点更换。",
+    "blurLevel": "模糊度: {{value}}%",
+    "overlayLevel": "遮罩浓度: {{value}}%"
+  },
+  "preview": "预览",
+  "errors": {
+    "r2UploadFailed": "R2 上传失败，降级到浏览器存储",
+    "r2RequestFailed": "R2 上传请求失败，降级到浏览器存储",
+    "indexedDbSaveFailed": "IndexedDB 存储失败",
+    "indexedDbLoadFailed": "从 IndexedDB 加载壁纸失败",
+    "fetchBingFailed": "获取Bing壁纸失败",
+    "bingApiRequestFailed": "Bing API请求失败: {{status}}",
+    "bingApiInvalidData": "Bing API返回数据格式异常"
+  }
+}

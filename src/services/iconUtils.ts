@@ -6,6 +6,7 @@ import AuthService from './AuthService';
 import ConfigService from './ConfigService';
 import { getServices } from './serviceContainer';
 import createLogger from '../utils/logger';
+import i18n from '../i18n';
 import React from 'react';
 import waitingImg from '../assets/Waiting.png';
 
@@ -191,7 +192,7 @@ const cacheAndReload = async (
       return;
     }
 
-    throw new Error(`缓存请求失败: ${response.status}`);
+    throw new Error(i18n.t('icons:utils.cacheRequestFailed', { status: response.status }));
   } catch {
     // 缓存失败 → 检查重试次数
     const retries = (cacheRetryCount.get(hash) || 0) + 1;
@@ -395,7 +396,7 @@ export async function preloadIconForUrl(
       const downloadUrl = getFaviconUrl(domain);
       await iconManager.preloadIcon(type, id, downloadUrl, domain);
     } catch (error) {
-      logger.error('预下载图标失败', error);
+      logger.error(i18n.t('icons:manager.preloadFailed'), error);
     }
   }
 }

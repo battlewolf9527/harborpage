@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import './EditWebsite.css';
 import AutoFetchDialog from './AutoFetchDialog';
 import type { Website } from '../../types';
@@ -55,6 +56,7 @@ interface EditWebsiteProps {
 }
 
 const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, initialUrl }) => {
+  const { t } = useTranslation('sites');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const urlInputRef = useRef<HTMLInputElement>(null);
   const { authService, iconManager } = getServices();
@@ -119,20 +121,20 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
     };
 
     if (!newIcon.name.trim()) {
-      newErrors.name = '请输入网站名称';
+      newErrors.name = t('errors.nameRequired');
     } else if (newIcon.name.trim().length > 80) {
-      newErrors.name = '网站名称不能超过80个字符';
+      newErrors.name = t('errors.nameTooLong');
     }
 
     if (!newIcon.url.trim()) {
-      newErrors.url = '请输入网站URL';
+      newErrors.url = t('errors.urlRequired');
     } else if (!validateUrl(newIcon.url.trim())) {
-      newErrors.url = '请输入有效的URL';
+      newErrors.url = t('errors.urlInvalid');
     }
 
     setErrors(newErrors);
     return !newErrors.name && !newErrors.url;
-  }, [newIcon.name, newIcon.url, validateUrl]);
+  }, [newIcon.name, newIcon.url, validateUrl, t]);
 
   const fetchTitleForUrl = useCallback(async (urlStr: string) => {
     if (!urlStr.trim()) return;
@@ -164,11 +166,11 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
       }
     } catch (error) {
       // 静默失败，用户可手动输入
-      logger.debug('获取标题失败', error);
+      logger.debug(t('logs.fetchTitleFailed'), error);
     } finally {
       setIsFetchingTitle(false);
     }
-  }, [protocol, newIcon.name, authService]);
+  }, [protocol, newIcon.name, authService, t]);
 
   // 组件挂载后自动聚焦 URL 输入框
   useEffect(() => {
@@ -232,7 +234,7 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
     if (!file) return;
 
     if (file.size > 100 * 1024) {
-      setToast({ type: 'error', message: '文件大小不能超过100KB' });
+      setToast({ type: 'error', message: t('errors.fileTooLarge') });
       return;
     }
 
@@ -263,18 +265,21 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
         }
       } else {
         const error = await response.json();
-        setToast({ type: 'error', message: `上传失败: ${error.error || '未知错误'}` });
+        setToast({
+          type: 'error',
+          message: t('errors.uploadFailedWithError', { error: error.error || t('errors.unknownError') }),
+        });
       }
     } catch (error) {
-      logger.error('上传图标失败', error);
-      setToast({ type: 'error', message: '上传失败，请重试' });
+      logger.error(t('logs.uploadIconFailed'), error);
+      setToast({ type: 'error', message: t('errors.uploadFailed') });
     } finally {
       setUploading(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     }
-  }, [icon, authService]);
+  }, [icon, authService, t]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -308,8 +313,8 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
       setNewIcon(prev => ({ ...prev, icon: iconDataUrl }));
     }
     setShowAutoFetch(false);
-    setToast({ type: 'success', message: '图标获取成功' });
-  }, []);
+    setToast({ type: 'success', message: t('toasts.iconFetchSuccess') });
+  }, [t]);
 
   const handleAddIconSubmit = useCallback(async () => {
     if (isSubmitting) return;
@@ -431,19 +436,22 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
         const result = await response.json() as { success: boolean; iconUrl: string };
         if (result.success && result.iconUrl) {
           setNewIcon(prev => ({ ...prev, icon: result.iconUrl }));
-          setToast({ type: 'success', message: '图标已保存到R2' });
+          setToast({ type: 'success', message: t('toasts.iconSavedToR2') });
         }
       } else {
-        const error = await response.json().catch(() => ({ error: '保存失败' }));
-        setToast({ type: 'error', message: `保存失败: ${error.error || '未知错误'}` });
+        const error = await response.json().catch(() => ({ error: t('errors.saveFailed') }));
+        setToast({
+          type: 'error',
+          message: t('errors.saveFailedWithError', { error: error.error || t('errors.unknownError') }),
+        });
       }
     } catch (error) {
-      logger.error('保存图标到R2失败', error);
-      setToast({ type: 'error', message: '保存失败，请重试' });
+      logger.error(t('logs.saveIconToR2Failed'), error);
+      setToast({ type: 'error', message: t('errors.saveFailed') });
     } finally {
       setSavingToR2(false);
     }
-  }, [iconPreview, previewError, newIcon.id, authService]);
+  }, [iconPreview, previewError, newIcon.id, authService, t]);
 
   // 判断是否可以保存到R2：有预览且非错误状态，且不是data URL（data URL已在自动获取中支持缓存）
   const canSaveToR2 = !!iconPreview && !previewError && !iconPreview.startsWith('data:') && !savingToR2 && !uploading;
@@ -483,7 +491,7 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
           {iconPreview && !previewError ? (
             <img
               src={iconPreview}
-              alt="图标预览"
+              alt={t('form.iconPreviewAlt')}
               className="edit-website-preview-image"
               referrerPolicy="no-referrer"
               onError={() => setPreviewError(true)}
@@ -494,7 +502,7 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
         </div>
 
         <div className="edit-website-input-group">
-          <label className="edit-website-label">网站URL</label>
+          <label className="edit-website-label">{t('form.urlLabel')}</label>
           <div className={`edit-website-url-wrapper ${errors.url ? 'error' : ''}`}>
             <select
               value={protocol}
@@ -507,7 +515,7 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
             <input 
               ref={urlInputRef}
               type="text" 
-              placeholder="例如：www.google.com"
+              placeholder={t('form.urlPlaceholder')}
               autoFocus
               tabIndex={1}
               value={newIcon.url}
@@ -541,10 +549,10 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
         </div>
 
         <div className="edit-website-input-group">
-          <label className="edit-website-label">网站名称 {isFetchingTitle && <span className="edit-website-fetching">获取中...</span>}</label>
+          <label className="edit-website-label">{t('form.nameLabel')} {isFetchingTitle && <span className="edit-website-fetching">{t('form.fetching')}</span>}</label>
           <input 
             type="text" 
-            placeholder="例如：Google"
+            placeholder={t('form.namePlaceholder')}
             tabIndex={2}
             value={newIcon.name}
             onChange={(e) => {
@@ -562,12 +570,15 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
 
         <div className="edit-website-input-group">
           <label className="edit-website-label">
-            图标（可选）
-            <span className="edit-website-tip" tabIndex={0} aria-label="图标输入说明">?</span>
+            {t('form.iconLabel')}
+            <span className="edit-website-tip-wrapper">
+              <span className="edit-website-tip" tabIndex={0} aria-label={t('form.iconTipAria')}>?</span>
+              <span className="edit-website-tip-text">{t('form.iconTipText')}</span>
+            </span>
           </label>
           <input 
             type="text" 
-            placeholder="留空则自动获取网站图标"
+            placeholder={t('form.iconPlaceholder')}
             tabIndex={3}
             value={newIcon.icon}
             onChange={(e) => setNewIcon({ ...newIcon, icon: e.target.value })}
@@ -577,7 +588,7 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
         </div>
 
         <div className="edit-website-upload-group">
-          <label className="edit-website-label">图标操作</label>
+          <label className="edit-website-label">{t('form.iconActionsLabel')}</label>
           <div className="edit-website-upload-buttons">
             <div className="edit-website-upload-button-wrapper">
               <input
@@ -594,9 +605,9 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
                 disabled={uploading}
                 tabIndex={4}
                 className="edit-website-button edit-website-button-upload"
-                title="手动上传图标到R2"
+                title={t('form.uploadTitle')}
               >
-                {uploading ? '上传中...' : '上传'}
+                {uploading ? t('actions.uploading') : t('actions.upload')}
               </button>
             </div>
             <button
@@ -605,9 +616,9 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
               disabled={uploading}
               tabIndex={5}
               className="edit-website-button edit-website-button-autofetch"
-              title="从多种渠道尝试获取图标"
+              title={t('form.autoFetchTitle')}
             >
-            智能获取
+            {t('actions.autoFetch')}
             </button>
             <button
               type="button"
@@ -615,9 +626,9 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
               disabled={!canSaveToR2}
               tabIndex={6}
               className="edit-website-button edit-website-button-save-r2"
-              title="将当前预览图标保存到R2并自动设置图标URL"
+              title={t('form.saveToR2Title')}
             >
-              {savingToR2 ? '保存中...' : '保存'}
+              {savingToR2 ? t('actions.saving') : t('actions.save')}
             </button>
           </div>
           {(uploading || savingToR2) && (
@@ -626,13 +637,13 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
             </div>
           )}
           <p className="edit-website-upload-hint">
-            支持 PNG、JPG、GIF、WebP、SVG 格式，最大100KB
-            {!canSaveToR2 && !uploading && <span className="edit-website-upload-hint-disabled">（预览图标正常显示后可保存到R2）</span>}
+            {t('form.uploadHint')}
+            {!canSaveToR2 && !uploading && <span className="edit-website-upload-hint-disabled">{t('form.saveDisabledHint')}</span>}
           </p>
         </div>
 
         <div className="edit-website-input-group">
-          <label className="edit-website-label">图标颜色</label>
+          <label className="edit-website-label">{t('form.iconColorLabel')}</label>
           <Palette
             value={{
               ...(newIcon.iconColor ? { color: newIcon.iconColor } : {}),
@@ -649,7 +660,7 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
             className="edit-website-button edit-website-button-primary"
             disabled={isSubmitting}
           >
-            {isSubmitting ? '保存中...' : '确定'}
+            {isSubmitting ? t('actions.saving') : t('actions.confirm')}
           </button>
           <button 
             onClick={onClose}
@@ -657,7 +668,7 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
             className="edit-website-button edit-website-button-secondary"
             disabled={isSubmitting || uploading}
           >
-            取消
+            {t('actions.cancel')}
           </button>
         </div>
       </div>
@@ -672,7 +683,7 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
           fullUrl = `${protocol}${fullUrl}`;
         }
         if (!fullUrl || !validateUrl(fullUrl)) {
-          setToast({ type: 'error', message: '请先填写有效的网站URL' });
+          setToast({ type: 'error', message: t('errors.invalidUrlBeforeFetch') });
           setShowAutoFetch(false);
           return null;
         }

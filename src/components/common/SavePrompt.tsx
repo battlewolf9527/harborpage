@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useIconsStore } from '../../store/useIconsStore';
 import Toast from './Toast';
 import { getServices } from '../../services/serviceContainer';
@@ -9,6 +10,7 @@ import { useAutoSaveSettings } from '../../hooks/useAutoSaveSettings';
 import { useAutoSave } from '../../hooks/useAutoSave';
 
 const SavePrompt: React.FC = () => {
+  const { t } = useTranslation('dock');
   const { dataManager } = getServices();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -41,13 +43,16 @@ const SavePrompt: React.FC = () => {
   }, []);
 
   const handleSaveSuccess = useCallback(() => {
-    setToast({ type: 'success', message: autoSaveEnabled ? '自动保存成功' : '保存成功' });
+    setToast({
+      type: 'success',
+      message: autoSaveEnabled ? t('savePrompt.autoSaveSuccess') : t('savePrompt.saveSuccess'),
+    });
     setIsSaving(false);
     exitTimerRef.current = setTimeout(() => {
       setIsExiting(true);
       hideTimerRef.current = setTimeout(() => setIsVisible(false), 300);
     }, 1000);
-  }, [autoSaveEnabled]);
+  }, [autoSaveEnabled, t]);
 
   const handleSaveError = useCallback((errorMsg: string) => {
     setSaveError(errorMsg);

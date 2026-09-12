@@ -1,0 +1,95 @@
+{
+  "title": "Settings",
+  "sections": {
+    "personalization": "Personalization",
+    "preferences": "Preferences",
+    "features": "Features",
+    "data": "Data Management",
+    "account": "Account & About"
+  },
+  "siteTitle": {
+    "label": "Site Title",
+    "placeholder": "Enter page title"
+  },
+  "language": {
+    "label": "Language"
+  },
+  "actions": {
+    "changeWallpaper": "Change Wallpaper",
+    "iconSettings": "Desktop Icon Settings",
+    "faviconSources": "Manage Icon Sources",
+    "searchEngines": "Manage Search Engines",
+    "autoSave": "Auto-save Settings",
+    "loadFromCloud": "Load Data from Cloud",
+    "loading": "Loading...",
+    "importPreset": "Import Preset Sites",
+    "clearAllSites": "Clear All Sites",
+    "logout": "Sign Out",
+    "about": "About HarborPage",
+    "continueCleanup": "Continue Cleanup"
+  },
+  "palette": {
+    "title": "Palette",
+    "hint": "Click a swatch to change that palette color; elements using it update automatically"
+  },
+  "lightness": {
+    "title": "Global Lightness",
+    "original": "Original",
+    "brighter": "Brighter +{{value}}",
+    "darker": "Darker {{value}}",
+    "previewLabel": "Live Preview",
+    "previewHint": "When enabled, the palette swatches below preview the lightness effect in real time; when disabled, the actual stored colors are shown",
+    "previewAria": "Preview the lightness effect on the palette below in real time",
+    "aria": "Global lightness: brighten or darken the colors used by icons, folders and notes",
+    "dim": "Darken",
+    "hint": "Does not modify stored colors, only adjusts the lightness of colors in use",
+    "bright": "Brighten"
+  },
+  "features": {
+    "weather": "Weather",
+    "weatherAria": "Show weather widget",
+    "search": "Search Box",
+    "searchAria": "Show search box",
+    "notes": "Notes",
+    "notesAria": "Show notes entry",
+    "todos": "To-do List",
+    "todosAria": "Show to-do entry",
+    "pages": "Pages",
+    "pagesAria": "Show pages entry"
+  },
+  "autoSave": {
+    "countdownTitle": "Countdown Duration",
+    "durationLabel": "Auto-save countdown: {{value}}s",
+    "durationHint": "The countdown starts once you leave the editing area, then your current changes are synced locally when it ends.",
+    "enabledLabel": "Enable Auto-save"
+  },
+  "dialogs": {
+    "loadDataTitle": "Load Data",
+    "loadDataMessage": "Load data from the cloud? This will overwrite your current local changes.",
+    "logoutTitle": "Sign Out",
+    "logoutMessage": "Sign out now? You will need to sign in again to continue using the app.",
+    "cleanupTitle": "Clean Up Icons",
+    "cleanupMessage": "Clean up unused icons? This will delete every icon file in R2 storage that is not referenced by a website. This action cannot be undone.",
+    "clearSitesTitle": "Clear All Sites",
+    "clearSitesMessage": "Clear all sites? This will delete every website shortcut and folder. This action cannot be undone."
+  },
+  "toasts": {
+    "loadSuccess": "Data loaded successfully",
+    "loadFailed": "Failed to load, please try again",
+    "loadFailedNetwork": "Failed to load, please check your network connection",
+    "cleanupFailed": "Cleanup failed, please try again",
+    "cleanupFailedNetwork": "Cleanup failed, please check your network connection",
+    "sitesCleared": "All sites cleared"
+  },
+  "logs": {
+    "loadDataFailed": "Failed to load data",
+    "cleanupIconsFailed": "Failed to clean up icons"
+  },
+  "windows": {
+    "wallpaper": "Wallpaper Management",
+    "search": "Search Management",
+    "favicon": "Icon Sources",
+    "icon": "Desktop Icon Settings",
+    "autoSave": "Auto-save Settings"
+  }
+}

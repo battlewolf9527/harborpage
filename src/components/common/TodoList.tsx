@@ -1,4 +1,5 @@
 import React, { useState, memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import './TodoList.css';
 import { useTodoStore } from '../../store/useTodoStore';
@@ -11,6 +12,7 @@ interface TodoListProps {
 }
 
 const TodoList: React.FC<TodoListProps> = memo(({ onRequestDeleteTodo, onRequestClearCompleted }) => {
+  const { t } = useTranslation('todos');
   const [newTodo, setNewTodo] = useState<string>('');
 
   const { todos, addTodo, toggleTodo } = useTodoStore(
@@ -51,12 +53,12 @@ const TodoList: React.FC<TodoListProps> = memo(({ onRequestDeleteTodo, onRequest
       <div className="add-todo">
         <input
           type="text"
-          placeholder="添加待办事项..."
+          placeholder={t('add.placeholder')}
           value={newTodo}
           onChange={(e) => setNewTodo(e.target.value)}
           onKeyDown={handleKeyDown}
         />
-        <button onClick={handleAddTodo}>添加</button>
+        <button onClick={handleAddTodo}>{t('add.button')}</button>
       </div>
 
       {/* 待办列表：放在中间，滚动只在这里发生（CSS flex:1 + min-height:0），
@@ -78,14 +80,17 @@ const TodoList: React.FC<TodoListProps> = memo(({ onRequestDeleteTodo, onRequest
             </button>
           </div>
         ))}
+        {todos.length === 0 && (
+          <p className="todo-empty">{t('empty')}</p>
+        )}
       </div>
 
       {/* 底部统计 + 清空操作：仅当有待办时显示；flex-shrink:0 固定在底部。 */}
       {todos.length > 0 && (
         <div className="todo-footer">
-          <span>{todos.filter(todo => !todo.completed).length} 项待完成</span>
+          <span>{t('footer.remaining', { count: todos.filter(todo => !todo.completed).length })}</span>
           {todos.some(todo => todo.completed) && (
-            <button onClick={handleClearCompleted}>清空已完成</button>
+            <button onClick={handleClearCompleted}>{t('footer.clearCompleted')}</button>
           )}
         </div>
       )}

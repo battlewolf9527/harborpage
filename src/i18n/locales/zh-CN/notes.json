@@ -1,0 +1,70 @@
+{
+  "untitled": "无标题",
+  "noContent": "（无内容）",
+  "blankContent": "（空内容）",
+  "close": "关闭",
+  "closeEsc": "关闭 (Esc)",
+  "cancel": "取消",
+  "save": "保存",
+  "create": "创建",
+  "add": "添加",
+  "edit": "编辑",
+  "delete": "删除",
+  "newNote": "新建笔记",
+  "editNote": "编辑笔记",
+  "addNote": "添加笔记",
+  "updatedAt": "更新于 {{date}}",
+  "createdAt": "创建于 {{date}}",
+  "entry": {
+    "label": "便签 · 悬停展开",
+    "labelWithCount": "{{count}} 篇便签 · 悬停展开"
+  },
+  "bar": {
+    "ariaLabel": "笔记栏",
+    "ballRowAria": "便签球",
+    "emptyGlyph": "无",
+    "emptyHintPrefix": "还没有笔记，点击左侧 ",
+    "emptyHintSuffix": " 创建第一篇吧",
+    "ballAria": "便签：{{title}}"
+  },
+  "bubble": {
+    "addText": "打开空白编辑器，填写标题与内容后点「保存」才会真正创建。",
+    "moreTitle": "笔记管理器",
+    "moreText": "查看全部笔记、批量重排、重命名、调整颜色或删除。",
+    "badgeText": "还有 {{count}} 篇不在此栏内，右侧 ⚙︎ 打开笔记管理器可查看全部",
+    "editText": "在编辑器中打开笔记（全文查看、修改标题/颜色/内容、保存或删除）"
+  },
+  "editor": {
+    "titlePlaceholder": "笔记标题…",
+    "contentPlaceholder": "写点什么吧…（⌘/Ctrl + Enter 保存）",
+    "colorPaletteAria": "便签颜色",
+    "newHint": "全新笔记，保存后立即生效。",
+    "createdLabel": "创建：{{date}}",
+    "deleteConfirmTitle": "删除笔记",
+    "deleteConfirmMessage": "确定要删除这篇笔记吗？删除后不可恢复。",
+    "discardTitle": "放弃未保存的更改？",
+    "discardMessage": "当前编辑尚未保存，关闭后将丢失输入的标题与内容。",
+    "discardConfirm": "放弃更改"
+  },
+  "manager": {
+    "title": "笔记管理",
+    "searchPlaceholder": "搜索标题或内容…",
+    "clearSearch": "清除搜索",
+    "statsFiltered": "命中 {{visible}} / 共 {{total}} 篇",
+    "stats": "共 {{total}} 篇 · 拖拽列表行可排序",
+    "create": "新建",
+    "emptyFilteredTitle": "没有匹配的笔记",
+    "emptyFilteredHint": "试试换个关键词，或者清除搜索条件。",
+    "emptyTitle": "还没有笔记",
+    "emptyHint": "点击右上角「新建」创建你的第一篇笔记吧！",
+    "dragToSort": "拖拽排序"
+  },
+  "panel": {
+    "title": "笔记",
+    "titlePlaceholder": "标题",
+    "contentPlaceholder": "内容"
+  },
+  "log": {
+    "targetNoteNotFound": "NoteEditorDialog: 找不到目标笔记，退化为新建模式。"
+  }
+}

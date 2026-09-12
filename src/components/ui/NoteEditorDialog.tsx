@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import './NoteEditorDialog.css';
 import { useNotesStore } from '../../store/useNotesStore';
@@ -31,6 +32,7 @@ interface NoteEditorDialogProps {
 }
 
 const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onClose }) => {
+  const { t } = useTranslation('notes');
   const { notes, addNote, updateNote, deleteNote, applyNoteColor } = useNotesStore(
     useShallow((s) => ({
       notes: s.notes,
@@ -67,7 +69,7 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
           ...(canonicalSlotId(target.colorSlot) ? { colorSlot: canonicalSlotId(target.colorSlot) } : {}),
         };
       }
-      logger.warn('NoteEditorDialog: 找不到目标笔记，退化为新建模式。', noteId);
+      logger.warn(t('log.targetNoteNotFound'), noteId);
     }
     const fallback = randomSlotSelection(slots);
     return {
@@ -148,11 +150,11 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
     }
     const target = notes.find((n) => n.id === activeId);
     if (!target) return true;
-    const titleChanged = (draft.title.trim() || '无标题') !== (target.title ?? '');
+    const titleChanged = (draft.title.trim() || t('untitled')) !== (target.title ?? '');
     const contentChanged = draft.content.trim() !== (target.content ?? '');
     const colorChanged = color !== (target.color ?? '') || (colorSlot ?? '') !== (target.colorSlot ?? '');
     return titleChanged || contentChanged || colorChanged;
-  }, [activeId, draft, color, colorSlot, notes]);
+  }, [activeId, draft, color, colorSlot, notes, t]);
 
   // 统一关闭入口：有未保存更改 → 弹确认框（可返回继续编辑）；无 → 直接关闭。
   // 供 ESC / 头部 ✕ / 底部 取消 使用，避免误触导致内容丢失。
@@ -179,7 +181,7 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
 
   // ── 保存 ──────────────────────────────────────────────────────────────
   const handleSave = useCallback(() => {
-    const title = draft.title.trim() || '无标题';
+    const title = draft.title.trim() || t('untitled');
     const content = draft.content.trim();
     // 保存快照色：绑定槽 → 槽当前色（改色后快照保鲜）；静态 → 归一化后的 hex/原名
     const savedColor = resolveColorHex(buildSelection(color, colorSlot), slots) || color || '';
@@ -210,7 +212,7 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
       });
     }
     runClosing();
-  }, [activeId, draft, color, colorSlot, slots, applyNoteColor, updateNote, addNote, notes, runClosing]);
+  }, [activeId, draft, color, colorSlot, slots, applyNoteColor, updateNote, addNote, notes, runClosing, t]);
 
   // Ctrl/Cmd+S 保存；Enter 在标题输入 → 跳到正文；最后输入框(正文) Ctrl/⌘ + Enter 保存
   const handleTitleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -282,24 +284,24 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
         style={colorStyleVars}
         role="dialog"
         aria-modal="true"
-        aria-label={isCreate ? '新建笔记' : '编辑笔记'}
+        aria-label={isCreate ? t('newNote') : t('editNote')}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="note-editor-header">
           <div className="note-editor-title-row">
-            <h2>{isCreate ? '新建笔记' : '编辑笔记'}</h2>
+            <h2>{isCreate ? t('newNote') : t('editNote')}</h2>
             <button
               type="button"
               className="note-editor-close"
               onClick={requestClose}
-              aria-label="关闭"
-              title="关闭 (Esc)"
+              aria-label={t('close')}
+              title={t('closeEsc')}
             >
               ✕
             </button>
           </div>
           <div className="note-editor-toolbar">
-            <div className="note-editor-color-palette" role="group" aria-label="便签颜色">
+            <div className="note-editor-color-palette" role="group" aria-label={t('editor.colorPaletteAria')}>
               <Palette value={pickerValue} onChange={handleColorChange} />
             </div>
           </div>
@@ -310,7 +312,7 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
             ref={titleInputRef}
             className="note-editor-title"
             type="text"
-            placeholder="笔记标题…"
+            placeholder={t('editor.titlePlaceholder')}
             value={draft.title}
             onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
             onKeyDown={handleTitleKeyDown}
@@ -318,7 +320,7 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
           <textarea
             ref={contentTextareaRef}
             className="note-editor-content"
-            placeholder="写点什么吧…（⌘/Ctrl + Enter 保存）"
+            placeholder={t('editor.contentPlaceholder')}
             rows={10}
             value={draft.content}
             onChange={(e) => setDraft((d) => ({ ...d, content: e.target.value }))}
@@ -327,14 +329,15 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
           <div className="note-editor-meta">
             {activeId ? (
               <span>
-                创建：
-                {(() => {
-                  const t = notes.find((n) => n.id === activeId);
-                  return t?.createdAt ? new Date(t.createdAt).toLocaleString() : '—';
-                })()}
+                {t('editor.createdLabel', {
+                  date: (() => {
+                    const target = notes.find((n) => n.id === activeId);
+                    return target?.createdAt ? new Date(target.createdAt).toLocaleString() : '—';
+                  })(),
+                })}
               </span>
             ) : (
-              <span>全新笔记，保存后立即生效。</span>
+              <span>{t('editor.newHint')}</span>
             )}
           </div>
         </div>
@@ -351,7 +354,7 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
                 className="note-editor-btn danger"
                 onClick={handleDelete}
               >
-                🗑️ 删除
+                🗑️ {t('delete')}
               </button>
             )}
           </div>
@@ -365,14 +368,14 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
               className="note-editor-btn primary"
               onClick={handleSave}
             >
-              {isCreate ? '创建' : '保存'}
+              {isCreate ? t('create') : t('save')}
             </button>
             <button
               type="button"
               className="note-editor-btn ghost"
               onClick={requestClose}
             >
-              取消
+              {t('cancel')}
             </button>
           </div>
         </div>
@@ -380,8 +383,8 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
 
       <ConfirmDialog
         isOpen={confirmDelete}
-        title="删除笔记"
-        message="确定要删除这篇笔记吗？删除后不可恢复。"
+        title={t('editor.deleteConfirmTitle')}
+        message={t('editor.deleteConfirmMessage')}
         onConfirm={handleConfirmDelete}
         onCancel={() => setConfirmDelete(false)}
       />
@@ -390,9 +393,9 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
           确认框自身监听 ESC → onCancel（留在编辑器），阻断冒泡到本编辑器 ESC 逻辑。 */}
       <ConfirmDialog
         isOpen={confirmDiscard}
-        title="放弃未保存的更改？"
-        message="当前编辑尚未保存，关闭后将丢失输入的标题与内容。"
-        confirmText="放弃更改"
+        title={t('editor.discardTitle')}
+        message={t('editor.discardMessage')}
+        confirmText={t('editor.discardConfirm')}
         confirmType="danger"
         onConfirm={() => {
           setConfirmDiscard(false);

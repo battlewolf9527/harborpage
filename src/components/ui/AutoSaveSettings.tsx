@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface AutoSaveSettingsProps {
   /** 当前倒计时（秒） */
@@ -21,13 +22,15 @@ const AutoSaveSettings: React.FC<AutoSaveSettingsProps> = ({
   onDurationChange,
   onEnabledChange,
 }) => {
+  const { t } = useTranslation('settings');
+
   return (
     <>
       <div className="settings-section">
-        <h3>倒计时时长</h3>
+        <h3>{t('autoSave.countdownTitle')}</h3>
         <div className="option-item">
           <label>
-            自动保存倒计时: {duration} 秒
+            {t('autoSave.durationLabel', { value: duration })}
             <input
               type="range"
               min="10"
@@ -43,13 +46,13 @@ const AutoSaveSettings: React.FC<AutoSaveSettingsProps> = ({
             color: 'var(--text-tertiary)',
             lineHeight: 1.55,
           }}>
-            离开编辑区后开始倒计时，到期自动将当前更改同步到本地。
+            {t('autoSave.durationHint')}
           </p>
         </div>
       </div>
 
       <div className="settings-section">
-        <h3>功能开关</h3>
+        <h3>{t('sections.features')}</h3>
         <div className="option-item">
           <label>
             <span style={{
@@ -59,7 +62,7 @@ const AutoSaveSettings: React.FC<AutoSaveSettingsProps> = ({
               marginBottom: 6,
               display: 'inline-block',
             }}>
-              启用自动保存
+              {t('autoSave.enabledLabel')}
             </span>
             <label className="toggle-switch">
               <input

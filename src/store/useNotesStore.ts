@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { Note } from '../types';
+import i18n from '../i18n';
 import { setupAutoPersist } from './persistence';
 import { getServices } from '../services/serviceContainer';
 import { generateId } from '../utils/idUtils';
@@ -65,7 +66,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
 
     const note: Note = {
       id,
-      title: input.title?.trim() || '无标题',
+      title: input.title?.trim() || i18n.t('notes:untitled'),
       content: input.content?.trim() || '',
       createdAt: now,
       updatedAt: now,

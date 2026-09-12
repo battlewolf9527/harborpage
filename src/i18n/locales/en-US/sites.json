@@ -1,0 +1,112 @@
+{
+  "colorNames": {
+    "white": "White",
+    "pink": "Pink",
+    "lightOrange": "Light Orange",
+    "lightYellow": "Light Yellow",
+    "lightGreen": "Light Green",
+    "lightCyan": "Light Cyan",
+    "lightBlue": "Light Blue",
+    "lightPurple": "Light Purple",
+    "silver": "Silver",
+    "brightRed": "Bright Red",
+    "brightOrange": "Bright Orange",
+    "brightYellow": "Bright Yellow",
+    "brightGreen": "Bright Green",
+    "brightCyan": "Bright Cyan",
+    "brightBlue": "Bright Blue",
+    "brightPurple": "Bright Purple",
+    "darkGray": "Dark Gray",
+    "darkRed": "Dark Red",
+    "darkOrange": "Dark Orange",
+    "darkYellow": "Dark Yellow",
+    "darkGreen": "Dark Green",
+    "darkCyan": "Dark Cyan",
+    "darkBlue": "Dark Blue",
+    "darkPurple": "Dark Purple",
+    "black": "Black",
+    "extraDarkRed": "Extra-dark Red",
+    "extraDarkOrange": "Extra-dark Orange",
+    "extraDarkYellow": "Extra-dark Yellow",
+    "extraDarkGreen": "Extra-dark Green",
+    "extraDarkCyan": "Extra-dark Cyan",
+    "extraDarkBlue": "Extra-dark Blue",
+    "extraDarkPurple": "Extra-dark Purple"
+  },
+  "slotLabel": "Palette {{number}}: {{color}}",
+  "slotLabelWithAlias": "{{alias}} (Palette {{number}}): {{color}}",
+  "palette": {
+    "aria": "Color palette",
+    "custom": "Custom",
+    "nonDefault": " (non-default)",
+    "editSlot": "Edit Palette {{number}}",
+    "editSlotWithAlias": "Edit \"{{alias}} (Palette {{number}})\""
+  },
+  "picker": {
+    "close": "Close",
+    "aliasLabel": "Alias",
+    "aliasPlaceholder": "Not set (shows Palette N by default)",
+    "presetColors": "Preset colors",
+    "customColor": "Custom color",
+    "currentColor": "Current color: ",
+    "selectColorPrompt": "Select a color",
+    "restoreDefault": "Restore default"
+  },
+  "form": {
+    "urlLabel": "Website URL",
+    "urlPlaceholder": "e.g. www.google.com",
+    "nameLabel": "Website Name",
+    "namePlaceholder": "e.g. Google",
+    "fetching": "Fetching...",
+    "iconLabel": "Icon (optional)",
+    "iconPlaceholder": "Leave empty to fetch the site icon automatically",
+    "iconTipAria": "Icon input help",
+    "iconTipText": "Three ways to provide an icon:\n1. Icon URL: an image link (e.g. https://.../icon.png)\n2. Text: any text (e.g. \"Ba\", \"ABC\") generates a colored text icon (max 4 characters)\n3. Emoji: an emoji character (e.g. 🚀, ⭐)\n\nLeave empty to fetch the website favicon automatically",
+    "iconPreviewAlt": "Icon preview",
+    "iconActionsLabel": "Icon Actions",
+    "iconColorLabel": "Icon Color",
+    "uploadTitle": "Upload an icon to R2 manually",
+    "autoFetchTitle": "Try to fetch the icon from multiple sources",
+    "saveToR2Title": "Save the current preview icon to R2 and set the icon URL automatically",
+    "uploadHint": "Supports PNG, JPG, GIF, WebP, SVG, up to 100KB",
+    "saveDisabledHint": " (available once the preview icon loads)"
+  },
+  "actions": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "upload": "Upload",
+    "uploading": "Uploading...",
+    "save": "Save",
+    "saving": "Saving...",
+    "autoFetch": "Smart Fetch"
+  },
+  "errors": {
+    "nameRequired": "Please enter a website name",
+    "nameTooLong": "Website name cannot exceed 80 characters",
+    "urlRequired": "Please enter the website URL",
+    "urlInvalid": "Please enter a valid URL",
+    "fileTooLarge": "File size cannot exceed 100KB",
+    "uploadFailed": "Upload failed, please try again",
+    "uploadFailedWithError": "Upload failed: {{error}}",
+    "unknownError": "Unknown error",
+    "saveFailed": "Save failed, please try again",
+    "saveFailedWithError": "Save failed: {{error}}",
+    "invalidUrlBeforeFetch": "Please enter a valid website URL first"
+  },
+  "toasts": {
+    "iconFetchSuccess": "Icon fetched successfully",
+    "iconSavedToR2": "Icon saved to R2"
+  },
+  "logs": {
+    "fetchTitleFailed": "Failed to fetch title",
+    "uploadIconFailed": "Failed to upload icon",
+    "saveIconToR2Failed": "Failed to save icon to R2"
+  },
+  "contextMenu": {
+    "aria": "Actions menu",
+    "edit": "Edit",
+    "moveToPage": "Move to page…",
+    "delete": "Delete"
+  },
+  "gridAria": "Website icon list"
+}

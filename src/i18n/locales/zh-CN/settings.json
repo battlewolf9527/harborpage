@@ -1,0 +1,95 @@
+{
+  "title": "设置",
+  "sections": {
+    "personalization": "个性化",
+    "preferences": "偏好设置",
+    "features": "功能开关",
+    "data": "数据管理",
+    "account": "账户与关于"
+  },
+  "siteTitle": {
+    "label": "网站标题",
+    "placeholder": "输入页面标题"
+  },
+  "language": {
+    "label": "界面语言"
+  },
+  "actions": {
+    "changeWallpaper": "更改壁纸",
+    "iconSettings": "桌面图标设置",
+    "faviconSources": "管理图标源",
+    "searchEngines": "管理搜索引擎",
+    "autoSave": "自动保存设置",
+    "loadFromCloud": "从云端加载数据",
+    "loading": "加载中...",
+    "importPreset": "导入预设站点",
+    "clearAllSites": "清空所有站点",
+    "logout": "注销登录",
+    "about": "关于 HarborPage",
+    "continueCleanup": "继续清理"
+  },
+  "palette": {
+    "title": "调色板",
+    "hint": "点击色块可重新设定该调色板颜色，使用该颜色的元素将自动更新"
+  },
+  "lightness": {
+    "title": "全局明暗度",
+    "original": "原色",
+    "brighter": "变亮 +{{value}}",
+    "darker": "变暗 {{value}}",
+    "previewLabel": "实时预览",
+    "previewHint": "开启后，下方调色板色块实时预览叠加明暗度的观感；关闭则显示真实存储色",
+    "previewAria": "在下方调色板实时预览明暗度效果",
+    "aria": "全局明暗度：整体调亮或调暗图标、文件夹与便签使用的颜色",
+    "dim": "调暗",
+    "hint": "不改动已存颜色，仅调整实际使用的颜色明暗",
+    "bright": "调亮"
+  },
+  "features": {
+    "weather": "天气",
+    "weatherAria": "显示天气组件",
+    "search": "搜索框",
+    "searchAria": "显示搜索框",
+    "notes": "笔记",
+    "notesAria": "显示笔记入口",
+    "todos": "待办事项",
+    "todosAria": "显示待办事项入口",
+    "pages": "多页面",
+    "pagesAria": "显示多页面入口"
+  },
+  "autoSave": {
+    "countdownTitle": "倒计时时长",
+    "durationLabel": "自动保存倒计时: {{value}} 秒",
+    "durationHint": "离开编辑区后开始倒计时，到期自动将当前更改同步到本地。",
+    "enabledLabel": "启用自动保存"
+  },
+  "dialogs": {
+    "loadDataTitle": "确认加载数据",
+    "loadDataMessage": "确定要从云端加载数据吗？这将覆盖当前的本地更改。",
+    "logoutTitle": "确认注销",
+    "logoutMessage": "确定要注销登录吗？注销后需要重新登录才能继续使用应用。",
+    "cleanupTitle": "确认清理",
+    "cleanupMessage": "确定要清理未使用的图标吗？这将删除R2存储中所有未被网站引用的图标文件，此操作不可恢复。",
+    "clearSitesTitle": "确认清空所有站点",
+    "clearSitesMessage": "确定要清空所有站点吗？这将删除所有网站快捷方式和文件夹，此操作不可恢复。"
+  },
+  "toasts": {
+    "loadSuccess": "数据加载成功",
+    "loadFailed": "加载失败，请重试",
+    "loadFailedNetwork": "加载失败，请检查网络连接",
+    "cleanupFailed": "清理失败，请重试",
+    "cleanupFailedNetwork": "清理失败，请检查网络连接",
+    "sitesCleared": "已清空所有站点"
+  },
+  "logs": {
+    "loadDataFailed": "加载数据失败",
+    "cleanupIconsFailed": "清理图标失败"
+  },
+  "windows": {
+    "wallpaper": "壁纸管理",
+    "search": "搜索管理",
+    "favicon": "图标源管理",
+    "icon": "桌面图标设置",
+    "autoSave": "自动保存设置"
+  }
+}

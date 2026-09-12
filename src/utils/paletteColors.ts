@@ -15,8 +15,13 @@
  * ---------------------------------------------------------------
  */
 import type { PaletteHexMap, PaletteAliasMap } from '../types';
+import i18n from '../i18n';
+import type sitesResources from '../i18n/locales/zh-CN/sites.json';
 import { hexToHslCssVars } from './colorUtils';
 import { isHexColor, NOTE_COLOR_PRESETS, resolveNoteColor } from './noteColors';
+
+/** 快捷预设色的展示名 key（sites:colorNames.*），由语言包结构推导，保证字面量类型合法 */
+type QuickColorKey = `colorNames.${keyof typeof sitesResources.colorNames}`;
 
 /**
  * 出厂 16 槽默认色 = 预设矩阵「第 1 行（淡彩糖果色）+ 第 3 行（宝石深色）」共 16 色，
@@ -121,46 +126,47 @@ export function normalizeHex(hex?: string): string {
  */
 export interface QuickPresetColor {
   hex: string;
-  label: string;
+  /** 展示名 i18n key（sites:colorNames.*）；颜色名仅用于展示，不作为任何数据/持久化标识 */
+  colorKey: QuickColorKey;
 }
 
 export const QUICK_PRESET_COLORS: readonly QuickPresetColor[] = [
   // ── 第 1 行（淡彩糖果色，通透不寡淡）──
-  { hex: '#ffffff', label: '白色' },
-  { hex: '#ff8a8a', label: '粉红' },
-  { hex: '#ffb366', label: '淡橙' },
-  { hex: '#ffe566', label: '淡黄' },
-  { hex: '#8cd98c', label: '淡绿' },
-  { hex: '#7ad9d9', label: '淡青' },
-  { hex: '#7ab8ff', label: '淡蓝' },
-  { hex: '#c28cff', label: '淡紫' },
+  { hex: '#ffffff', colorKey: 'colorNames.white' },
+  { hex: '#ff8a8a', colorKey: 'colorNames.pink' },
+  { hex: '#ffb366', colorKey: 'colorNames.lightOrange' },
+  { hex: '#ffe566', colorKey: 'colorNames.lightYellow' },
+  { hex: '#8cd98c', colorKey: 'colorNames.lightGreen' },
+  { hex: '#7ad9d9', colorKey: 'colorNames.lightCyan' },
+  { hex: '#7ab8ff', colorKey: 'colorNames.lightBlue' },
+  { hex: '#c28cff', colorKey: 'colorNames.lightPurple' },
   // ── 第 2 行（高饱和亮色）──
-  { hex: '#d9d9d9', label: '银灰' },
-  { hex: '#ff3b30', label: '亮赤' },
-  { hex: '#ff9500', label: '亮橙' },
-  { hex: '#ffcc00', label: '亮黄' },
-  { hex: '#34c759', label: '亮绿' },
-  { hex: '#5ac8fa', label: '亮青' },
-  { hex: '#007aff', label: '亮蓝' },
-  { hex: '#af52de', label: '亮紫' },
+  { hex: '#d9d9d9', colorKey: 'colorNames.silver' },
+  { hex: '#ff3b30', colorKey: 'colorNames.brightRed' },
+  { hex: '#ff9500', colorKey: 'colorNames.brightOrange' },
+  { hex: '#ffcc00', colorKey: 'colorNames.brightYellow' },
+  { hex: '#34c759', colorKey: 'colorNames.brightGreen' },
+  { hex: '#5ac8fa', colorKey: 'colorNames.brightCyan' },
+  { hex: '#007aff', colorKey: 'colorNames.brightBlue' },
+  { hex: '#af52de', colorKey: 'colorNames.brightPurple' },
   // ── 第 3 行（浓郁宝石深色）──
-  { hex: '#7a7a7a', label: '深灰' },
-  { hex: '#d90000', label: '深赤' },
-  { hex: '#d97000', label: '深橙' },
-  { hex: '#d9a800', label: '深黄' },
-  { hex: '#00a34a', label: '深绿' },
-  { hex: '#0099a8', label: '深青' },
-  { hex: '#0055d9', label: '深蓝' },
-  { hex: '#8a2be2', label: '深紫' },
+  { hex: '#7a7a7a', colorKey: 'colorNames.darkGray' },
+  { hex: '#d90000', colorKey: 'colorNames.darkRed' },
+  { hex: '#d97000', colorKey: 'colorNames.darkOrange' },
+  { hex: '#d9a800', colorKey: 'colorNames.darkYellow' },
+  { hex: '#00a34a', colorKey: 'colorNames.darkGreen' },
+  { hex: '#0099a8', colorKey: 'colorNames.darkCyan' },
+  { hex: '#0055d9', colorKey: 'colorNames.darkBlue' },
+  { hex: '#8a2be2', colorKey: 'colorNames.darkPurple' },
   // ── 第 4 行（极深但保留色相的通透暗调）──
-  { hex: '#1a1a1a', label: '黑色' },
-  { hex: '#b30000', label: '极深赤' },
-  { hex: '#b35c00', label: '极深橙' },
-  { hex: '#8a7300', label: '极深黄' },
-  { hex: '#006b3d', label: '极深绿' },
-  { hex: '#006b6b', label: '极深青' },
-  { hex: '#0033b3', label: '极深蓝' },
-  { hex: '#5b1a8b', label: '极深紫' },
+  { hex: '#1a1a1a', colorKey: 'colorNames.black' },
+  { hex: '#b30000', colorKey: 'colorNames.extraDarkRed' },
+  { hex: '#b35c00', colorKey: 'colorNames.extraDarkOrange' },
+  { hex: '#8a7300', colorKey: 'colorNames.extraDarkYellow' },
+  { hex: '#006b3d', colorKey: 'colorNames.extraDarkGreen' },
+  { hex: '#006b6b', colorKey: 'colorNames.extraDarkCyan' },
+  { hex: '#0033b3', colorKey: 'colorNames.extraDarkBlue' },
+  { hex: '#5b1a8b', colorKey: 'colorNames.extraDarkPurple' },
 ];
 
 /** 取色器预设描述：命中 32 色候选 → 中文色名；否则返回 hex（出厂 16 色均在候选内，无需单独兜底） */
@@ -168,7 +174,7 @@ export function describeQuickColor(hex?: string): string {
   const normalized = normalizeHex(hex);
   if (!normalized) return '';
   const hit = QUICK_PRESET_COLORS.find((c) => c.hex === normalized);
-  return hit ? hit.label : describeColor(normalized);
+  return hit ? i18n.t(`sites:${hit.colorKey}`) : describeColor(normalized);
 }
 
 /**
@@ -218,7 +224,10 @@ export function describeSlotLabel(
   const hex = normalizeHex(slots?.[id]) || DEFAULT_PALETTE_HEXES[id] || '';
   // 颜色名：命中 32 色预设（含出厂 16 槽默认色）→ 中文色名；否则 hex 兜底
   const colorText = hex ? describeQuickColor(hex) : '';
-  return alias ? `${alias}（调色板 ${slotNumber(id)}）：${colorText}` : `调色板 ${slotNumber(id)}：${colorText}`;
+  const number = slotNumber(id);
+  return alias
+    ? i18n.t('sites:slotLabelWithAlias', { alias, number, color: colorText })
+    : i18n.t('sites:slotLabel', { number, color: colorText });
 }
 
 /**

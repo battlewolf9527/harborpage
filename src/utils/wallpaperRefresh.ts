@@ -1,4 +1,5 @@
 import AuthService from '../services/AuthService';
+import i18n from '../i18n';
 import createLogger from './logger';
 
 const logger = createLogger('wallpaperRefresh');
@@ -16,7 +17,7 @@ export async function fetchBingWallpaperUrl(excludeUrl?: string | null): Promise
       '/api/bing/HPImageArchive.aspx?format=json&idx=0&n=8&mkt=zh-CN',
       { headers: AuthService.getAuthHeaders(), cache: 'no-store' },
     );
-    if (!response.ok) throw new Error(`Bing API请求失败: ${response.status}`);
+    if (!response.ok) throw new Error(i18n.t('wallpaper:errors.bingApiRequestFailed', { status: response.status }));
     const data = await response.json();
     if (data?.images?.length > 0) {
       const images: Array<{ url: string }> = data.images;
@@ -28,9 +29,9 @@ export async function fetchBingWallpaperUrl(excludeUrl?: string | null): Promise
       const candidates = pool.length > 0 ? pool : fullUrls;
       return candidates[Math.floor(Math.random() * candidates.length)];
     }
-    throw new Error('Bing API返回数据格式异常');
+    throw new Error(i18n.t('wallpaper:errors.bingApiInvalidData'));
   } catch (error) {
-    logger.error('获取Bing壁纸失败', error);
+    logger.error(i18n.t('wallpaper:errors.fetchBingFailed'), error);
     return FALLBACK_WALLPAPER;
   }
 }

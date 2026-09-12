@@ -1,0 +1,70 @@
+{
+  "untitled": "Untitled",
+  "noContent": "(No content)",
+  "blankContent": "(Empty content)",
+  "close": "Close",
+  "closeEsc": "Close (Esc)",
+  "cancel": "Cancel",
+  "save": "Save",
+  "create": "Create",
+  "add": "Add",
+  "edit": "Edit",
+  "delete": "Delete",
+  "newNote": "New Note",
+  "editNote": "Edit Note",
+  "addNote": "Add Note",
+  "updatedAt": "Updated {{date}}",
+  "createdAt": "Created {{date}}",
+  "entry": {
+    "label": "Notes · hover to expand",
+    "labelWithCount": "{{count}} notes · hover to expand"
+  },
+  "bar": {
+    "ariaLabel": "Notes bar",
+    "ballRowAria": "Note balls",
+    "emptyGlyph": "—",
+    "emptyHintPrefix": "No notes yet. Click ",
+    "emptyHintSuffix": " on the left to create your first one.",
+    "ballAria": "Note: {{title}}"
+  },
+  "bubble": {
+    "addText": "Opens a blank editor. The note is only created after you click “Save”.",
+    "moreTitle": "Notes Manager",
+    "moreText": "View all notes, reorder them, rename, change colors, or delete.",
+    "badgeText": "{{count}} more notes are not shown in this bar. Open the notes manager via ⚙︎ on the right to see them all",
+    "editText": "Open the note in the editor (read the full text, edit title/color/content, save or delete)"
+  },
+  "editor": {
+    "titlePlaceholder": "Note title…",
+    "contentPlaceholder": "Write something… (⌘/Ctrl + Enter to save)",
+    "colorPaletteAria": "Note color",
+    "newHint": "A brand new note. It takes effect as soon as you save.",
+    "createdLabel": "Created: {{date}}",
+    "deleteConfirmTitle": "Delete Note",
+    "deleteConfirmMessage": "Delete this note? This cannot be undone.",
+    "discardTitle": "Discard unsaved changes?",
+    "discardMessage": "Your edits have not been saved. Closing now will lose the title and content you entered.",
+    "discardConfirm": "Discard Changes"
+  },
+  "manager": {
+    "title": "Notes Manager",
+    "searchPlaceholder": "Search titles or content…",
+    "clearSearch": "Clear search",
+    "statsFiltered": "{{visible}} of {{total}} matched",
+    "stats": "{{total}} notes · drag rows to reorder",
+    "create": "New",
+    "emptyFilteredTitle": "No matching notes",
+    "emptyFilteredHint": "Try a different keyword, or clear the search.",
+    "emptyTitle": "No notes yet",
+    "emptyHint": "Click “New” in the top right to create your first note!",
+    "dragToSort": "Drag to reorder"
+  },
+  "panel": {
+    "title": "Notes",
+    "titlePlaceholder": "Title",
+    "contentPlaceholder": "Content"
+  },
+  "log": {
+    "targetNoteNotFound": "NoteEditorDialog: target note not found, falling back to create mode."
+  }
+}

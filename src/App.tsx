@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useCallback, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import './App.css'
 import Search from './components/features/Search'
 import SettingsWindow from './components/ui/SettingsWindow'
@@ -36,7 +37,7 @@ import { cleanupWallpaperPersist } from './store/useWallpaperStore';
 const useDocumentTitle = (title: string) => {
   useEffect(() => {
     const originalTitle = document.title;
-    document.title = title || '我的导航';
+    document.title = title;
     return () => {
       document.title = originalTitle;
     };
@@ -44,6 +45,7 @@ const useDocumentTitle = (title: string) => {
 };
 
 function App() {
+  const { t } = useTranslation('common');
   const { isAuthenticated, isCheckingAuth, handleLogin } = useAuth();
   useWallpaperInit(isAuthenticated, isCheckingAuth);
   useWallpaperAutoChange(isAuthenticated, isCheckingAuth);
@@ -66,7 +68,7 @@ function App() {
   }, []);
 
   const { iconColumns, siteTitle, weatherEnabled, searchEnabled, notesEnabled, todosEnabled, pagesEnabled, settingsReady } = useSettingsSelector();
-  useDocumentTitle(siteTitle);
+  useDocumentTitle(siteTitle || t('defaultSiteTitle'));
 
   const {
     websites, openFolder, setOpenFolder, setWebsiteIcons,
@@ -208,7 +210,7 @@ function App() {
       <button 
         className="settings-button"
         onClick={() => setShowSettings(!showSettings)}
-        aria-label="设置"
+        aria-label={t('settings')}
       >
         ⚙️
       </button>
@@ -230,7 +232,7 @@ function App() {
           <button 
             className="add-icon-button"
             onClick={() => setShowAddIcon(true)}
-            aria-label="新增网站"
+            aria-label={t('addWebsite')}
           >
             +
           </button>
@@ -266,7 +268,7 @@ function App() {
       {showAddIcon && (
         <SettingsWindow
           ref={addIconWindowRef}
-          title="新增网站"
+          title={t('addWebsite')}
           onClose={() => {
             setShowAddIcon(false);
             setAddIconInitialUrl(undefined);
@@ -287,7 +289,7 @@ function App() {
       {showEditIcon && editingIcon && (
         <SettingsWindow 
           ref={settingsWindowRef}
-          title="修改网站"
+          title={t('editWebsite')}
           onClose={() => {
             setShowEditIcon(false);
             setEditingIcon(null);
@@ -307,8 +309,8 @@ function App() {
 
       <ConfirmDialog
         isOpen={showConfirmDialog}
-        title="确认删除"
-        message="确定要删除这个网站吗？"
+        title={t('deleteConfirmTitle')}
+        message={t('deleteConfirmMessage')}
         onConfirm={confirmDeleteIcon}
         onCancel={cancelDeleteIcon}
       />

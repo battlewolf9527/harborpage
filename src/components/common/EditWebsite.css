@@ -107,23 +107,18 @@
   color: var(--text-primary);
   outline: none;
 }
-.edit-website-tip::after {
-  content: '';
-  position: absolute;
-  top: calc(100% + 6px); left: 50%;
-  transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-bottom-color: var(--glass-surface-300);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--motion-fast);
-  z-index: 10;
+/* 悬浮说明：文案由 JSX 真实节点（.edit-website-tip-text）渲染，
+   便于 i18n；箭头用该节点自身的 ::before，content 仅几何形状、无文案。 */
+.edit-website-tip-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
 }
-.edit-website-tip::before {
-  content: '支持三种输入方式：\A 1. 图标URL：图片链接（如 https://.../icon.png）\A 2. 文字：任意文字（如 "Ba"、"ABC"），将生成带颜色的文字图标（最多4字符）\A 3. Emoji：emoji字符（如 🚀、⭐）\A\A 留空则自动获取网站favicon';
+.edit-website-tip-text {
   position: absolute;
   top: calc(100% + 14px); left: 50%;
   transform: translateX(-50%);
+  margin: 0;
   background: var(--glass-surface-300);
   backdrop-filter: var(--glass-blur-soft);
   color: var(--text-primary);
@@ -140,10 +135,16 @@
   transition: opacity var(--motion-fast);
   z-index: 10;
 }
-.edit-website-tip:hover::after,
-.edit-website-tip:hover::before,
-.edit-website-tip:focus::after,
-.edit-website-tip:focus::before {
+.edit-website-tip-text::before {
+  content: '';
+  position: absolute;
+  bottom: 100%; left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-bottom-color: var(--glass-surface-300);
+}
+.edit-website-tip-wrapper:hover .edit-website-tip-text,
+.edit-website-tip-wrapper:focus-within .edit-website-tip-text {
   opacity: 1;
   pointer-events: auto;
 }
@@ -206,17 +207,28 @@
   border-color: color-mix(in srgb, var(--semantic-danger) 70%, #fff);
   background: color-mix(in srgb, var(--semantic-danger) 10%, transparent);
 }
-/* 协议选择框：内容右对齐，贴近 URL 内容（用户偏好） */
-.edit-website-url-protocol {
+/* 协议选择框：内容右对齐，贴近 URL 内容（用户偏好）
+   选择器必须带 .edit-website-url-wrapper 提升特异性：EditWebsite 嵌在 SettingsWindow
+   面板内，SettingsWindow.css 的 .settings-panel select（特异性 0,1,1）会盖过单类选择器，
+   把 width:100% / 边框 / 自绘箭头背景图 / 内高光 泄漏进来，把协议框撑成半行宽。
+   注意：聚焦态需单独覆盖 box-shadow，.settings-panel select:focus（0,2,1）比本规则(0,2,0)高。 */
+.edit-website-url-wrapper .edit-website-url-protocol {
   padding: 12px 2px 12px 10px;
   border: none;
+  border-radius: 0;
   background: transparent;
+  box-shadow: none;
   color: var(--text-secondary);
   font-size: var(--font-md);
   font-weight: 500;
   outline: none;
   cursor: pointer;
-  min-width: 68px;
+  /* 不能用固定 px：--font-md 是 clamp(14px, 0.8vw, 18px)，宽视口下字号会放大到
+     17-18px，而 <select> 的固有宽度只等于文本宽 + 自身内边距（不含本规则的 padding），
+     宽度会被定死在这里，末尾的 "/" 就被裁掉。用 em 随字号一起缩放：
+     4em 是文本宽（"https://" ≈ 3.5em）的余量，12px 即左右内边距之和。 */
+  min-width: calc(4em + 12px);
+  width: auto;
   transition: background var(--motion-fast);
   appearance: none;
   text-align: right;
@@ -233,10 +245,11 @@
   pointer-events: none;
   margin-left: 2px;
 }
-.edit-website-url-protocol:hover,
-.edit-website-url-protocol:focus {
+.edit-website-url-wrapper .edit-website-url-protocol:hover,
+.edit-website-url-wrapper .edit-website-url-protocol:focus {
   background: var(--glass-surface-300);
   color: var(--text-primary);
+  box-shadow: none;
 }
 .edit-website-url-protocol option {
   background: #0f1226;

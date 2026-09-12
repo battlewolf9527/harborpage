@@ -6,6 +6,7 @@ import DataRepository from './DataRepository';
 import FaviconConfigService from './FaviconConfigService';
 import MD5 from 'crypto-js/md5';
 import createLogger from '../utils/logger';
+import i18n from '../i18n';
 
 const logger = createLogger('IconManager');
 
@@ -389,7 +390,7 @@ class IconManager {
       }
       return { success: true as const };
     } catch (error) {
-      logger.error('预下载图标失败', error);
+      logger.error(i18n.t('icons:manager.preloadFailed'), error);
       return { success: false };
     }
   }
@@ -427,18 +428,18 @@ class IconManager {
 
         DataRepository.handleAuthResponse(response);
         if (!response.ok) {
-          logger.error(`删除R2图标失败: ${response.status}`);
+          logger.error(i18n.t('icons:manager.deleteFailedWithStatus', { status: response.status }));
           failures.push({ id: item.id, url: item.url, error: `HTTP ${response.status}` });
         }
       } catch (error) {
-        logger.error('删除R2图标失败', error);
+        logger.error(i18n.t('icons:manager.deleteFailed'), error);
         failures.push({ id: item.id, url: item.url, error });
       }
     }
 
     // 如果有失败项，抛出错误让调用方决定是否保留 pendingDeletes
     if (failures.length > 0) {
-      throw new Error(`${failures.length}/${total} 个图标删除失败`);
+      throw new Error(i18n.t('icons:manager.deletePartialFailed', { failed: failures.length, total }));
     }
   }
 }

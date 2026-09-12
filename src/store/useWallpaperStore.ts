@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { WallpaperData, WallpaperType } from '../types';
+import i18n from '../i18n';
 import { setupAutoPersist } from './persistence';
 import { getServices } from '../services/serviceContainer';
 import { loadLocalWallpaper } from '../utils/wallpaperStorage';
@@ -110,7 +111,7 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
             }
           })
           .catch((err) => {
-            console.error('从 IndexedDB 加载壁纸失败', err);
+            console.error(i18n.t('wallpaper:errors.indexedDbLoadFailed'), err);
           });
       }
     }

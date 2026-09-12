@@ -2,6 +2,7 @@
 import { STORAGE_KEYS } from '../constants';
 import ConfigService from './ConfigService';
 import createLogger from '../utils/logger';
+import i18n from '../i18n';
 
 const logger = createLogger('AuthService');
 
@@ -45,14 +46,14 @@ class AuthService {
     try {
       passwordHash = await this.sha256(password);
     } catch (error) {
-      logger.error('密码哈希失败', error);
+      logger.error(i18n.t('system:auth.passwordHashFailed'), error);
       if (error instanceof Error && error.message === 'CRYPTO_SUBTLE_UNAVAILABLE') {
         return {
           success: false,
-          error: '当前环境不支持密码加密，请通过 HTTPS 或 localhost 访问',
+          error: i18n.t('system:auth.cryptoSubtleUnavailable'),
         };
       }
-      return { success: false, error: '密码加密失败，请稍后重试' };
+      return { success: false, error: i18n.t('system:auth.passwordEncryptFailed') };
     }
 
     try {
@@ -74,15 +75,15 @@ class AuthService {
         try {
           await ConfigService.fetchConfig();
         } catch (configError) {
-          logger.error('获取配置失败', configError);
+          logger.error(i18n.t('system:config.fetchFailed'), configError);
         }
         return { success: true };
       }
       // 密码错误（401）或其他非 OK 状态，统一显示默认错误
       return { success: false };
     } catch (error) {
-      logger.error('登录失败', error);
-      return { success: false, error: '网络请求失败，请稍后重试' };
+      logger.error(i18n.t('system:auth.loginFailed'), error);
+      return { success: false, error: i18n.t('system:auth.networkRequestFailed') };
     }
   }
 
@@ -122,7 +123,7 @@ class AuthService {
       }
       return false;
     } catch (error) {
-      logger.error('检查认证状态失败', error);
+      logger.error(i18n.t('system:auth.checkAuthStatusFailed'), error);
       return false;
     }
   }

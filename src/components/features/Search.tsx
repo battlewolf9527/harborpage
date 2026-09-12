@@ -1,5 +1,6 @@
 import React, { useState, useRef, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import './Search.css'
 import { useSearchSelector } from '../../store/selectors'
 import { IconType } from '../../services/IconManager'
@@ -13,6 +14,7 @@ interface SearchProps {
 }
 
 const Search: React.FC<SearchProps> = ({ onSearch }) => {
+  const { t } = useTranslation('search');
   const { iconManager } = getServices();
   const { searchEngines, defaultSearchEngineId } = useSearchSelector();
   const [showSearchDropdown, setShowSearchDropdown] = useState<boolean>(false)
@@ -146,7 +148,7 @@ const Search: React.FC<SearchProps> = ({ onSearch }) => {
           className="search-input"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={effectiveSearchEngine ? `用${effectiveSearchEngine.name}搜索` : '搜索...'}
+          placeholder={effectiveSearchEngine ? t('placeholderWithEngine', { name: effectiveSearchEngine.name }) : t('placeholder')}
           onKeyDown={handleKeyDown}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
@@ -155,7 +157,7 @@ const Search: React.FC<SearchProps> = ({ onSearch }) => {
           className="search-submit-button"
           onClick={handleSearchSubmit}
         >
-          搜索
+          {t('searchButton')}
         </button>
       </div>
     </div>

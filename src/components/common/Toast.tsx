@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import './Toast.css';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
@@ -18,8 +19,9 @@ const Toast: React.FC<ToastProps> = ({
   duration = 2000,
   onClose,
   onContinue,
-  continueText = '继续'
+  continueText
 }) => {
+  const { t } = useTranslation('dock');
   // 使用 lazy initialization 避免在 useEffect 中同步调用 setState
   const [isVisible, setIsVisible] = useState(() => true);
   const [progress, setProgress] = useState(100);
@@ -99,7 +101,7 @@ const Toast: React.FC<ToastProps> = ({
         <div className="toast-message">{message}</div>
         {onContinue && (
           <button className="toast-continue-btn" onClick={onContinue}>
-            {continueText}
+            {continueText ?? t('toast.continue')}
           </button>
         )}
         <div

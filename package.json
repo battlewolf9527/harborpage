@@ -16,11 +16,13 @@
 	"dependencies": {
 		"cloudflare": "^5.2.0",
 		"crypto-js": "^4.2.0",
+		"i18next": "^26.0.0",
 		"jose": "^6.2.2",
 		"lunisolar": "^2.6.0",
 		"qweather-icons": "^1.8.0",
 		"react": "^19.2.0",
 		"react-dom": "^19.2.0",
+		"react-i18next": "^17.0.0",
 		"zustand": "^5.0.12"
 	},
 	"devDependencies": {
