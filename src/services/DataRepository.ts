@@ -2,7 +2,6 @@ import type { UserData } from '../types';
 import AuthService from './AuthService';
 import { STORAGE_KEYS, TRACKED_KEYS } from '../constants';
 import createLogger from '../utils/logger';
-import i18n from '../i18n';
 
 const logger = createLogger('DataRepository');
 
@@ -31,7 +30,7 @@ class DataRepository {
       if (!raw) return null;
       return JSON.parse(raw);
     } catch (e) {
-      logger.error(i18n.t('system:storage.loadLocalFailed'), e);
+      logger.error('Failed to load data from local storage', e);
       return null;
     }
   }
@@ -46,7 +45,7 @@ class DataRepository {
       const data = await response.json();
       return data;
     } catch (e) {
-      logger.error(i18n.t('system:storage.loadApiFailed'), e);
+      logger.error('Failed to load data from API', e);
       return null;
     }
   }
@@ -71,7 +70,7 @@ class DataRepository {
       try {
         localStorage.setItem(STORAGE_KEYS.DATA, JSON.stringify(data));
       } catch (error) {
-        logger.error(i18n.t('system:storage.saveLocalFailed'), error);
+        logger.error('Failed to save local data', error);
       }
       this.saveTimer = null;
     }, delay);
@@ -90,7 +89,7 @@ class DataRepository {
       this.handleAuthResponse(response);
       return response.ok;
     } catch (e) {
-      logger.error(i18n.t('system:storage.saveKeyFailed', { key }), e);
+      logger.error(`Failed to save ${key}`, e);
       return false;
     }
   }
@@ -107,7 +106,7 @@ class DataRepository {
       }
       return true;
     } catch (e) {
-      logger.error(i18n.t('system:storage.clearFailed'), e);
+      logger.error('Failed to clear data', e);
       return false;
     }
   }
@@ -120,7 +119,7 @@ class DataRepository {
     try {
       localStorage.setItem(key, value);
     } catch (error) {
-      logger.error(i18n.t('system:storage.saveConfigFailed', { key }), error);
+      logger.error(`Failed to save config ${key}`, error);
     }
   }
 
@@ -128,7 +127,7 @@ class DataRepository {
     try {
       return localStorage.getItem(key);
     } catch (error) {
-      logger.error(i18n.t('system:storage.loadConfigFailed', { key }), error);
+      logger.error(`Failed to load config ${key}`, error);
       return null;
     }
   }
@@ -137,7 +136,7 @@ class DataRepository {
     try {
       localStorage.removeItem(key);
     } catch (error) {
-      logger.error(i18n.t('system:storage.removeConfigFailed', { key }), error);
+      logger.error(`Failed to remove config ${key}`, error);
     }
   }
 
@@ -145,7 +144,7 @@ class DataRepository {
     try {
       localStorage.setItem(STORAGE_KEYS.UNSAVED_CHANGES, JSON.stringify(changedKeys));
     } catch (error) {
-      logger.error(i18n.t('system:storage.saveUnsavedFailed'), error);
+      logger.error('Failed to save unsaved state', error);
     }
   }
 
@@ -164,7 +163,7 @@ class DataRepository {
       }
       return null;
     } catch (error) {
-      logger.error(i18n.t('system:storage.loadUnsavedFailed'), error);
+      logger.error('Failed to load unsaved state', error);
       return null;
     }
   }
@@ -173,7 +172,7 @@ class DataRepository {
     try {
       localStorage.setItem(key, JSON.stringify(data));
     } catch (error) {
-      logger.error(i18n.t('system:storage.saveCacheFailed', { key }), error);
+      logger.error(`Failed to save cache ${key}`, error);
     }
   }
 
@@ -183,7 +182,7 @@ class DataRepository {
       if (!raw) return null;
       return JSON.parse(raw) as T;
     } catch (error) {
-      logger.error(i18n.t('system:storage.loadCacheFailed', { key }), error);
+      logger.error(`Failed to load cache ${key}`, error);
       return null;
     }
   }

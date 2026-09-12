@@ -1,7 +1,6 @@
 import type { FaviconSource } from '../types';
 import DataManager from './DataManager';
 import createLogger from '../utils/logger';
-import i18n from '../i18n';
 
 const logger = createLogger('FaviconConfigService');
 
@@ -43,7 +42,7 @@ class FaviconConfigService {
       const data = (await resp.json()) as { sources: FaviconSource[] };
       this.cachedDefaults = data.sources;
     } catch (error) {
-      logger.error(i18n.t('icons:faviconService.loadDefaultsFailed'), error);
+      logger.error('Failed to load default favicon sources from the backend', error);
     }
   }
 
@@ -60,7 +59,7 @@ class FaviconConfigService {
         return userSources;
       }
     } catch (error) {
-      logger.error(i18n.t('icons:faviconService.loadSourcesFailed'), error);
+      logger.error('Failed to get favicon source configuration', error);
     }
     return this.cachedDefaults ?? [];
   }
@@ -106,7 +105,7 @@ class FaviconConfigService {
     try {
       DataManager.updateFaviconSources(sources);
     } catch (error) {
-      logger.error(i18n.t('icons:faviconService.saveSourcesFailed'), error);
+      logger.error('Failed to save favicon source configuration', error);
     }
   }
 }

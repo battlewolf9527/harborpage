@@ -63,8 +63,5 @@
     "title": "Notes",
     "titlePlaceholder": "Title",
     "contentPlaceholder": "Content"
-  },
-  "log": {
-    "targetNoteNotFound": "NoteEditorDialog: target note not found, falling back to create mode."
   }
 }

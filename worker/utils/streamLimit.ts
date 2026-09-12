@@ -1,4 +1,5 @@
 import type { Env } from '../types';
+import { API_ERROR_CODES } from './constants';
 
 /**
  * 安全地读取响应体为 ArrayBuffer，实时计数字节，超限立即取消
@@ -14,14 +15,14 @@ export async function readResponseBodyWithLimit(
   if (contentLengthStr) {
     const contentLength = parseInt(contentLengthStr, 10);
     if (!Number.isNaN(contentLength) && contentLength > maxBytes) {
-      throw new ResponseSizeError('图片过大');
+      throw new ResponseSizeError(API_ERROR_CODES.IMAGE_TOO_LARGE);
     }
   }
 
   if (!response.body) {
     const data = await response.arrayBuffer();
     if (data.byteLength > maxBytes) {
-      throw new ResponseSizeError('图片过大');
+      throw new ResponseSizeError(API_ERROR_CODES.IMAGE_TOO_LARGE);
     }
     return data;
   }
@@ -36,7 +37,7 @@ export async function readResponseBodyWithLimit(
       if (done) break;
       totalBytes += value.byteLength;
       if (totalBytes > maxBytes) {
-        throw new ResponseSizeError('图片过大');
+        throw new ResponseSizeError(API_ERROR_CODES.IMAGE_TOO_LARGE);
       }
       chunks.push(value);
     }
@@ -55,7 +56,7 @@ export async function readResponseBodyWithLimit(
 
 /**
  * 响应体大小超限时抛出的专用错误
- * Worker 端 catch 后可通过 err.message === '图片过大' 判断
+ * Worker 端 catch 后通过 err instanceof ResponseSizeError 判断并映射为对应的错误码
  */
 export class ResponseSizeError extends Error {
   constructor(message: string) {

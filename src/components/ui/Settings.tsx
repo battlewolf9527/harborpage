@@ -166,7 +166,7 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
         setToast({ type: 'error', message: t('toasts.loadFailed') });
       }
     } catch (error) {
-      logger.error(t('logs.loadDataFailed'), error);
+      logger.error('Failed to load data', error);
       setToast({ type: 'error', message: t('toasts.loadFailedNetwork') });
     } finally {
       setIsLoading(false);
@@ -222,18 +222,24 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
           // 还有更多图标需要清理，显示继续按钮
           setToast({ 
             type: 'success', 
-            message: result.message,
+            message: t('toasts.cleanupSummaryWithMore', {
+              count: result.deletedCount,
+              remaining: result.estimatedRemaining,
+            }),
             onContinue: () => handleConfirmCleanupIcons(result.cursor, result.prefix),
             continueText: t('actions.continueCleanup')
           });
         } else {
-          setToast({ type: 'success', message: result.message });
+          setToast({
+            type: 'success',
+            message: t('toasts.cleanupSummary', { count: result.deletedCount }),
+          });
         }
       } else {
         setToast({ type: 'error', message: t('toasts.cleanupFailed') });
       }
     } catch (error) {
-      logger.error(t('logs.cleanupIconsFailed'), error);
+      logger.error('Failed to clean up icons', error);
       setToast({ type: 'error', message: t('toasts.cleanupFailedNetwork') });
     } finally {
       setIsCleaningUp(false);

@@ -8,8 +8,8 @@ interface IconSettingsProps {
   isCleaningUp: boolean;
 }
 
-const IconSettings: React.FC<IconSettingsProps> = ({ 
-  iconColumns, 
+const IconSettings: React.FC<IconSettingsProps> = ({
+  iconColumns,
   onIconColumnsChange,
   onCleanupIcons,
   isCleaningUp,

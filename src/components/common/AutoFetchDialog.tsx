@@ -5,6 +5,7 @@ import { getServices } from '../../services/serviceContainer';
 import autoFetchService, { type DownloadedIcon, type FetchProgress } from '../../services/autoFetchService';
 import { generateId } from '../../utils/idUtils';
 import createLogger from '../../utils/logger';
+import { translateIconSource } from '../../utils/apiErrorUtils';
 
 const logger = createLogger('AutoFetchDialog');
 
@@ -60,7 +61,7 @@ const AutoFetchDialog: React.FC<AutoFetchDialogProps> = ({
         setError(t('autoFetch.noIconsFound'));
       }
     } catch (err) {
-      logger.error(t('autoFetch.fetchIconsFailed'), err);
+      logger.error('Failed to auto fetch icons', err);
       setError(t('autoFetch.fetchFailed', {
         message: err instanceof Error ? err.message : t('autoFetch.networkError'),
       }));
@@ -105,7 +106,7 @@ const AutoFetchDialog: React.FC<AutoFetchDialogProps> = ({
         throw new Error(t('autoFetch.cacheResultInvalid'));
       }
     } catch (err) {
-      logger.error(t('autoFetch.cacheIconFailed'), err);
+      logger.error('Failed to cache icon', err);
       setError(t('autoFetch.cacheFailedWithMessage', {
         message: err instanceof Error ? err.message : t('autoFetch.unknownError'),
       }));
@@ -212,7 +213,7 @@ const AutoFetchDialog: React.FC<AutoFetchDialogProps> = ({
                       className="auto-fetch-item-img"
                     />
                     <div className="auto-fetch-item-meta">
-                      <span className="auto-fetch-item-source">{icon.source}</span>
+                      <span className="auto-fetch-item-source">{translateIconSource(icon.source)}</span>
                       <span className="auto-fetch-item-size">{formatSize(icon.size)}</span>
                     </div>
                     {selectedIndex === index && (

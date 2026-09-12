@@ -1,4 +1,6 @@
 export { TRACKED_KEYS, isTrackedKey } from '../shared/constants';
+export { API_ERROR_CODES, isApiErrorCode, ICON_SOURCE_CODES, isIconSourceCode } from '../shared/apiErrors';
+export type { ApiErrorCode, IconSourceCode } from '../shared/apiErrors';
 
 // 本地存储键名常量
 export const STORAGE_PREFIX = 'harborpage_';

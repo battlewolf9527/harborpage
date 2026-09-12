@@ -159,7 +159,6 @@ export async function handleCleanup(env: Env, cursor?: string, prefix?: string):
 
   return Response.json({
     success: true,
-    message: `清理完成，共删除 ${deletedCount} 个未使用的图标${hasMore ? `，还有约 ${estimatedRemaining} 个图标未清理，请再次点击继续清理` : ''}`,
     deletedCount,
     errors,
     hasMore,

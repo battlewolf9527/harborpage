@@ -1,5 +1,6 @@
 import type { Env } from '../types';
 import { readResponseBodyWithLimit, ResponseSizeError } from '../utils/streamLimit';
+import { API_ERROR_CODES } from '../utils/constants';
 
 // 壁纸代理允许的域名白名单
 const ALLOWED_HOSTS = new Set([
@@ -26,13 +27,13 @@ export async function handleWallpaperRoutes(request: Request, url: URL, _env: En
   }
 
   if (request.method !== 'GET') {
-    return Response.json({ error: '方法不支持' }, { status: 405 });
+    return Response.json({ error: API_ERROR_CODES.METHOD_NOT_ALLOWED }, { status: 405 });
   }
 
   try {
     const wallpaperUrl = url.searchParams.get('url');
     if (!wallpaperUrl) {
-      return Response.json({ error: '缺少必要参数' }, { status: 400 });
+      return Response.json({ error: API_ERROR_CODES.MISSING_PARAM }, { status: 400 });
     }
 
     // URL 解析校验
@@ -40,20 +41,20 @@ export async function handleWallpaperRoutes(request: Request, url: URL, _env: En
     try {
       parsed = new URL(wallpaperUrl);
     } catch {
-      return Response.json({ error: '无效的 URL' }, { status: 400 });
+      return Response.json({ error: API_ERROR_CODES.INVALID_URL }, { status: 400 });
     }
 
     // 仅允许 HTTPS + 域名白名单
     if (parsed.protocol !== 'https:') {
-      return Response.json({ error: '仅允许 HTTPS 协议' }, { status: 400 });
+      return Response.json({ error: API_ERROR_CODES.HTTPS_REQUIRED }, { status: 400 });
     }
     if (!ALLOWED_HOSTS.has(parsed.hostname)) {
-      return Response.json({ error: '域名不被允许' }, { status: 403 });
+      return Response.json({ error: API_ERROR_CODES.HOST_NOT_ALLOWED }, { status: 403 });
     }
 
     const response = await fetch(wallpaperUrl);
     if (!response.ok) {
-      return Response.json({ error: `获取壁纸失败: ${response.status} ${response.statusText}` }, { status: 502 });
+      return Response.json({ error: API_ERROR_CODES.WALLPAPER_FETCH_FAILED }, { status: 502 });
     }
 
     let imageData: ArrayBuffer;
@@ -61,7 +62,7 @@ export async function handleWallpaperRoutes(request: Request, url: URL, _env: En
       imageData = await readResponseBodyWithLimit(response, MAX_WALLPAPER_SIZE);
     } catch (err) {
       if (err instanceof ResponseSizeError) {
-        return Response.json({ error: '图片过大' }, { status: 413 });
+        return Response.json({ error: API_ERROR_CODES.IMAGE_TOO_LARGE }, { status: 413 });
       }
       throw err;
     }
@@ -72,7 +73,7 @@ export async function handleWallpaperRoutes(request: Request, url: URL, _env: En
         'Cache-Control': 'public, max-age=86400',
       },
     });
-  } catch (error) {
-    return Response.json({ error: `获取壁纸失败: ${error instanceof Error ? error.message : String(error)}` }, { status: 500 });
+  } catch {
+    return Response.json({ error: API_ERROR_CODES.WALLPAPER_FETCH_FAILED }, { status: 500 });
   }
 }

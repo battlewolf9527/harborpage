@@ -28,7 +28,7 @@ function syncToDataManager(): void {
       fn();
       syncResults[name] = true;
     } catch (error) {
-      logger.error(i18n.t('system:store.syncToDataManagerFailed', { name }), error);
+      logger.error(`Failed to sync ${name} to DataManager`, error);
       syncResults[name] = false;
     }
   };
@@ -103,7 +103,7 @@ function syncToDataManager(): void {
     .map(([name]) => name);
 
   if (failedSyncs.length > 0) {
-    logger.warn(i18n.t('system:store.syncFailedList', { names: failedSyncs.join(', ') }));
+    logger.warn(`Failed to sync the following data to DataManager: ${failedSyncs.join(', ')}`);
   }
 }
 
@@ -115,7 +115,7 @@ export function initializeAllStores(data: UserData): void {
       fn();
       initResults[name] = true;
     } catch (error) {
-      logger.error(i18n.t('system:store.initFailed', { name }), error);
+      logger.error(`Failed to initialize ${name}`, error);
       initResults[name] = false;
     }
   };
@@ -135,7 +135,7 @@ export function initializeAllStores(data: UserData): void {
     .map(([name]) => name);
 
   if (failedStores.length > 0) {
-    logger.warn(i18n.t('system:store.initFailedList', { names: failedStores.join(', ') }));
+    logger.warn(`The following stores failed to initialize: ${failedStores.join(', ')}`);
   }
 
   syncToDataManager();
@@ -154,7 +154,7 @@ export async function initializeAllStoresAsync(
       fn();
       initResults[name] = true;
     } catch (error) {
-      logger.error(i18n.t('system:store.initFailed', { name }), error);
+      logger.error(`Failed to initialize ${name}`, error);
       initResults[name] = false;
     }
   };
@@ -182,7 +182,7 @@ export async function initializeAllStoresAsync(
     .map(([name]) => name);
 
   if (failedStores.length > 0) {
-    logger.warn(i18n.t('system:store.initFailedList', { names: failedStores.join(', ') }));
+    logger.warn(`The following stores failed to initialize: ${failedStores.join(', ')}`);
   }
 
   onProgress?.(i18n.t('system:store.progress.syncingData'), 92);
@@ -197,6 +197,6 @@ export function clearAllPendingDeletes(): void {
   try {
     useIconsStore.getState().clearPendingDeletes();
   } catch (error) {
-    logger.error(i18n.t('system:store.clearPendingDeletesFailed'), error);
+    logger.error('Failed to clear pending deletes', error);
   }
 }

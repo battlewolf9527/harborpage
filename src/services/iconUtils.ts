@@ -396,7 +396,7 @@ export async function preloadIconForUrl(
       const downloadUrl = getFaviconUrl(domain);
       await iconManager.preloadIcon(type, id, downloadUrl, domain);
     } catch (error) {
-      logger.error(i18n.t('icons:manager.preloadFailed'), error);
+      logger.error('Failed to preload icon', error);
     }
   }
 }

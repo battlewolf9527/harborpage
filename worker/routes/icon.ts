@@ -3,6 +3,7 @@ import { requireAuth } from '../middleware/auth';
 import { getIconPath, getIconUrl } from '../utils/icon';
 import { readResponseBodyWithLimit, ResponseSizeError } from '../utils/streamLimit';
 import { handleCleanup } from './icon-cleanup';
+import { API_ERROR_CODES, ICON_SOURCE_CODES } from '../utils/constants';
 
 // 图标最大允许大小：2MB（favicon 一般 < 50KB）
 const MAX_ICON_SIZE = 2 * 1024 * 1024;
@@ -106,7 +107,7 @@ async function fetchIconWithLimit(
     });
     clearTimeout(timeoutId);
     if (!response.ok) {
-      return { response: Response.json({ error: `下载图标失败: ${response.status}` }, { status: 502 }) };
+      return { response: Response.json({ error: API_ERROR_CODES.ICON_DOWNLOAD_FAILED }, { status: 502 }) };
     }
 
     // 检查 Content-Type 是否为明显的非图片类型（HTML错误页等）
@@ -115,20 +116,19 @@ async function fetchIconWithLimit(
       (blocked) => contentType.toLowerCase().startsWith(blocked)
     );
     if (isBlockedType) {
-      return { response: Response.json({ error: `返回了非图片内容: ${contentType}` }, { status: 502 }) };
+      return { response: Response.json({ error: API_ERROR_CODES.ICON_NOT_IMAGE }, { status: 502 }) };
     }
 
     const data = await readResponseBodyWithLimit(response, MAX_ICON_SIZE);
     return { data, contentType };
   } catch (err) {
     if (err instanceof ResponseSizeError) {
-      return { response: Response.json({ error: '图标过大' }, { status: 413 }) };
+      return { response: Response.json({ error: API_ERROR_CODES.ICON_TOO_LARGE }, { status: 413 }) };
     }
     if (err instanceof DOMException && err.name === 'AbortError') {
-      return { response: Response.json({ error: '下载超时' }, { status: 504 }) };
+      return { response: Response.json({ error: API_ERROR_CODES.ICON_DOWNLOAD_TIMEOUT }, { status: 504 }) };
     }
-    const msg = err instanceof Error ? err.message : String(err);
-    return { response: Response.json({ error: `下载图标网络错误: ${msg}` }, { status: 502 }) };
+    return { response: Response.json({ error: API_ERROR_CODES.ICON_NETWORK_ERROR }, { status: 502 }) };
   }
 }
 
@@ -192,7 +192,7 @@ async function downloadAndCacheIcon(
   // 校验所有源的 URL 合法性
   for (const url of sources) {
     if (!isValidUrl(url)) {
-      return Response.json({ error: '下载URL格式无效' }, { status: 400 });
+      return Response.json({ error: API_ERROR_CODES.INVALID_URL }, { status: 400 });
     }
   }
 
@@ -202,7 +202,7 @@ async function downloadAndCacheIcon(
   try {
     const existing = await env.BUCKET.get(iconPath);
     if (existing) {
-      return Response.json({ success: true, message: '图标已存在', iconUrl });
+      return Response.json({ success: true, iconUrl });
     }
   } catch {
     // R2获取失败，继续下载
@@ -215,14 +215,14 @@ async function downloadAndCacheIcon(
       try {
         await cacheIconToR2(env, type, hashInput, sourceUrl, result.data, result.contentType);
       } catch (r2Error) {
-        console.error(`R2存储失败: ${r2Error instanceof Error ? r2Error.message : String(r2Error)}`);
-        return Response.json({ error: '图标保存失败' }, { status: 500 });
+        console.error(`R2 storage failed: ${r2Error instanceof Error ? r2Error.message : String(r2Error)}`);
+        return Response.json({ error: API_ERROR_CODES.ICON_SAVE_FAILED }, { status: 500 });
       }
-      return Response.json({ success: true, message: '图标下载成功', iconUrl });
+      return Response.json({ success: true, iconUrl });
     }
   }
 
-  return Response.json({ error: '所有图标源均下载失败' }, { status: 502 });
+  return Response.json({ error: API_ERROR_CODES.ALL_SOURCES_FAILED }, { status: 502 });
 }
 
 async function handlePostIcon(request: Request, _url: URL, env: Env): Promise<Response> {
@@ -236,16 +236,16 @@ async function handlePostIcon(request: Request, _url: URL, env: Env): Promise<Re
     const { type = 'site', hashInput, downloadUrl, domain } = body;
 
     if (!env.BUCKET || !env.R2_URL) {
-      return Response.json({ error: 'R2 存储不可用，无法保存图标' }, { status: 503 });
+      return Response.json({ error: API_ERROR_CODES.R2_UNAVAILABLE }, { status: 503 });
     }
 
     if (!hashInput || !downloadUrl) {
-      return Response.json({ error: '缺少必要参数' }, { status: 400 });
+      return Response.json({ error: API_ERROR_CODES.MISSING_PARAM }, { status: 400 });
     }
 
     return downloadAndCacheIcon(env, type, hashInput, downloadUrl, domain);
-  } catch (error) {
-    return Response.json({ error: `创建图标失败: ${error instanceof Error ? error.message : String(error)}` }, { status: 500 });
+  } catch {
+    return Response.json({ error: API_ERROR_CODES.INTERNAL_ERROR }, { status: 500 });
   }
 }
 
@@ -256,7 +256,7 @@ async function handleDeleteIcon(_request: Request, url: URL, env: Env): Promise<
 
     if (action === 'cleanup') {
       if (!env.BUCKET || !env.R2_URL) {
-        return Response.json({ error: 'R2 存储不可用，无法清理图标' }, { status: 503 });
+        return Response.json({ error: API_ERROR_CODES.R2_UNAVAILABLE }, { status: 503 });
       }
       const cursor = url.searchParams.get('cursor') || undefined;
       const prefix = url.searchParams.get('prefix') || undefined;
@@ -269,35 +269,35 @@ async function handleDeleteIcon(_request: Request, url: URL, env: Env): Promise<
       const domain = url.searchParams.get('domain');
       if (domain) {
         if (domain.length > 253 || !/^[a-zA-Z0-9.-]+$/.test(domain)) {
-          return Response.json({ error: '无效的域名参数' }, { status: 400 });
+          return Response.json({ error: API_ERROR_CODES.INVALID_DOMAIN }, { status: 400 });
         }
         hashInput = domain;
       } else if (id) {
         if (id.length > 100 || !/^[a-zA-Z0-9_-]+$/.test(id)) {
-          return Response.json({ error: '无效的ID参数' }, { status: 400 });
+          return Response.json({ error: API_ERROR_CODES.INVALID_ID }, { status: 400 });
         }
         hashInput = id;
       }
     } else {
       if (hashInput.length > 200 || hashInput.includes('..') || hashInput.includes('/')) {
-        return Response.json({ error: '无效的hashInput参数' }, { status: 400 });
+        return Response.json({ error: API_ERROR_CODES.INVALID_HASH_INPUT }, { status: 400 });
       }
     }
 
     if (!hashInput) {
-      return Response.json({ error: '缺少必要参数' }, { status: 400 });
+      return Response.json({ error: API_ERROR_CODES.MISSING_PARAM }, { status: 400 });
     }
 
     if (!env.BUCKET || !env.R2_URL) {
-      return Response.json({ error: 'R2 存储不可用，无法删除图标' }, { status: 503 });
+      return Response.json({ error: API_ERROR_CODES.R2_UNAVAILABLE }, { status: 503 });
     }
 
     const iconPath = getIconPath(type, hashInput);
     await env.BUCKET.delete(iconPath);
 
-    return Response.json({ success: true, message: '图标删除成功' });
-  } catch (error) {
-    return Response.json({ error: `操作失败: ${error instanceof Error ? error.message : String(error)}` }, { status: 500 });
+    return Response.json({ success: true });
+  } catch {
+    return Response.json({ error: API_ERROR_CODES.INTERNAL_ERROR }, { status: 500 });
   }
 }
 
@@ -413,15 +413,15 @@ async function handleAutoFetchIcons(_request: Request, url: URL, env: Env): Prom
   try {
     const targetUrl = url.searchParams.get('url');
 
-    log(`=== 开始分析页面结构 ===`);
-    log(`目标URL: ${targetUrl}`);
+    log(`=== Analyzing page structure ===`);
+    log(`Target URL: ${targetUrl}`);
 
     if (!targetUrl) {
-      return Response.json({ error: '缺少目标URL参数', debug }, { status: 400 });
+      return Response.json({ error: API_ERROR_CODES.MISSING_TARGET_URL, debug }, { status: 400 });
     }
 
     if (!isValidUrl(targetUrl)) {
-      return Response.json({ error: 'URL格式无效', debug }, { status: 400 });
+      return Response.json({ error: API_ERROR_CODES.INVALID_URL, debug }, { status: 400 });
     }
 
     const parsedUrl = new URL(targetUrl);
@@ -435,7 +435,7 @@ async function handleAutoFetchIcons(_request: Request, url: URL, env: Env): Prom
 
     // 来源 1：HTML页面中的图标链接
     try {
-      log(`正在获取HTML页面...`);
+      log(`Fetching HTML page...`);
       const htmlResponse = await fetch(targetUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -444,11 +444,11 @@ async function handleAutoFetchIcons(_request: Request, url: URL, env: Env): Prom
         },
         redirect: 'follow',
       });
-      log(`HTML响应状态: ${htmlResponse.status}`);
+      log(`HTML response status: ${htmlResponse.status}`);
 
       const finalUrl = htmlResponse.url || targetUrl;
       if (finalUrl !== targetUrl) {
-        log(`⚠️ URL发生跳转: ${targetUrl} → ${finalUrl}`);
+        log(`⚠️ URL redirected: ${targetUrl} → ${finalUrl}`);
       }
 
       const finalParsedUrl = new URL(finalUrl);
@@ -466,27 +466,27 @@ async function handleAutoFetchIcons(_request: Request, url: URL, env: Env): Prom
       finalPageUrl.hash = '';
       htmlBaseUrl = finalPageUrl.href.endsWith('/') ? finalPageUrl.href : finalPageUrl.href + '/';
 
-      log(`最终URL: ${finalUrl}`);
-      log(`根URL: ${rootUrl}`);
-      log(`站点路径根: ${sitePathRoot}`);
+      log(`Final URL: ${finalUrl}`);
+      log(`Root URL: ${rootUrl}`);
+      log(`Site path root: ${sitePathRoot}`);
 
       if (htmlResponse.ok) {
         const htmlText = await htmlResponse.text();
-        log(`HTML长度: ${htmlText.length} 字节`);
+        log(`HTML length: ${htmlText.length} bytes`);
 
         const headEndTag = htmlText.indexOf('</head>');
         const parseRange = headEndTag > 0 ? htmlText.substring(0, headEndTag + 7) : htmlText;
 
         const iconLinks = extractIconLinksFromHtml(parseRange, htmlBaseUrl);
-        log(`从HTML提取到 ${iconLinks.length} 个图标链接`);
+        log(`Extracted ${iconLinks.length} icon link(s) from HTML`);
         for (const link of iconLinks) {
-          candidates.push({ url: link, source: 'HTML' });
+          candidates.push({ url: link, source: ICON_SOURCE_CODES.HTML });
         }
       } else {
-        log(`HTML获取失败: HTTP ${htmlResponse.status}`);
+        log(`Failed to fetch HTML: HTTP ${htmlResponse.status}`);
       }
     } catch (err) {
-      log(`HTML获取异常: ${err instanceof Error ? err.message : String(err)}`);
+      log(`Error fetching HTML: ${err instanceof Error ? err.message : String(err)}`);
       sitePathRoot = sitePathRoot || (parsedUrl.pathname === '/'
         ? rootUrl + '/'
         : (parsedUrl.pathname.endsWith('/') ? parsedUrl.href : rootUrl + parsedUrl.pathname.substring(0, parsedUrl.pathname.lastIndexOf('/') + 1)));
@@ -505,16 +505,16 @@ async function handleAutoFetchIcons(_request: Request, url: URL, env: Env): Prom
       '/images/favicon.svg',
     ];
     for (const path of rootFaviconPaths) {
-      candidates.push({ url: `${rootUrl}${path}`, source: '常见路径' });
+      candidates.push({ url: `${rootUrl}${path}`, source: ICON_SOURCE_CODES.COMMON_PATH });
     }
     if (sitePathRoot !== rootUrl + '/') {
       for (const path of rootFaviconPaths) {
-        candidates.push({ url: `${sitePathRoot}${path.substring(1)}`, source: '路径常见路径' });
+        candidates.push({ url: `${sitePathRoot}${path.substring(1)}`, source: ICON_SOURCE_CODES.SITE_PATH_COMMON_PATH });
       }
     }
 
     // 来源 3：系统配置的图标源
-    const faviconSourceUrls = (await getEffectiveFaviconSources(env, domain)).map((s) => ({ url: s, source: '图标源' }));
+    const faviconSourceUrls = (await getEffectiveFaviconSources(env, domain)).map((s) => ({ url: s, source: ICON_SOURCE_CODES.ICON_SOURCE }));
     candidates.push(...faviconSourceUrls);
 
     // 去重
@@ -524,7 +524,7 @@ async function handleAutoFetchIcons(_request: Request, url: URL, env: Env): Prom
       seen.add(c.url);
       return true;
     });
-    log(`候选去重后共 ${uniqueCandidates.length} 个`);
+    log(`${uniqueCandidates.length} candidate(s) after deduplication`);
 
     return Response.json({
       success: true,
@@ -533,8 +533,8 @@ async function handleAutoFetchIcons(_request: Request, url: URL, env: Env): Prom
       debug,
     });
   } catch (error) {
-    log(`致命错误: ${error instanceof Error ? error.message : String(error)}`);
-    return Response.json({ error: `分析页面结构失败: ${error instanceof Error ? error.message : String(error)}`, debug }, { status: 500 });
+    log(`Fatal error: ${error instanceof Error ? error.message : String(error)}`);
+    return Response.json({ error: API_ERROR_CODES.ANALYZE_FAILED, debug }, { status: 500 });
   }
 }
 
@@ -547,11 +547,11 @@ async function handleDownloadIcon(request: Request): Promise<Response> {
     const { url: downloadUrl } = body;
 
     if (!downloadUrl) {
-      return Response.json({ error: '缺少URL参数' }, { status: 400 });
+      return Response.json({ error: API_ERROR_CODES.MISSING_PARAM }, { status: 400 });
     }
 
     if (!isValidUrl(downloadUrl)) {
-      return Response.json({ error: 'URL格式无效' }, { status: 400 });
+      return Response.json({ error: API_ERROR_CODES.INVALID_URL }, { status: 400 });
     }
 
     const result = await fetchIconWithLimit(downloadUrl);
@@ -571,7 +571,7 @@ async function handleDownloadIcon(request: Request): Promise<Response> {
     }
 
     if (!mimeType || !mimeType.startsWith('image/')) {
-      return Response.json({ error: '非图片内容' }, { status: 422 });
+      return Response.json({ error: API_ERROR_CODES.ICON_NOT_IMAGE }, { status: 422 });
     }
 
     const dataUrl = arrayBufferToDataUrl(data, mimeType);
@@ -581,8 +581,8 @@ async function handleDownloadIcon(request: Request): Promise<Response> {
       size: data.byteLength,
       mimeType,
     });
-  } catch (error) {
-    return Response.json({ error: `下载图标失败: ${error instanceof Error ? error.message : String(error)}` }, { status: 500 });
+  } catch {
+    return Response.json({ error: API_ERROR_CODES.ICON_DOWNLOAD_FAILED }, { status: 500 });
   }
 }
 
@@ -650,17 +650,17 @@ async function handleCacheSelectedIcon(request: Request, _url: URL, env: Env): P
     const { type = 'site', hashInput, iconDataUrl } = body;
 
     if (!hashInput || !iconDataUrl) {
-      return Response.json({ error: '缺少必要参数' }, { status: 400 });
+      return Response.json({ error: API_ERROR_CODES.MISSING_PARAM }, { status: 400 });
     }
 
     if (!env.BUCKET || !env.R2_URL) {
-      return Response.json({ error: 'R2 存储不可用' }, { status: 503 });
+      return Response.json({ error: API_ERROR_CODES.R2_UNAVAILABLE }, { status: 503 });
     }
 
     // 从 data URL 解码
     const dataMatch = iconDataUrl.match(/^data:([^;]+);base64,(.+)$/);
     if (!dataMatch) {
-      return Response.json({ error: '无效的图标数据' }, { status: 400 });
+      return Response.json({ error: API_ERROR_CODES.INVALID_ICON_DATA }, { status: 400 });
     }
 
     const mimeType = dataMatch[1];
@@ -676,8 +676,8 @@ async function handleCacheSelectedIcon(request: Request, _url: URL, env: Env): P
 
     const iconUrl = getIconUrl(type, hashInput, env.R2_URL);
     return Response.json({ success: true, iconUrl });
-  } catch (error) {
-    return Response.json({ error: `保存图标失败: ${error instanceof Error ? error.message : String(error)}` }, { status: 500 });
+  } catch {
+    return Response.json({ error: API_ERROR_CODES.ICON_SAVE_FAILED }, { status: 500 });
   }
 }
 
@@ -701,11 +701,11 @@ async function cacheUrlToR2(
   targetUrl: string
 ): Promise<Response> {
   if (!env.BUCKET || !env.R2_URL) {
-    return Response.json({ error: 'R2 存储不可用' }, { status: 503 });
+    return Response.json({ error: API_ERROR_CODES.R2_UNAVAILABLE }, { status: 503 });
   }
 
   if (!isValidUrl(targetUrl)) {
-    return Response.json({ error: 'URL格式无效' }, { status: 400 });
+    return Response.json({ error: API_ERROR_CODES.INVALID_URL }, { status: 400 });
   }
 
   const result = await fetchIconWithLimit(targetUrl);
@@ -718,12 +718,12 @@ async function cacheUrlToR2(
   try {
     await cacheIconToR2(env, type, hashInput, targetUrl, data, contentType);
   } catch (r2Error) {
-    console.error(`R2存储失败: ${r2Error instanceof Error ? r2Error.message : String(r2Error)}`);
-    return Response.json({ error: '图标保存到R2失败' }, { status: 500 });
+    console.error(`R2 storage failed: ${r2Error instanceof Error ? r2Error.message : String(r2Error)}`);
+    return Response.json({ error: API_ERROR_CODES.ICON_SAVE_FAILED }, { status: 500 });
   }
 
   const iconUrl = getIconUrl(type, hashInput, env.R2_URL);
-  return Response.json({ success: true, iconUrl, message: '图标已保存到R2' });
+  return Response.json({ success: true, iconUrl });
 }
 
 const authenticatedHandleCacheUrlToR2 = requireAuth(async (request: Request, _url: URL, env: Env): Promise<Response> => {
@@ -736,12 +736,12 @@ const authenticatedHandleCacheUrlToR2 = requireAuth(async (request: Request, _ur
     const { type = 'site', hashInput, url: targetUrl } = body;
 
     if (!hashInput || !targetUrl) {
-      return Response.json({ error: '缺少必要参数（hashInput, url）' }, { status: 400 });
+      return Response.json({ error: API_ERROR_CODES.MISSING_PARAM }, { status: 400 });
     }
 
     return cacheUrlToR2(env, type, hashInput, targetUrl);
-  } catch (error) {
-    return Response.json({ error: `保存图标失败: ${error instanceof Error ? error.message : String(error)}` }, { status: 500 });
+  } catch {
+    return Response.json({ error: API_ERROR_CODES.ICON_SAVE_FAILED }, { status: 500 });
   }
 });
 
@@ -751,7 +751,7 @@ export async function handleIconRoutes(request: Request, url: URL, env: Env): Pr
     if (request.method === 'GET') {
       return handleGetDefaultSources();
     }
-    return new Response('Method Not Allowed', { status: 405 });
+    return Response.json({ error: API_ERROR_CODES.METHOD_NOT_ALLOWED }, { status: 405 });
   }
 
   // 直接缓存指定URL的图标到R2（EditWebsite「保存到R2」功能）
@@ -759,7 +759,7 @@ export async function handleIconRoutes(request: Request, url: URL, env: Env): Pr
     if (request.method === 'POST') {
       return authenticatedHandleCacheUrlToR2(request, url, env);
     }
-    return new Response('Method Not Allowed', { status: 405 });
+    return Response.json({ error: API_ERROR_CODES.METHOD_NOT_ALLOWED }, { status: 405 });
   }
 
   // 自动获取图标候选列表
@@ -767,7 +767,7 @@ export async function handleIconRoutes(request: Request, url: URL, env: Env): Pr
     if (request.method === 'GET') {
       return authenticatedHandleAutoFetchIcons(request, url, env);
     }
-    return new Response('Method Not Allowed', { status: 405 });
+    return Response.json({ error: API_ERROR_CODES.METHOD_NOT_ALLOWED }, { status: 405 });
   }
 
   // 下载单个图标并返回 data URL（供前端并发调用）
@@ -775,7 +775,7 @@ export async function handleIconRoutes(request: Request, url: URL, env: Env): Pr
     if (request.method === 'POST') {
       return authenticatedHandleDownloadIcon(request, url, env);
     }
-    return new Response('Method Not Allowed', { status: 405 });
+    return Response.json({ error: API_ERROR_CODES.METHOD_NOT_ALLOWED }, { status: 405 });
   }
 
   // 缓存选中的图标（data URL）到R2
@@ -783,7 +783,7 @@ export async function handleIconRoutes(request: Request, url: URL, env: Env): Pr
     if (request.method === 'POST') {
       return authenticatedHandleCacheSelectedIcon(request, url, env);
     }
-    return new Response('Method Not Allowed', { status: 405 });
+    return Response.json({ error: API_ERROR_CODES.METHOD_NOT_ALLOWED }, { status: 405 });
   }
 
   if (url.pathname === '/api/icon') {
@@ -795,7 +795,7 @@ export async function handleIconRoutes(request: Request, url: URL, env: Env): Pr
       return authenticatedHandleDeleteIcon(request, url, env);
     }
 
-    return new Response('Method Not Allowed', { status: 405 });
+    return Response.json({ error: API_ERROR_CODES.METHOD_NOT_ALLOWED }, { status: 405 });
   }
 
   return null;

@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from 'jose';
 import type { Env } from '../types';
+import { API_ERROR_CODES } from '../utils/constants';
 
 // JWT 配置常量
 const JWT_ISSUER = 'harborpage-worker';
@@ -49,7 +50,7 @@ export function requireAuth(handler: RouteHandler): RouteHandler {
   return async (request: Request, url: URL, env: Env) => {
     const isAuthenticated = await authenticate(request, env);
     if (!isAuthenticated) {
-      return Response.json({ error: '未授权，请先登录' }, { status: 401 });
+      return Response.json({ error: API_ERROR_CODES.UNAUTHORIZED }, { status: 401 });
     }
     return await handler(request, url, env);
   };

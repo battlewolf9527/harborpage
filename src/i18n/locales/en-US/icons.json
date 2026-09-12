@@ -1,20 +1,9 @@
 {
   "manager": {
-    "preloadFailed": "Failed to preload icon",
-    "deleteFailed": "Failed to delete R2 icon",
-    "deleteFailedWithStatus": "Failed to delete R2 icon: {{status}}",
     "deletePartialFailed": "{{failed}}/{{total}} icons failed to delete"
   },
   "utils": {
     "cacheRequestFailed": "Cache request failed: {{status}}"
-  },
-  "faviconService": {
-    "loadDefaultsFailed": "Failed to load default favicon sources from the backend",
-    "loadSourcesFailed": "Failed to get favicon source configuration",
-    "saveSourcesFailed": "Failed to save favicon source configuration"
-  },
-  "store": {
-    "deleteFailedRetry": "Failed to delete icons; will retry on the next save"
   },
   "autoFetch": {
     "candidatesFetchFailed": "Failed to fetch candidate list: HTTP {{status}}",
@@ -23,8 +12,6 @@
     "downloadStart": "Starting icon download (0/{{total}})",
     "downloading": "Downloading ({{current}}/{{total}})",
     "downloadDone": "Done, {{count}} valid icons retrieved",
-    "downloadFailed": "Failed to download icon {{url}}: HTTP {{status}}",
-    "downloadError": "Error downloading icon {{url}}: {{message}}",
     "title": "Auto Fetch Icon",
     "close": "Close",
     "websiteLabel": "Website: ",
@@ -45,9 +32,60 @@
     "cacheFailed": "Cache failed",
     "cacheResultInvalid": "Unexpected cache response",
     "cacheFailedWithMessage": "Cache failed: {{message}}",
-    "unknownError": "Unknown error",
-    "fetchIconsFailed": "Failed to auto fetch icons",
-    "cacheIconFailed": "Failed to cache icon"
+    "unknownError": "Unknown error"
+  },
+  "apiErrors": {
+    "METHOD_NOT_ALLOWED": "Request method not allowed",
+    "UNAUTHORIZED": "Unauthorized, please sign in first",
+    "INTERNAL_ERROR": "Internal server error",
+    "MISSING_PARAM": "Missing required parameter",
+    "INVALID_URL": "Invalid URL",
+    "MISSING_PASSWORD": "Missing password parameter",
+    "AUTH_FAILED": "Authentication failed",
+    "LOGIN_FAILED": "Login failed",
+    "MISSING_KEY": "Missing key parameter",
+    "INVALID_KEY": "Invalid key parameter",
+    "DATA_PARSE_FAILED": "Failed to parse data",
+    "INVALID_JSON": "Invalid JSON data",
+    "DATA_TOO_LARGE": "Data too large, maximum {{maxSize}} MB allowed",
+    "R2_UNAVAILABLE": "R2 storage is unavailable",
+    "MISSING_FILE": "Missing file or invalid file format",
+    "ICON_FILE_TOO_LARGE": "File too large, maximum {{maxSize}} KB allowed",
+    "UNSUPPORTED_FILE_FORMAT": "Unsupported file format",
+    "INVALID_DOMAIN": "Invalid domain parameter",
+    "INVALID_ID": "Invalid ID parameter",
+    "INVALID_HASH_INPUT": "Invalid hashInput parameter",
+    "MISSING_TARGET_URL": "Missing target URL parameter",
+    "ICON_TOO_LARGE": "Icon too large",
+    "ICON_NOT_IMAGE": "Response is not an image",
+    "ICON_DOWNLOAD_FAILED": "Failed to download icon",
+    "ICON_DOWNLOAD_TIMEOUT": "Download timed out",
+    "ICON_NETWORK_ERROR": "Network error while downloading icon",
+    "ALL_SOURCES_FAILED": "All icon sources failed to download",
+    "ICON_SAVE_FAILED": "Failed to save icon",
+    "ICON_DELETE_FAILED": "Failed to delete icon",
+    "INVALID_ICON_DATA": "Invalid icon data",
+    "ANALYZE_FAILED": "Failed to analyze page structure",
+    "WALLPAPER_FILE_TOO_LARGE": "File too large, maximum {{maxSize}} MB allowed",
+    "HTTPS_REQUIRED": "Only HTTPS is allowed",
+    "HOST_NOT_ALLOWED": "Domain not allowed",
+    "WALLPAPER_FETCH_FAILED": "Failed to fetch wallpaper",
+    "IMAGE_TOO_LARGE": "Image too large",
+    "WEATHER_API_NOT_CONFIGURED": "Weather API is not configured",
+    "INVALID_LOCATION": "Missing or invalid location parameter",
+    "INVALID_COORDINATES": "Invalid coordinates",
+    "GEO_REQUEST_FAILED": "Location request failed",
+    "WEATHER_REQUEST_FAILED": "Weather request failed",
+    "MISSING_URL": "Missing url parameter",
+    "BING_REQUEST_FAILED": "Bing API request failed",
+    "BING_INVALID_RESPONSE": "Unexpected Bing API response",
+    "BING_PROXY_ERROR": "Bing proxy error"
+  },
+  "iconSource": {
+    "HTML": "HTML",
+    "COMMON_PATH": "Common path",
+    "SITE_PATH_COMMON_PATH": "Site path common path",
+    "ICON_SOURCE": "Icon source"
   },
   "faviconSettings": {
     "title": "Icon Source Configuration",

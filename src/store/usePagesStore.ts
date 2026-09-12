@@ -10,8 +10,6 @@ import i18n from '../i18n';
 
 const logger = createLogger('PagesStore');
 
-export const DEFAULT_PAGE_NAME = '默认页面';
-
 interface PagesState {
   pages: Page[];
   currentPageId: string;
@@ -36,9 +34,14 @@ const initialState = {
   currentPageId: '',
 };
 
-const createDefaultPage = (websites: Website[] = []): Page => ({
+/**
+ * 创建默认页：名称按当前界面语言生成并持久化（之后仅作展示用），
+ * isDefault 作为跨语言的稳定标识供迁移/导入链路识别。
+ */
+export const createDefaultPage = (websites: Website[] = []): Page => ({
   id: generateId('page-'),
-  name: DEFAULT_PAGE_NAME,
+  name: i18n.t('pages:store.defaultPageName'),
+  isDefault: true,
   websites,
   createdAt: Date.now(),
 });
@@ -85,7 +88,7 @@ export const usePagesStore = create<PagesState>((set, get) => ({
   deletePage: (pageId) => {
     const { pages, currentPageId } = get();
     if (pages.length <= 1) {
-      logger.warn(i18n.t('pages:store.atLeastOnePage'));
+      logger.warn('At least one page must be kept');
       return;
     }
 

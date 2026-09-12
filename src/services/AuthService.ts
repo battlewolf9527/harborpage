@@ -46,7 +46,7 @@ class AuthService {
     try {
       passwordHash = await this.sha256(password);
     } catch (error) {
-      logger.error(i18n.t('system:auth.passwordHashFailed'), error);
+      logger.error('Password hashing failed', error);
       if (error instanceof Error && error.message === 'CRYPTO_SUBTLE_UNAVAILABLE') {
         return {
           success: false,
@@ -75,14 +75,14 @@ class AuthService {
         try {
           await ConfigService.fetchConfig();
         } catch (configError) {
-          logger.error(i18n.t('system:config.fetchFailed'), configError);
+          logger.error('Failed to fetch config', configError);
         }
         return { success: true };
       }
       // 密码错误（401）或其他非 OK 状态，统一显示默认错误
       return { success: false };
     } catch (error) {
-      logger.error(i18n.t('system:auth.loginFailed'), error);
+      logger.error('Login failed', error);
       return { success: false, error: i18n.t('system:auth.networkRequestFailed') };
     }
   }
@@ -123,7 +123,7 @@ class AuthService {
       }
       return false;
     } catch (error) {
-      logger.error(i18n.t('system:auth.checkAuthStatusFailed'), error);
+      logger.error('Failed to check authentication status', error);
       return false;
     }
   }

@@ -1,3 +1,4 @@
+/** i18next 类型增强：声明全部命名空间，供 useTranslation 的 t() 做键名类型检查 */
 import 'i18next';
 import type common from './locales/zh-CN/common.json';
 import type settings from './locales/zh-CN/settings.json';

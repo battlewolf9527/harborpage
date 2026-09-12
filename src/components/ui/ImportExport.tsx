@@ -17,8 +17,7 @@ import {
 import { EXPORT_FILE_PREFIX } from '../../constants';
 import type importExportResources from '../../i18n/locales/zh-CN/importExport.json';
 import type { UserData, Website, Page, PaletteHexMap, PaletteAliasMap } from '../../types';
-import { generateId } from '../../utils/idUtils';
-import { DEFAULT_PAGE_NAME } from '../../store/usePagesStore';
+import { createDefaultPage } from '../../store/usePagesStore';
 import { DEFAULT_PALETTE_HEXES, PALETTE_SLOT_IDS, normalizeAliasMap, normalizePaletteMap } from '../../utils/paletteColors';
 import './ImportExport.css';
 
@@ -292,20 +291,15 @@ const ImportExport: React.FC = () => {
     let migratedPagesFromLegacy: Page[] | null = null;
     if (rawHasLegacyWebsites && (!raw.pages || raw.pages.length === 0)) {
       const restoredLegacyWebsites = restoreIsFolder(raw.websites!);
-      // upsert 同名默认页：current 里已有叫"默认页面"的页就复用 id 并合并 websites，避免产生两个重名默认页
-      const existingDefaultInCurrent = (current.pages ?? []).find(p => p.name === DEFAULT_PAGE_NAME);
+      // upsert 默认页：current 里已有 isDefault 标记的页就复用 id 并合并 websites，避免产生两个默认页
+      const existingDefaultInCurrent = (current.pages ?? []).find(p => p.isDefault);
       if (existingDefaultInCurrent) {
         migratedPagesFromLegacy = [{
           ...existingDefaultInCurrent,
           websites: mergeById(existingDefaultInCurrent.websites, restoredLegacyWebsites),
         }];
       } else {
-        migratedPagesFromLegacy = [{
-          id: generateId('page-'),
-          name: DEFAULT_PAGE_NAME,
-          websites: restoredLegacyWebsites,
-          createdAt: Date.now(),
-        }];
+        migratedPagesFromLegacy = [createDefaultPage(restoredLegacyWebsites)];
       }
     }
 

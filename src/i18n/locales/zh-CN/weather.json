@@ -7,6 +7,7 @@
   "unableToFetch": "无法获取天气",
   "date": {
     "current": "{{month}}月{{date}}日 {{day}}",
+    "lunarFormat": "cY cZ年 lMlD T",
     "weekdays": {
       "sun": "周日",
       "mon": "周一",
@@ -34,11 +35,8 @@
     "apiNotConfigured": "天气API未配置",
     "citySearchRequestFailed": "城市搜索API请求失败: {{status}} {{statusText}}",
     "citySearchCodeFailed": "城市搜索API错误: {{code}}",
-    "cityNameFailed": "获取城市名称失败",
     "weatherRequestFailed": "天气API请求失败: {{status}} {{statusText}}",
     "fetchWeatherFailed": "获取天气数据失败: {{detail}}",
-    "copyLocationFailed": "复制定位信息失败:",
-    "ipLocationRequestFailed": "IP定位API请求失败",
-    "ipLocationFallback": "IP定位失败，使用默认位置:"
+    "ipLocationRequestFailed": "IP定位API请求失败"
   }
 }

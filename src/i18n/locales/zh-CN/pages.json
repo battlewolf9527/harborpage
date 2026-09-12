@@ -28,6 +28,6 @@
   },
   "store": {
     "defaultName": "页面 {{index}}",
-    "atLeastOnePage": "至少保留一个页面"
+    "defaultPageName": "默认页面"
   }
 }

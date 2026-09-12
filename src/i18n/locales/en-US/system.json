@@ -1,44 +1,17 @@
 {
   "auth": {
-    "passwordHashFailed": "Password hashing failed",
     "cryptoSubtleUnavailable": "Password encryption is not supported in the current environment, please access via HTTPS or localhost",
     "passwordEncryptFailed": "Password encryption failed, please try again later",
-    "loginFailed": "Login failed",
-    "networkRequestFailed": "Network request failed, please try again later",
-    "checkAuthStatusFailed": "Failed to check authentication status"
+    "networkRequestFailed": "Network request failed, please try again later"
   },
   "config": {
-    "loadFailed": "Failed to load config",
-    "saveFailed": "Failed to save config",
     "fetchFailed": "Failed to fetch config"
-  },
-  "storage": {
-    "loadLocalFailed": "Failed to load data from local storage",
-    "loadApiFailed": "Failed to load data from API",
-    "saveLocalFailed": "Failed to save local data",
-    "saveKeyFailed": "Failed to save {{key}}",
-    "clearFailed": "Failed to clear data",
-    "saveConfigFailed": "Failed to save config {{key}}",
-    "loadConfigFailed": "Failed to load config {{key}}",
-    "removeConfigFailed": "Failed to remove config {{key}}",
-    "saveUnsavedFailed": "Failed to save unsaved state",
-    "loadUnsavedFailed": "Failed to load unsaved state",
-    "saveCacheFailed": "Failed to save cache {{key}}",
-    "loadCacheFailed": "Failed to load cache {{key}}"
   },
   "data": {
     "syncing": "Sync in progress",
-    "saveKeyFailedRollback": "Failed to save {{key}}, rolled back {{savedCount}} saved key(s)",
-    "saveFailed": "Save failed",
-    "saveDataFailed": "Failed to save data",
-    "silentSyncFailed": "Silent cloud sync of defaultSearchEngineId failed (later operations will retry automatically):"
+    "saveFailed": "Save failed"
   },
   "store": {
-    "syncToDataManagerFailed": "Failed to sync {{name}} to DataManager",
-    "syncFailedList": "Failed to sync the following data to DataManager: {{names}}",
-    "initFailed": "Failed to initialize {{name}}",
-    "initFailedList": "The following stores failed to initialize: {{names}}",
-    "clearPendingDeletesFailed": "Failed to clear pending deletes",
     "progress": {
       "initializingSettings": "Initializing settings...",
       "initializingPages": "Initializing pages...",
@@ -51,8 +24,5 @@
       "syncingData": "Syncing data...",
       "importCompleted": "Import completed"
     }
-  },
-  "hooks": {
-    "dataInitFailed": "Data initialization failed"
   }
 }

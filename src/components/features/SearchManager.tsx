@@ -64,7 +64,7 @@ const SearchManager: React.FC = () => {
     if (!dialog) return;
     if (!dialog.name.trim() || !dialog.url.trim()) return;
     if (!dialog.url.includes('{q}')) {
-      logger.error(t('manager.urlRequiredHint'));
+      logger.error('Search URL must contain the {q} placeholder');
       return;
     }
 

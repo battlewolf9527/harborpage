@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback, useState } from 'react'
+import React, { useEffect, useRef, useCallback, useState, lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import './App.css'
 import Search from './components/features/Search'
@@ -6,8 +6,6 @@ import SettingsWindow from './components/ui/SettingsWindow'
 import FolderWindow from './components/features/FolderWindow'
 import IconsContainer from './components/layout/IconsContainer';
 import Background from './components/layout/Background';
-import EditWebsite from './components/common/EditWebsite';
-import Settings from './components/ui/Settings'
 import ConfirmDialog from './components/common/ConfirmDialog';
 import FolderNameDialog from './components/common/FolderNameDialog';
 import SavePrompt from './components/common/SavePrompt';
@@ -15,12 +13,8 @@ import LoginModal from './components/common/LoginModal';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import ImportProgressOverlay from './components/common/ImportProgressOverlay';
 import MoveToPageDialog from './components/common/MoveToPageDialog';
+import FeatureDock from './components/common/FeatureDock';
 import { useSettingsSelector, useIconsDataSelector, useIconsUISelector, useImportSelector, usePagesSelector } from './store/selectors'
-import Weather from './components/features/Weather'
-import TodoSidebar from './components/features/TodoSidebar'
-import PagesSidebar from './components/features/PagesSidebar'
-import NoteBar from './components/ui/NoteBar'
-import FeatureDock from './components/common/FeatureDock'
 import type { Website, SearchEngine } from './types'
 import { useAuth } from './hooks/useAuth';
 import { useDataInitialization } from './hooks/useDataInitialization';
@@ -33,6 +27,25 @@ import { isClickOnEmptyArea } from './utils/deviceUtils';
 import IconDownloadQueue from './services/IconDownloadQueue';
 import DataRepository from './services/DataRepository';
 import { cleanupWallpaperPersist } from './store/useWallpaperStore';
+
+/**
+ * 按需加载（code-split）的组件。
+ *
+ * 这些组件只在特定条件下出现（功能开关、用户交互），首屏并不需要，
+ * 因此改为动态 import，把它们的代码从首屏 chunk 中挪出。
+ * 天气模块额外带出 lunisolar（约 47 kB）与图标字体样式；
+ * 设置面板带出其下若干管理器子组件（壁纸/搜索/图标/备份等）。
+ *
+ * 注意：Settings / FolderWindow 是「常驻挂载 + 内部 isOpen 门控」的组件，
+ * 不能简单用 `{cond && <Lazy/>}` 包裹，否则关闭时会瞬间卸载、丢掉滑出动画。
+ * 这里用「首次打开后持续挂载」的守卫（hasOpenedSettings）来保留其开合过渡。
+ */
+const Weather = lazy(() => import('./components/features/Weather'));
+const EditWebsite = lazy(() => import('./components/common/EditWebsite'));
+const TodoSidebar = lazy(() => import('./components/features/TodoSidebar'));
+const PagesSidebar = lazy(() => import('./components/features/PagesSidebar'));
+const NoteBar = lazy(() => import('./components/ui/NoteBar'));
+const Settings = lazy(() => import('./components/ui/Settings'));
 
 const useDocumentTitle = (title: string) => {
   useEffect(() => {
@@ -86,6 +99,14 @@ function App() {
 
   const { isImporting, importProgress, importMessage } = useImportSelector();
   const { currentPageId } = usePagesSelector();
+
+  /* 设置面板首次打开后才开始挂载（懒加载）；打开过一次后保持挂载，
+     以便关闭时的滑出过渡能正常播放（组件内部负责延迟卸载）。
+     用渲染期间的「派生状态」latch，避免在 effect 里 setState 触发级联渲染。 */
+  const [hasOpenedSettings, setHasOpenedSettings] = useState(false);
+  if (showSettings && !hasOpenedSettings) {
+    setHasOpenedSettings(true);
+  }
 
   // 跨页移动：fromPageId 通常 = currentPageId；将来扩展 FolderWindow 内部移动时可灵活指定
   const [moveDialog, setMoveDialog] = useState<{ fromPageId: string; iconIds: string[] } | null>(null);
@@ -205,7 +226,11 @@ function App() {
     >
       <Background />
       {/* 等账号设置加载完成后再挂载天气组件，避免天气关闭时仍触发定位/天气请求 */}
-      {settingsReady && weatherEnabled && <Weather />}
+      {settingsReady && weatherEnabled && (
+        <Suspense fallback={null}>
+          <Weather />
+        </Suspense>
+      )}
       
       <button 
         className="settings-button"
@@ -260,51 +285,59 @@ function App() {
         disableClickOutside={showEditIcon || showAddIcon || showSettings || !!moveDialog}
       />
       
-      <Settings 
-        isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
-      />
+      {(hasOpenedSettings || showSettings) && (
+        <Suspense fallback={null}>
+          <Settings
+            isOpen={showSettings}
+            onClose={() => setShowSettings(false)}
+          />
+        </Suspense>
+      )}
       
       {showAddIcon && (
-        <SettingsWindow
-          ref={addIconWindowRef}
-          title={t('addWebsite')}
-          onClose={() => {
-            setShowAddIcon(false);
-            setAddIconInitialUrl(undefined);
-          }}
-        >
-          <EditWebsite
-            onSubmit={handleAddIcon}
+        <Suspense fallback={null}>
+          <SettingsWindow
+            ref={addIconWindowRef}
+            title={t('addWebsite')}
             onClose={() => {
-              if (addIconWindowRef.current) {
-                addIconWindowRef.current.handleClose();
-              }
+              setShowAddIcon(false);
+              setAddIconInitialUrl(undefined);
             }}
-            initialUrl={addIconInitialUrl}
-          />
-        </SettingsWindow>
+          >
+            <EditWebsite
+              onSubmit={handleAddIcon}
+              onClose={() => {
+                if (addIconWindowRef.current) {
+                  addIconWindowRef.current.handleClose();
+                }
+              }}
+              initialUrl={addIconInitialUrl}
+            />
+          </SettingsWindow>
+        </Suspense>
       )}
 
       {showEditIcon && editingIcon && (
-        <SettingsWindow 
-          ref={settingsWindowRef}
-          title={t('editWebsite')}
-          onClose={() => {
-            setShowEditIcon(false);
-            setEditingIcon(null);
-          }}
-        >
-          <EditWebsite 
-            onSubmit={updateIcon}
+        <Suspense fallback={null}>
+          <SettingsWindow
+            ref={settingsWindowRef}
+            title={t('editWebsite')}
             onClose={() => {
-              if (settingsWindowRef.current) {
-                settingsWindowRef.current.handleClose();
-              }
+              setShowEditIcon(false);
+              setEditingIcon(null);
             }}
-            icon={editingIcon}
-          />
-        </SettingsWindow>
+          >
+            <EditWebsite
+              onSubmit={updateIcon}
+              onClose={() => {
+                if (settingsWindowRef.current) {
+                  settingsWindowRef.current.handleClose();
+                }
+              }}
+              icon={editingIcon}
+            />
+          </SettingsWindow>
+        </Suspense>
       )}
 
       <ConfirmDialog
@@ -318,11 +351,23 @@ function App() {
       {/* 宿主 Dock：为已注册功能渲染共享入口球（倒置依赖宿主侧） */}
       <FeatureDock />
 
-      {pagesEnabled && <PagesSidebar />}
-      {todosEnabled && <TodoSidebar />}
+      {pagesEnabled && (
+        <Suspense fallback={null}>
+          <PagesSidebar />
+        </Suspense>
+      )}
+      {todosEnabled && (
+        <Suspense fallback={null}>
+          <TodoSidebar />
+        </Suspense>
+      )}
 
       {/* 底部半隐入笔记栏（仅登录后展示）；功能开关关闭时不渲染入口 peek 球 */}
-      {notesEnabled && <NoteBar />}
+      {notesEnabled && (
+        <Suspense fallback={null}>
+          <NoteBar />
+        </Suspense>
+      )}
 
       <MoveToPageDialog
         isOpen={!!moveDialog}

@@ -28,6 +28,6 @@
   },
   "store": {
     "defaultName": "Page {{index}}",
-    "atLeastOnePage": "At least one page must be kept"
+    "defaultPageName": "Default Page"
   }
 }

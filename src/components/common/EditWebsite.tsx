@@ -11,6 +11,7 @@ import Toast from './Toast';
 import { Palette } from './PalettePicker';
 import { generateId } from '../../utils/idUtils';
 import createLogger from '../../utils/logger';
+import { translateApiError } from '../../utils/apiErrorUtils';
 import { usePaletteStore } from '../../store/usePaletteStore';
 import { canonicalSlotId, resolveColorHex, type ColorSelection } from '../../utils/paletteColors';
 
@@ -166,11 +167,11 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
       }
     } catch (error) {
       // 静默失败，用户可手动输入
-      logger.debug(t('logs.fetchTitleFailed'), error);
+      logger.debug('Failed to fetch title', error);
     } finally {
       setIsFetchingTitle(false);
     }
-  }, [protocol, newIcon.name, authService, t]);
+  }, [protocol, newIcon.name, authService]);
 
   // 组件挂载后自动聚焦 URL 输入框
   useEffect(() => {
@@ -267,11 +268,11 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
         const error = await response.json();
         setToast({
           type: 'error',
-          message: t('errors.uploadFailedWithError', { error: error.error || t('errors.unknownError') }),
+          message: t('errors.uploadFailedWithError', { error: translateApiError(error.error, t('errors.unknownError')) }),
         });
       }
     } catch (error) {
-      logger.error(t('logs.uploadIconFailed'), error);
+      logger.error('Failed to upload icon', error);
       setToast({ type: 'error', message: t('errors.uploadFailed') });
     } finally {
       setUploading(false);
@@ -442,11 +443,11 @@ const EditWebsite: React.FC<EditWebsiteProps> = ({ onSubmit, onClose, icon, init
         const error = await response.json().catch(() => ({ error: t('errors.saveFailed') }));
         setToast({
           type: 'error',
-          message: t('errors.saveFailedWithError', { error: error.error || t('errors.unknownError') }),
+          message: t('errors.saveFailedWithError', { error: translateApiError(error.error, t('errors.unknownError')) }),
         });
       }
     } catch (error) {
-      logger.error(t('logs.saveIconToR2Failed'), error);
+      logger.error('Failed to save icon to R2', error);
       setToast({ type: 'error', message: t('errors.saveFailed') });
     } finally {
       setSavingToR2(false);

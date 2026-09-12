@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useImportStore } from '../../store/useImportStore';
-import { usePagesStore, DEFAULT_PAGE_NAME } from '../../store/usePagesStore';
+import { usePagesStore } from '../../store/usePagesStore';
 import { getServices } from '../../services/serviceContainer';
 import { initializeAllStoresAsync, clearAllPendingDeletes } from '../../services/storeInitializer';
 import Toast from './Toast';
@@ -73,7 +73,7 @@ const ImportProgressOverlay: React.FC<ImportProgressOverlayProps> = ({
           // 避免还停留在其他空页面导致误以为"没导入进来"
           try {
             const pagesState = usePagesStore.getState();
-            const defaultPage = pagesState.pages.find(p => p.name === DEFAULT_PAGE_NAME);
+            const defaultPage = pagesState.pages.find(p => p.isDefault);
             if (defaultPage && defaultPage.websites.length > 0 && pagesState.currentPageId !== defaultPage.id) {
               pagesState.setCurrentPageId(defaultPage.id);
             }

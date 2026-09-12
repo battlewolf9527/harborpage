@@ -3,9 +3,8 @@ import ChangeTracker from './ChangeTracker';
 import DataRepository from './DataRepository';
 import { STORAGE_KEYS } from '../constants';
 import { mergeById } from '../utils/importExportUtils';
-import { generateId } from '../utils/idUtils';
 import { normalizeAliasMap, normalizeLightness, normalizePaletteMap } from '../utils/paletteColors';
-import { DEFAULT_PAGE_NAME } from '../store/usePagesStore';
+import { createDefaultPage } from '../store/usePagesStore';
 import createLogger from '../utils/logger';
 import i18n from '../i18n';
 
@@ -61,7 +60,7 @@ class DataManager {
           for (const savedKey of savedKeys) {
             ChangeTracker.markChanged(savedKey);
           }
-          logger.error(i18n.t('system:data.saveKeyFailedRollback', { key, savedCount: savedKeys.length }));
+          logger.error(`Failed to save ${key}, rolled back ${savedKeys.length} saved key(s)`);
           return { performed: false, error: i18n.t('system:data.saveFailed') };
         }
         savedKeys.push(key);
@@ -71,7 +70,7 @@ class DataManager {
       DataRepository.flushLocal(this.data);
       return { performed: true };
     } catch (error) {
-      logger.error(i18n.t('system:data.saveDataFailed'), error);
+      logger.error('Failed to save data', error);
       return { performed: false, error: error instanceof Error ? error.message : String(error) };
     } finally {
       this.isSyncing = false;
@@ -132,8 +131,8 @@ class DataManager {
     const current = this.data;
 
     // 预处理：旧格式兼容 —— 如果 imported.pages 为空/undefined 但 imported.websites 非空，
-    // 把旧 websites upsert 成一个名为 DEFAULT_PAGE_NAME 的页面（已存在则复用 id 并合并网站，
-    // 否则新建），保证后续链路 pages 通路就能拿到导入的网站数据且不产生重名默认页
+    // 把旧 websites upsert 成一个默认页（isDefault 标记；current 中已有默认页则复用 id 并合并网站，
+    // 否则新建），保证后续链路 pages 通路就能拿到导入的网站数据且不产生重复默认页
     let normalizedImported = imported;
     const importedLegacyWebsites = imported.websites;
     const importedPages = imported.pages;
@@ -141,7 +140,7 @@ class DataManager {
       (!importedPages || importedPages.length === 0) &&
       importedLegacyWebsites && importedLegacyWebsites.length > 0;
     if (needsLegacyMigration) {
-      const existingDefaultInCurrent = (current.pages ?? []).find(p => p.name === DEFAULT_PAGE_NAME);
+      const existingDefaultInCurrent = (current.pages ?? []).find(p => p.isDefault);
       let migratedPage: Page;
       if (existingDefaultInCurrent) {
         migratedPage = {
@@ -149,12 +148,7 @@ class DataManager {
           websites: mergeById(existingDefaultInCurrent.websites, importedLegacyWebsites),
         };
       } else {
-        migratedPage = {
-          id: generateId('page-'),
-          name: DEFAULT_PAGE_NAME,
-          websites: importedLegacyWebsites,
-          createdAt: Date.now(),
-        };
+        migratedPage = createDefaultPage(importedLegacyWebsites);
       }
       normalizedImported = { ...imported, pages: [migratedPage] };
       // 旧格式迁移：强制指向迁移页 id，保证下游 initialize 后直接切到默认页面看到结果
@@ -440,7 +434,7 @@ class DataManager {
       try {
         await DataRepository.saveKeyToAPI('settings', settingsSnapshot);
       } catch (err) {
-        logger.warn(i18n.t('system:data.silentSyncFailed'), err);
+        logger.warn('Silent cloud sync of defaultSearchEngineId failed (later operations will retry automatically):', err);
       }
     })();
   }

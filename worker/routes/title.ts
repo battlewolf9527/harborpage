@@ -1,5 +1,6 @@
 import type { Env } from '../types';
 import { requireAuth } from '../middleware/auth';
+import { API_ERROR_CODES } from '../utils/constants';
 
 // 从 hostname 提取第二级域名并转大写作为兜底标题
 // www.qq.com → QQ；youku.com → YOUKU；aaa.bbb.ccc.com → CCC
@@ -14,19 +15,19 @@ function extractDomainTitle(hostname: string): string {
 
 async function fetchTitleHandler(request: Request, url: URL, _env: Env): Promise<Response> {
   if (request.method !== 'GET') {
-    return Response.json({ error: '方法不支持' }, { status: 405 });
+    return Response.json({ error: API_ERROR_CODES.METHOD_NOT_ALLOWED }, { status: 405 });
   }
 
   const targetUrl = url.searchParams.get('url');
   if (!targetUrl) {
-    return Response.json({ error: '缺少 url 参数' }, { status: 400 });
+    return Response.json({ error: API_ERROR_CODES.MISSING_URL }, { status: 400 });
   }
 
   let parsedUrl: URL;
   try {
     parsedUrl = new URL(targetUrl);
   } catch {
-    return Response.json({ error: '无效的 URL' }, { status: 400 });
+    return Response.json({ error: API_ERROR_CODES.INVALID_URL }, { status: 400 });
   }
 
   let title = '';

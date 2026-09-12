@@ -31,7 +31,7 @@ export async function fetchBingWallpaperUrl(excludeUrl?: string | null): Promise
     }
     throw new Error(i18n.t('wallpaper:errors.bingApiInvalidData'));
   } catch (error) {
-    logger.error(i18n.t('wallpaper:errors.fetchBingFailed'), error);
+    logger.error('Failed to fetch Bing wallpaper', error);
     return FALLBACK_WALLPAPER;
   }
 }

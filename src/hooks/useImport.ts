@@ -168,7 +168,7 @@ export const useImport = (): UseImportResult => {
 
       setImportMessage(t('progress.completed'));
     } catch (error) {
-      logger.error(t('logs.importFailed'), error);
+      logger.error('An error occurred during import', error);
       setImportMessage(t('progress.failed', { error: error instanceof Error ? error.message : String(error) }));
       // 失败时延长清理时间，让用户有时间阅读错误信息
       cleanupTimerRef.current = setTimeout(() => {

@@ -2,6 +2,10 @@
   "placeholder": "Search...",
   "placeholderWithEngine": "Search with {{name}}",
   "searchButton": "Search",
+  "defaultEngines": {
+    "baidu": "Baidu",
+    "bing": "Bing"
+  },
   "manager": {
     "title": "Search Settings",
     "addEngine": "Add Search Engine",
@@ -17,7 +21,6 @@
     "namePlaceholder": "Search engine name",
     "url": "Search URL",
     "urlHint": "Use {q} as the query parameter placeholder",
-    "urlRequiredHint": "Search URL must contain the {q} placeholder",
     "icon": "Icon",
     "iconPlaceholder": "Leave empty to auto-fetch favicon, or enter an icon URL/Emoji",
     "add": "Add",

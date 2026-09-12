@@ -97,11 +97,6 @@
     "iconFetchSuccess": "图标获取成功",
     "iconSavedToR2": "图标已保存到R2"
   },
-  "logs": {
-    "fetchTitleFailed": "获取标题失败",
-    "uploadIconFailed": "上传图标失败",
-    "saveIconToR2Failed": "保存图标到R2失败"
-  },
   "contextMenu": {
     "aria": "操作菜单",
     "edit": "修改",

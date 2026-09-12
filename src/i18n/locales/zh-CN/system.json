@@ -1,44 +1,17 @@
 {
   "auth": {
-    "passwordHashFailed": "密码哈希失败",
     "cryptoSubtleUnavailable": "当前环境不支持密码加密，请通过 HTTPS 或 localhost 访问",
     "passwordEncryptFailed": "密码加密失败，请稍后重试",
-    "loginFailed": "登录失败",
-    "networkRequestFailed": "网络请求失败，请稍后重试",
-    "checkAuthStatusFailed": "检查认证状态失败"
+    "networkRequestFailed": "网络请求失败，请稍后重试"
   },
   "config": {
-    "loadFailed": "加载配置失败",
-    "saveFailed": "保存配置失败",
     "fetchFailed": "获取配置失败"
-  },
-  "storage": {
-    "loadLocalFailed": "从本地加载数据失败",
-    "loadApiFailed": "从API加载数据失败",
-    "saveLocalFailed": "保存本地数据失败",
-    "saveKeyFailed": "保存 {{key}} 失败",
-    "clearFailed": "清除数据失败",
-    "saveConfigFailed": "保存配置 {{key}} 失败",
-    "loadConfigFailed": "加载配置 {{key}} 失败",
-    "removeConfigFailed": "删除配置 {{key}} 失败",
-    "saveUnsavedFailed": "保存未保存状态失败",
-    "loadUnsavedFailed": "加载未保存状态失败",
-    "saveCacheFailed": "保存缓存 {{key}} 失败",
-    "loadCacheFailed": "加载缓存 {{key}} 失败"
   },
   "data": {
     "syncing": "正在同步中",
-    "saveKeyFailedRollback": "保存 {{key}} 失败，已回滚 {{savedCount}} 个已保存的 key",
-    "saveFailed": "保存失败",
-    "saveDataFailed": "保存数据失败",
-    "silentSyncFailed": "defaultSearchEngineId 静默云同步失败（后续操作会自动重试）："
+    "saveFailed": "保存失败"
   },
   "store": {
-    "syncToDataManagerFailed": "同步 {{name}} 到 DataManager 失败",
-    "syncFailedList": "以下数据同步到 DataManager 失败: {{names}}",
-    "initFailed": "初始化 {{name}} 失败",
-    "initFailedList": "以下 store 初始化失败: {{names}}",
-    "clearPendingDeletesFailed": "清理待删除项失败",
     "progress": {
       "initializingSettings": "正在初始化设置...",
       "initializingPages": "正在初始化页面...",
@@ -51,8 +24,5 @@
       "syncingData": "正在同步数据...",
       "importCompleted": "导入完成"
     }
-  },
-  "hooks": {
-    "dataInitFailed": "数据初始化失败"
   }
 }

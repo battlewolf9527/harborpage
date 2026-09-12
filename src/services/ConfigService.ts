@@ -37,7 +37,7 @@ class ConfigService {
         this.config = JSON.parse(cachedData);
       }
     } catch (error) {
-      logger.error(i18n.t('system:config.loadFailed'), error);
+      logger.error('Failed to load config', error);
       this.config = null;
     }
   }
@@ -46,7 +46,7 @@ class ConfigService {
     try {
       DataRepository.saveConfigValue(STORAGE_KEYS.CONFIG, JSON.stringify(this.config));
     } catch (error) {
-      logger.error(i18n.t('system:config.saveFailed'), error);
+      logger.error('Failed to save config', error);
     }
   }
 
@@ -85,7 +85,7 @@ class ConfigService {
       this.saveConfigToStorage();
       return config;
     } catch (error) {
-      logger.error(i18n.t('system:config.fetchFailed'), error);
+      logger.error('Failed to fetch config', error);
       throw error;
     }
   }

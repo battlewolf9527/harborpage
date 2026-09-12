@@ -2,14 +2,15 @@ import type { Env } from '../types';
 import { requireAuth } from '../middleware/auth';
 import { generateIconFilename, getPrefix } from '../utils/icon';
 import { secureId } from '../utils/crypto';
+import { API_ERROR_CODES } from '../utils/constants';
 
 async function uploadHandler(request: Request, _url: URL, env: Env): Promise<Response> {
   if (request.method !== 'POST') {
-    return Response.json({ error: '方法不支持' }, { status: 405 });
+    return Response.json({ error: API_ERROR_CODES.METHOD_NOT_ALLOWED }, { status: 405 });
   }
 
   if (!env.BUCKET || !env.R2_URL) {
-    return Response.json({ error: 'R2 存储不可用，无法上传图标' }, { status: 503 });
+    return Response.json({ error: API_ERROR_CODES.R2_UNAVAILABLE }, { status: 503 });
   }
 
   const formData = await request.formData();
@@ -20,13 +21,16 @@ async function uploadHandler(request: Request, _url: URL, env: Env): Promise<Res
 
   // 使用 instanceof 显式校验，避免攻击者发送字符串表单字段绕过校验
   if (!(rawFile instanceof File)) {
-    return Response.json({ error: '缺少文件或文件格式无效' }, { status: 400 });
+    return Response.json({ error: API_ERROR_CODES.MISSING_FILE }, { status: 400 });
   }
   const file = rawFile;
 
   const maxSize = 100 * 1024;
   if (file.size > maxSize) {
-    return Response.json({ error: '文件大小超过限制（最大100KB）' }, { status: 400 });
+    return Response.json(
+      { error: API_ERROR_CODES.ICON_FILE_TOO_LARGE, maxSize: maxSize / 1024 },
+      { status: 400 }
+    );
   }
 
   const id = originalId ?? secureId('temp_');
@@ -36,7 +40,7 @@ async function uploadHandler(request: Request, _url: URL, env: Env): Promise<Res
   const allowedExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'];
 
   if (!allowedExtensions.includes(fileExtension)) {
-    return Response.json({ error: '不支持的文件格式' }, { status: 400 });
+    return Response.json({ error: API_ERROR_CODES.UNSUPPORTED_FILE_FORMAT }, { status: 400 });
   }
 
   const timestampInput = `${type}_${id}_${domain}_${Date.now()}`;
@@ -63,7 +67,6 @@ async function uploadHandler(request: Request, _url: URL, env: Env): Promise<Res
   const iconUrl = `${cleanR2Url}/${prefix}/${filename}`;
   return Response.json({
     success: true,
-    message: '图标上传成功',
     path: iconPath,
     iconUrl,
   });

@@ -160,9 +160,9 @@ const WallpaperManager: React.FC = () => {
         return;
       }
       // R2 不可用（503）或其他错误，降级到浏览器存储
-      logger.warn(t('errors.r2UploadFailed'), response.status);
+      logger.warn('R2 upload failed, falling back to browser storage', response.status);
     } catch (error) {
-      logger.warn(t('errors.r2RequestFailed'), error);
+      logger.warn('R2 upload request failed, falling back to browser storage', error);
     }
 
     // 降级：base64 存入 IndexedDB，store 直接用 data URL 渲染
@@ -173,11 +173,11 @@ const WallpaperManager: React.FC = () => {
         await saveLocalWallpaper(dataUrl);
         setWallpaper(dataUrl, 'local');
       } catch (err) {
-        logger.error(t('errors.indexedDbSaveFailed'), err);
+        logger.error('Failed to save to IndexedDB', err);
       }
     };
     reader.readAsDataURL(file);
-  }, [setWallpaper, wallpaper, t]);
+  }, [setWallpaper, wallpaper]);
 
   const handleColorChange = useCallback((color: string) => {
     setSolidColor(color);

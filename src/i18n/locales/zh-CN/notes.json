@@ -63,8 +63,5 @@
     "title": "笔记",
     "titlePlaceholder": "标题",
     "contentPlaceholder": "内容"
-  },
-  "log": {
-    "targetNoteNotFound": "NoteEditorDialog: 找不到目标笔记，退化为新建模式。"
   }
 }

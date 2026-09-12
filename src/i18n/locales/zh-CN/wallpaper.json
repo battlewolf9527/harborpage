@@ -25,11 +25,6 @@
   },
   "preview": "预览",
   "errors": {
-    "r2UploadFailed": "R2 上传失败，降级到浏览器存储",
-    "r2RequestFailed": "R2 上传请求失败，降级到浏览器存储",
-    "indexedDbSaveFailed": "IndexedDB 存储失败",
-    "indexedDbLoadFailed": "从 IndexedDB 加载壁纸失败",
-    "fetchBingFailed": "获取Bing壁纸失败",
     "bingApiRequestFailed": "Bing API请求失败: {{status}}",
     "bingApiInvalidData": "Bing API返回数据格式异常"
   }

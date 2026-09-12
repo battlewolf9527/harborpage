@@ -1,6 +1,7 @@
 import type { Env } from '../types';
 import { sha256, timingSafeEqual } from '../utils/crypto';
 import { authenticate, generateJwt, requireAuth } from '../middleware/auth';
+import { API_ERROR_CODES } from '../utils/constants';
 
 async function configHandler(_request: Request, _url: URL, env: Env): Promise<Response> {
   const hasBucket = !!env.BUCKET;
@@ -37,21 +38,21 @@ export async function handleAuthRoutes(request: Request, url: URL, env: Env): Pr
       try {
         const body = (await request.json()) as { passwordHash: string };
         if (!body.passwordHash) {
-          return Response.json({ error: '缺少密码参数' }, { status: 400 });
+          return Response.json({ error: API_ERROR_CODES.MISSING_PASSWORD }, { status: 400 });
         }
         const storedPasswordHash = await getStoredPasswordHash(env);
         // 使用 Worker 安全的 XOR 逐字节恒定时间比较（非 crypto.subtle）
         const passwordMatches = timingSafeEqual(body.passwordHash, storedPasswordHash);
         if (!passwordMatches) {
-          return Response.json({ error: '认证失败' }, { status: 401 });
+          return Response.json({ error: API_ERROR_CODES.AUTH_FAILED }, { status: 401 });
         }
         const token = await generateJwt(env);
         return Response.json({ success: true, token });
       } catch {
-        return Response.json({ error: '登录失败' }, { status: 500 });
+        return Response.json({ error: API_ERROR_CODES.LOGIN_FAILED }, { status: 500 });
       }
     }
-    return Response.json({ error: '方法不支持' }, { status: 405 });
+    return Response.json({ error: API_ERROR_CODES.METHOD_NOT_ALLOWED }, { status: 405 });
   }
 
   if (url.pathname === '/api/auth/status') {
@@ -59,14 +60,14 @@ export async function handleAuthRoutes(request: Request, url: URL, env: Env): Pr
       const isAuthenticated = await authenticate(request, env);
       return Response.json({ authenticated: isAuthenticated });
     }
-    return Response.json({ error: '方法不支持' }, { status: 405 });
+    return Response.json({ error: API_ERROR_CODES.METHOD_NOT_ALLOWED }, { status: 405 });
   }
 
   if (url.pathname === '/api/config') {
     if (request.method === 'GET') {
       return authenticatedConfigHandler(request, url, env);
     }
-    return Response.json({ error: '方法不支持' }, { status: 405 });
+    return Response.json({ error: API_ERROR_CODES.METHOD_NOT_ALLOWED }, { status: 405 });
   }
 
   return null;

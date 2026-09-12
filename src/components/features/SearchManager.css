@@ -3,7 +3,10 @@
    包含：列表 + 添加/编辑对话框 engine-dialog。 */
 
 .search-manager {
-  padding: 20px;
+  /* 本组件是 SettingsWindow 的子页面，面板自带 22-36px 内边距。
+     原先再加 20px 会让列表行被双重内缩、名称可用宽度不足（窄屏下只剩省略号），
+     也会让 h3 与面板标题左边缘错位。此处不再叠加内边距。 */
+  padding: 0;
   color: var(--text-primary);
   font-family: inherit;
 }
@@ -264,7 +267,7 @@
 .engine-info {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex: 1;
   min-width: 0;
 }

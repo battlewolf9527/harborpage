@@ -79,11 +79,9 @@
     "loadFailedNetwork": "加载失败，请检查网络连接",
     "cleanupFailed": "清理失败，请重试",
     "cleanupFailedNetwork": "清理失败，请检查网络连接",
+    "cleanupSummary": "已清理 {{count}} 个图标",
+    "cleanupSummaryWithMore": "已清理 {{count}} 个图标，预计还有约 {{remaining}} 个待清理",
     "sitesCleared": "已清空所有站点"
-  },
-  "logs": {
-    "loadDataFailed": "加载数据失败",
-    "cleanupIconsFailed": "清理图标失败"
   },
   "windows": {
     "wallpaper": "壁纸管理",

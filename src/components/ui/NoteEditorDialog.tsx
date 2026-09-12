@@ -69,7 +69,7 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
           ...(canonicalSlotId(target.colorSlot) ? { colorSlot: canonicalSlotId(target.colorSlot) } : {}),
         };
       }
-      logger.warn(t('log.targetNoteNotFound'), noteId);
+      logger.warn('NoteEditorDialog: target note not found, falling back to create mode.', noteId);
     }
     const fallback = randomSlotSelection(slots);
     return {

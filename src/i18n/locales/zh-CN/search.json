@@ -2,6 +2,10 @@
   "placeholder": "搜索...",
   "placeholderWithEngine": "用 {{name}} 搜索",
   "searchButton": "搜索",
+  "defaultEngines": {
+    "baidu": "百度",
+    "bing": "必应"
+  },
   "manager": {
     "title": "搜索设置",
     "addEngine": "添加搜索引擎",
@@ -17,7 +21,6 @@
     "namePlaceholder": "搜索引擎名称",
     "url": "搜索URL",
     "urlHint": "使用 {q} 作为查询参数占位符",
-    "urlRequiredHint": "搜索 URL 必须包含 {q} 占位符",
     "icon": "图标",
     "iconPlaceholder": "留空自动获取favicon，或输入图标URL/Emoji",
     "add": "添加",

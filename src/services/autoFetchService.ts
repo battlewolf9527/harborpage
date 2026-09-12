@@ -1,6 +1,7 @@
 import { getServices } from './serviceContainer';
 import createLogger from '../utils/logger';
 import i18n from '../i18n';
+import { translateApiError } from '../utils/apiErrorUtils';
 
 const logger = createLogger('autoFetchService');
 
@@ -57,7 +58,9 @@ class AutoFetchService {
 
     const result = await response.json();
     if (!result.success) {
-      throw new Error(result.error || i18n.t('icons:autoFetch.candidatesFetchFailedGeneric'));
+      throw new Error(
+        translateApiError(result.error, i18n.t('icons:autoFetch.candidatesFetchFailedGeneric'))
+      );
     }
 
     return result.candidates || [];
@@ -105,7 +108,7 @@ class AutoFetchService {
         });
 
         if (!response.ok) {
-          logger.warn(i18n.t('icons:autoFetch.downloadFailed', { url: candidate.url, status: response.status }));
+          logger.warn(`Failed to download icon ${candidate.url}: HTTP ${response.status}`);
           return;
         }
 
@@ -121,10 +124,7 @@ class AutoFetchService {
         }
       } catch (err) {
         logger.warn(
-          i18n.t('icons:autoFetch.downloadError', {
-            url: candidate.url,
-            message: err instanceof Error ? err.message : String(err),
-          })
+          `Error downloading icon ${candidate.url}: ${err instanceof Error ? err.message : String(err)}`
         );
       }
     };

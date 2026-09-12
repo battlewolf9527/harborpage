@@ -3,7 +3,6 @@ import { getServices } from '../services/serviceContainer';
 import { initializeAllStores } from '../services/storeInitializer';
 import FaviconConfigService from '../services/FaviconConfigService';
 import createLogger from '../utils/logger';
-import i18n from '../i18n';
 
 const logger = createLogger('DataInit');
 
@@ -29,7 +28,7 @@ export function useDataInitialization(isAuthenticated: boolean, isCheckingAuth: 
         // 未保存变更标记是用户上次会话遗留的真实未保存数据，必须保留以便自动保存触发。
       } catch (error) {
         if (!cancelled) {
-          logger.error(i18n.t('system:hooks.dataInitFailed'), error);
+          logger.error('Data initialization failed', error);
         }
       } finally {
         if (!cancelled) {

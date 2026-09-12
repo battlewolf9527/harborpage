@@ -4,6 +4,11 @@ export interface Page {
   name: string;
   websites: Website[];
   createdAt: number;
+  /**
+   * 标记「默认页」：首次创建的首页，以及旧格式（根级 websites）导入时承载迁移数据的页面。
+   * 作为跨语言的稳定标识，替代按页面名匹配的做法。
+   */
+  isDefault?: boolean;
 }
 
 // 网站类型

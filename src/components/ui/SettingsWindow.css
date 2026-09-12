@@ -354,9 +354,10 @@
 }
 
 /* ── 通用按钮：玻璃幽灵 + 10px 圆 ──
-   调色板组件（Palette）自带紧凑色块按钮（.palette-cell），
-   用 :not() 排除，避免被拉伸成通栏玻璃按钮。 */
-.settings-panel button:not(.palette-cell) {
+   紧凑图标按钮用 :not() 排除，避免被拉伸成通栏玻璃按钮：
+   · .palette-cell      → 调色板自带色块按钮
+   · .engine-action-btn → 搜索引擎列表行内的图标按钮（需保持 28×28 透明无边框） */
+.settings-panel button:not(.palette-cell):not(.engine-action-btn) {
   padding: 0 16px;
   min-height: var(--btn-h);
   border: var(--glass-border);
@@ -377,13 +378,13 @@
   line-height: 1;
   text-align: center;
 }
-.settings-panel button:hover:not(:disabled):not(.palette-cell) {
+.settings-panel button:hover:not(:disabled):not(.palette-cell):not(.engine-action-btn) {
   background: var(--glass-surface-hover);
   color: var(--text-primary);
   border-color: rgba(255, 255, 255, 0.18);
   transform: translateY(-1px);
 }
-.settings-panel button:active:not(.palette-cell) { transform: translateY(0); }
+.settings-panel button:active:not(.palette-cell):not(.engine-action-btn) { transform: translateY(0); }
 
 .settings-panel button:disabled {
   opacity: 0.45;

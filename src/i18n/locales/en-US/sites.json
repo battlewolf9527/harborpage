@@ -97,11 +97,6 @@
     "iconFetchSuccess": "Icon fetched successfully",
     "iconSavedToR2": "Icon saved to R2"
   },
-  "logs": {
-    "fetchTitleFailed": "Failed to fetch title",
-    "uploadIconFailed": "Failed to upload icon",
-    "saveIconToR2Failed": "Failed to save icon to R2"
-  },
   "contextMenu": {
     "aria": "Actions menu",
     "edit": "Edit",

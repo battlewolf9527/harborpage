@@ -79,11 +79,9 @@
     "loadFailedNetwork": "Failed to load, please check your network connection",
     "cleanupFailed": "Cleanup failed, please try again",
     "cleanupFailedNetwork": "Cleanup failed, please check your network connection",
+    "cleanupSummary": "Cleaned up {{count}} icons",
+    "cleanupSummaryWithMore": "Cleaned up {{count}} icons; about {{remaining}} more remaining",
     "sitesCleared": "All sites cleared"
-  },
-  "logs": {
-    "loadDataFailed": "Failed to load data",
-    "cleanupIconsFailed": "Failed to clean up icons"
   },
   "windows": {
     "wallpaper": "Wallpaper Management",

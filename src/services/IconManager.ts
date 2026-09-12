@@ -390,7 +390,7 @@ class IconManager {
       }
       return { success: true as const };
     } catch (error) {
-      logger.error(i18n.t('icons:manager.preloadFailed'), error);
+      logger.error('Failed to preload icon', error);
       return { success: false };
     }
   }
@@ -428,11 +428,11 @@ class IconManager {
 
         DataRepository.handleAuthResponse(response);
         if (!response.ok) {
-          logger.error(i18n.t('icons:manager.deleteFailedWithStatus', { status: response.status }));
+          logger.error(`Failed to delete R2 icon: ${response.status}`);
           failures.push({ id: item.id, url: item.url, error: `HTTP ${response.status}` });
         }
       } catch (error) {
-        logger.error(i18n.t('icons:manager.deleteFailed'), error);
+        logger.error('Failed to delete R2 icon', error);
         failures.push({ id: item.id, url: item.url, error });
       }
     }

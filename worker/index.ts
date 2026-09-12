@@ -8,6 +8,7 @@ import { handleWallpaperRoutes } from './routes/wallpaper';
 import { handleWallpaperUpload } from './routes/wallpaper-upload';
 import { handleBingRoutes } from './routes/bing';
 import { handleTitleRoutes } from './routes/title';
+import { API_ERROR_CODES } from './utils/constants';
 
 // 统一错误处理中间件
 function withErrorHandler(
@@ -19,7 +20,7 @@ function withErrorHandler(
     } catch (error) {
       console.error(`[ERROR] ${request.method} ${url.pathname}:`, error);
       return Response.json(
-        { error: `服务器内部错误: ${error instanceof Error ? error.message : String(error)}` },
+        { error: API_ERROR_CODES.INTERNAL_ERROR },
         { status: 500 }
       );
     }

@@ -18,6 +18,7 @@ function formatCoords(latitude: number, longitude: number, t: TFunction<'weather
 }
 
 export function useWeatherLocation({ fetchWeatherData, enabled = true }: UseWeatherLocationParams) {
+  // 语言变化时 react-i18next 会重建 t，下面的 useCallback/useEffect 随之重跑并重新拉取
   const { t } = useTranslation('weather');
   const [locationMethod, setLocationMethod] = useState(enabled ? t('location.locating') : '');
   const [locationDetail, setLocationDetail] = useState<string | null>(null);
@@ -48,7 +49,7 @@ export function useWeatherLocation({ fetchWeatherData, enabled = true }: UseWeat
         await fetchWeatherDataRef.current(DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lon);
       }
     } catch (error) {
-      console.warn(t('errors.ipLocationFallback'), error);
+      console.warn('IP location failed, using default location:', error);
       await fetchWeatherDataRef.current(DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lon);
     }
   }, [enabled, t]);

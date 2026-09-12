@@ -11,6 +11,11 @@ const logger = createLogger('useWeather');
 
 const WEATHER_CACHE_EXPIRY = 60 * 60 * 1000; // 1小时缓存
 
+/** 和风天气只区分中英两种返回语言 */
+function toWeatherLang(language: string): 'zh' | 'en' {
+  return language.startsWith('en') ? 'en' : 'zh';
+}
+
 export interface WeatherData {
   temperature: number;
   weather: string;
@@ -25,7 +30,8 @@ interface WeatherCacheEntry {
 }
 
 export function useWeather() {
-  const { t } = useTranslation('weather');
+  const { t, i18n } = useTranslation('weather');
+  const lang = toWeatherLang(i18n.language);
   const { configService } = getServices();
   const weatherApiAvailable = configService.isWeatherApiAvailable();
 
@@ -38,7 +44,7 @@ export function useWeather() {
   const fetchCityName = useCallback(async (latitude: number, longitude: number): Promise<string | null> => {
     try {
       const { authService } = getServices();
-      const geoUrl = `/api/geo?location=${longitude},${latitude}`;
+      const geoUrl = `/api/geo?location=${longitude},${latitude}&lang=${lang}`;
       const response = await fetch(geoUrl, {
         headers: authService.getAuthHeaders(),
       });
@@ -55,10 +61,10 @@ export function useWeather() {
         throw new Error(t('errors.citySearchCodeFailed', { code: data.code }));
       }
     } catch (error) {
-      logger.error(t('errors.cityNameFailed'), error);
+      logger.error('Failed to get city name', error);
       return null;
     }
-  }, [t]);
+  }, [t, lang]);
 
   const fetchWeatherData = useCallback(async (latitude: number, longitude: number) => {
     const { configService } = getServices();
@@ -74,7 +80,8 @@ export function useWeather() {
       const { authService } = getServices();
       const lat = latitude.toFixed(2);
       const lon = longitude.toFixed(2);
-      const cacheKey = `weather_${lat}_${lon}`;
+      // 缓存键包含语言：天气现象与城市名由 API 按语言返回，换语言后必须重新获取
+      const cacheKey = `weather_${lang}_${lat}_${lon}`;
       const cachedData = DataRepository.loadCache<WeatherCacheEntry>(cacheKey);
 
       if (cachedData) {
@@ -97,7 +104,7 @@ export function useWeather() {
       const displayCity = city ?? t('location.unknownCity');
       setCityName(displayCity);
 
-      const url = `/api/weather?lat=${latitude}&lon=${longitude}`;
+      const url = `/api/weather?lat=${latitude}&lon=${longitude}&lang=${lang}`;
       const response = await fetch(url, {
         headers: authService.getAuthHeaders(),
       });
@@ -131,7 +138,7 @@ export function useWeather() {
       setWeatherError(t('errors.fetchWeatherFailed', { detail: error instanceof Error ? error.message : String(error) }));
       setWeatherLoading(false);
     }
-  }, [fetchCityName, t]);
+  }, [fetchCityName, t, lang]);
 
   const { locationMethod, locationDetail } = useWeatherLocation({
     fetchWeatherData,

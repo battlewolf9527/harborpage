@@ -81,9 +81,56 @@ function devVarsCleanup(): Plugin {
   };
 }
 
+/**
+ * 精简 qweather-icons 字体产物：仅保留 woff2。
+ *
+ * 【问题根因】
+ * qweather-icons 的 CSS 在同一个 @font-face 中按优先级声明了三个 src：
+ *   woff2 → woff → truetype(ttf)，总计约 326 kB。
+ * 现代浏览器一律优先取 woff2（53.7 kB），woff/ttf 实际不会下载，
+ * 但 Vite 仍会把三份字体全部 emit 到产物目录。
+ *
+ * 【为何不能在配置层解决】
+ * 三份字体是「同一 @font-face 的备选 src」，不是独立声明，
+ * 没有 Vite 原生选项可以裁剪其中某个 src，故在 generateBundle 阶段：
+ *   1) 从 bundle 中删除 .woff / .ttf 字体资产（.woff2 保留）；
+ *   2) 同时从 CSS 资产里剥离对应 url()+format() 片段，
+ *      避免浏览器尝试请求已不存在的文件。
+ *
+ * enforce: 'post' 保证本插件的 generateBundle 晚于 Vite 的 CSS 资产 emit。
+ */
+function stripLegacyFonts(): Plugin {
+  const FONT_FALLBACK_RE =
+    /,\s*url\([^)]*?\.(?:woff|ttf)(?:\?[^)]*)?\)\s*format\(\s*["']?(?:woff|truetype)["']?\s*\)/g;
+
+  return {
+    name: "strip-legacy-fonts",
+    apply: "build",
+    enforce: "post",
+    generateBundle(_options, bundle) {
+      // 1) 删除 woff / ttf 字体资产（保留 .woff2）
+      for (const fileName of Object.keys(bundle)) {
+        if (!/qweather-icons[^/\\]*\.(woff|ttf)$/.test(fileName)) continue;
+        this.warn(`[strip-legacy-fonts] 移除冗余字体资产: ${fileName}`);
+        delete bundle[fileName];
+      }
+
+      // 2) 从 CSS 中剥离对应 src
+      for (const fileName of Object.keys(bundle)) {
+        const item = bundle[fileName];
+        if (item.type !== "asset" || !fileName.endsWith(".css")) continue;
+        const source = typeof item.source === "string"
+          ? item.source
+          : Buffer.from(item.source).toString("utf8");
+        item.source = source.replace(FONT_FALLBACK_RE, "");
+      }
+    },
+  };
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), cloudflare(), devVarsCleanup()],
+  plugins: [react(), cloudflare(), devVarsCleanup(), stripLegacyFonts()],
   server: {
     port: 5173,
     proxy: {
@@ -96,5 +143,33 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist/client',
+  },
+  environments: {
+    client: {
+      build: {
+        rollupOptions: {
+          output: {
+            /**
+             * 第三方依赖分包：把体积大、更新频率低的运行时单独拆出，
+             * 使其可被浏览器长期缓存，且避免单个 chunk 超过 500 kB 告警。
+             *
+             * 注意：分区必须「包边界精确匹配」且互不重叠。
+             * react 与 react-dom、scheduler 必须进同一 chunk，
+             * 否则会出现 vendor -> vendor-react -> vendor 的循环 chunk。
+             */
+            manualChunks(id) {
+              if (!id.includes('node_modules')) return;
+              if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) {
+                return 'vendor-react';
+              }
+              if (/[\\/]node_modules[\\/](i18next|react-i18next)[\\/]/.test(id)) {
+                return 'vendor-i18n';
+              }
+              return;
+            },
+          },
+        },
+      },
+    },
   },
 })

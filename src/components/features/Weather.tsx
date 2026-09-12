@@ -54,7 +54,7 @@ const Weather: React.FC = () => {
       await navigator.clipboard.writeText(locationDetail);
     } catch (error) {
       // 剪贴板 API 不可用时（非安全上下文等）静默失败
-      console.warn(t('errors.copyLocationFailed'), error);
+      console.warn('Failed to copy location info:', error);
       return;
     }
     setCopied(true);

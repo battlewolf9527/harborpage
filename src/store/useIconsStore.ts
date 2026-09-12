@@ -4,7 +4,6 @@ import type { Website, OpenFolder } from '../types';
 import { setupAutoPersist } from './persistence';
 import { generateId } from '../utils/idUtils';
 import createLogger from '../utils/logger';
-import i18n from '../i18n';
 import { usePagesStore } from './usePagesStore';
 import type { ColorSelection } from '../utils/paletteColors';
 
@@ -376,7 +375,7 @@ export const useIconsStore = create<IconsState>((set, get) => ({
       set({ pendingDeletes: [] });
     } catch (error) {
       // 保留 pendingDeletes 以便下次保存时重试
-      logger.error(i18n.t('icons:store.deleteFailedRetry'), error);
+      logger.error('Failed to delete icons; will retry on the next save', error);
       throw error;
     }
   },

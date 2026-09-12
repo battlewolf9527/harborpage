@@ -1,20 +1,9 @@
 {
   "manager": {
-    "preloadFailed": "预下载图标失败",
-    "deleteFailed": "删除R2图标失败",
-    "deleteFailedWithStatus": "删除R2图标失败: {{status}}",
     "deletePartialFailed": "{{failed}}/{{total}} 个图标删除失败"
   },
   "utils": {
     "cacheRequestFailed": "缓存请求失败: {{status}}"
-  },
-  "faviconService": {
-    "loadDefaultsFailed": "从后端加载默认 favicon 源失败",
-    "loadSourcesFailed": "获取 favicon 源配置失败",
-    "saveSourcesFailed": "保存 favicon 源配置失败"
-  },
-  "store": {
-    "deleteFailedRetry": "删除图标失败，将在下次保存时重试"
   },
   "autoFetch": {
     "candidatesFetchFailed": "获取候选列表失败: HTTP {{status}}",
@@ -23,8 +12,6 @@
     "downloadStart": "开始下载图标 (0/{{total}})",
     "downloading": "下载中 ({{current}}/{{total}})",
     "downloadDone": "完成，共获取 {{count}} 个有效图标",
-    "downloadFailed": "下载图标失败 {{url}}: HTTP {{status}}",
-    "downloadError": "下载图标异常 {{url}}: {{message}}",
     "title": "自动获取图标",
     "close": "关闭",
     "websiteLabel": "网站：",
@@ -45,9 +32,60 @@
     "cacheFailed": "缓存失败",
     "cacheResultInvalid": "缓存返回异常",
     "cacheFailedWithMessage": "缓存失败: {{message}}",
-    "unknownError": "未知错误",
-    "fetchIconsFailed": "自动获取图标失败",
-    "cacheIconFailed": "缓存图标失败"
+    "unknownError": "未知错误"
+  },
+  "apiErrors": {
+    "METHOD_NOT_ALLOWED": "请求方法不被支持",
+    "UNAUTHORIZED": "未授权，请先登录",
+    "INTERNAL_ERROR": "服务器内部错误",
+    "MISSING_PARAM": "缺少必要参数",
+    "INVALID_URL": "无效的 URL",
+    "MISSING_PASSWORD": "缺少密码参数",
+    "AUTH_FAILED": "认证失败",
+    "LOGIN_FAILED": "登录失败",
+    "MISSING_KEY": "缺少 key 参数",
+    "INVALID_KEY": "无效的 key 参数",
+    "DATA_PARSE_FAILED": "数据解析失败",
+    "INVALID_JSON": "无效的 JSON 数据",
+    "DATA_TOO_LARGE": "数据过大，最大支持 {{maxSize}} MB",
+    "R2_UNAVAILABLE": "R2 存储不可用",
+    "MISSING_FILE": "缺少文件或文件格式无效",
+    "ICON_FILE_TOO_LARGE": "文件过大，最大支持 {{maxSize}} KB",
+    "UNSUPPORTED_FILE_FORMAT": "不支持的文件格式",
+    "INVALID_DOMAIN": "无效的域名参数",
+    "INVALID_ID": "无效的 ID 参数",
+    "INVALID_HASH_INPUT": "无效的 hashInput 参数",
+    "MISSING_TARGET_URL": "缺少目标 URL 参数",
+    "ICON_TOO_LARGE": "图标过大",
+    "ICON_NOT_IMAGE": "返回了非图片内容",
+    "ICON_DOWNLOAD_FAILED": "下载图标失败",
+    "ICON_DOWNLOAD_TIMEOUT": "下载超时",
+    "ICON_NETWORK_ERROR": "下载图标网络错误",
+    "ALL_SOURCES_FAILED": "所有图标源均下载失败",
+    "ICON_SAVE_FAILED": "图标保存失败",
+    "ICON_DELETE_FAILED": "图标删除失败",
+    "INVALID_ICON_DATA": "无效的图标数据",
+    "ANALYZE_FAILED": "分析页面结构失败",
+    "WALLPAPER_FILE_TOO_LARGE": "文件过大，最大支持 {{maxSize}} MB",
+    "HTTPS_REQUIRED": "仅允许 HTTPS 协议",
+    "HOST_NOT_ALLOWED": "域名不被允许",
+    "WALLPAPER_FETCH_FAILED": "获取壁纸失败",
+    "IMAGE_TOO_LARGE": "图片过大",
+    "WEATHER_API_NOT_CONFIGURED": "缺少天气 API 配置",
+    "INVALID_LOCATION": "缺少或无效的 location 参数",
+    "INVALID_COORDINATES": "无效的经纬度参数",
+    "GEO_REQUEST_FAILED": "定位请求失败",
+    "WEATHER_REQUEST_FAILED": "天气请求失败",
+    "MISSING_URL": "缺少 url 参数",
+    "BING_REQUEST_FAILED": "Bing API 请求失败",
+    "BING_INVALID_RESPONSE": "Bing API 返回格式异常",
+    "BING_PROXY_ERROR": "Bing 代理异常"
+  },
+  "iconSource": {
+    "HTML": "HTML",
+    "COMMON_PATH": "常见路径",
+    "SITE_PATH_COMMON_PATH": "路径常见路径",
+    "ICON_SOURCE": "图标源"
   },
   "faviconSettings": {
     "title": "图标源配置",

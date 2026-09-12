@@ -1,5 +1,6 @@
 import type { Env } from '../types';
 import { requireAuth } from '../middleware/auth';
+import { API_ERROR_CODES } from '../utils/constants';
 
 const WALLPAPER_PREFIX = 'wallpapers/';
 const MAX_WALLPAPER_SIZE = 10 * 1024 * 1024;
@@ -14,22 +15,25 @@ function extractR2Path(url: string, r2BaseUrl: string): string | null {
 
 async function uploadHandler(request: Request, _url: URL, env: Env): Promise<Response> {
   if (request.method !== 'POST') {
-    return Response.json({ error: '方法不支持' }, { status: 405 });
+    return Response.json({ error: API_ERROR_CODES.METHOD_NOT_ALLOWED }, { status: 405 });
   }
 
   if (!env.BUCKET || !env.R2_URL) {
-    return Response.json({ error: 'R2 存储不可用' }, { status: 503 });
+    return Response.json({ error: API_ERROR_CODES.R2_UNAVAILABLE }, { status: 503 });
   }
 
   const formData = await request.formData();
   const rawFile = formData.get('file');
 
   if (!(rawFile instanceof File)) {
-    return Response.json({ error: '缺少文件或文件格式无效' }, { status: 400 });
+    return Response.json({ error: API_ERROR_CODES.MISSING_FILE }, { status: 400 });
   }
 
   if (rawFile.size > MAX_WALLPAPER_SIZE) {
-    return Response.json({ error: '文件大小超过限制（最大10MB）' }, { status: 400 });
+    return Response.json(
+      { error: API_ERROR_CODES.WALLPAPER_FILE_TOO_LARGE, maxSize: MAX_WALLPAPER_SIZE / 1024 / 1024 },
+      { status: 400 }
+    );
   }
 
   const fileData = await rawFile.arrayBuffer();

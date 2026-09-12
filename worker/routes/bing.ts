@@ -1,9 +1,10 @@
 import type { Env } from '../types';
 import { requireAuth } from '../middleware/auth';
+import { API_ERROR_CODES } from '../utils/constants';
 
 async function bingHandler(request: Request, url: URL, _env: Env): Promise<Response> {
   if (request.method !== 'GET') {
-    return Response.json({ error: '方法不支持' }, { status: 405 });
+    return Response.json({ error: API_ERROR_CODES.METHOD_NOT_ALLOWED }, { status: 405 });
   }
 
   try {
@@ -33,7 +34,7 @@ async function bingHandler(request: Request, url: URL, _env: Env): Promise<Respo
 
     if (!response.ok) {
       return Response.json(
-        { error: `Bing API 请求失败: ${response.status} ${response.statusText}` },
+        { error: API_ERROR_CODES.BING_REQUEST_FAILED },
         { status: 502 }
       );
     }
@@ -46,13 +47,12 @@ async function bingHandler(request: Request, url: URL, _env: Env): Promise<Respo
       });
     } catch {
       return Response.json(
-        { error: 'Bing API 返回格式异常', raw: text.slice(0, 200) },
+        { error: API_ERROR_CODES.BING_INVALID_RESPONSE, raw: text.slice(0, 200) },
         { status: 502 }
       );
     }
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    return Response.json({ error: `Bing 代理异常: ${msg}` }, { status: 500 });
+  } catch {
+    return Response.json({ error: API_ERROR_CODES.BING_PROXY_ERROR }, { status: 500 });
   }
 }
 

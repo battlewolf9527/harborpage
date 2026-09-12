@@ -25,11 +25,6 @@
   },
   "preview": "Preview",
   "errors": {
-    "r2UploadFailed": "R2 upload failed, falling back to browser storage",
-    "r2RequestFailed": "R2 upload request failed, falling back to browser storage",
-    "indexedDbSaveFailed": "Failed to save to IndexedDB",
-    "indexedDbLoadFailed": "Failed to load wallpaper from IndexedDB",
-    "fetchBingFailed": "Failed to fetch Bing wallpaper",
     "bingApiRequestFailed": "Bing API request failed: {{status}}",
     "bingApiInvalidData": "Unexpected Bing API response format"
   }
