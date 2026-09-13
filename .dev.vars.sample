@@ -10,6 +10,10 @@
 PASSWORD=<YOUR_LOGIN_PASSWORD>
 JWT_SECRET=<YOUR_JWT_SECRET>
 
-# ==================== 天气 API 配置（和风天气） ====================
+# ==================== 天气 API 配置 ====================
+# 天气功能开关 + 供应商（可选：qweather、openmeteo）；不填写则不启用天气功能
+# WEATHER_PROVIDER=qweather
+# 和风天气（qweather）：在 https://dev.qweather.com/ 注册获取免费 API Key
 WEATHER_API_KEY=<YOUR_WEATHER_API_KEY>
 WEATHER_API_HOST=<YOUR_WEATHER_API_HOST>
+# Open-Meteo（openmeteo）：无需密钥，设置 WEATHER_PROVIDER=openmeteo 即可启用

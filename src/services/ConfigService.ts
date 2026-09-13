@@ -13,6 +13,8 @@ interface AppConfig {
   enableR2Cdn: boolean;
   r2StorageAvailable: boolean;
   weatherApiAvailable: boolean;
+  /** 后端生效的天气供应商标识（如 qweather），未配置时为空串 */
+  weatherProvider: string;
 }
 
 class ConfigService {
@@ -68,6 +70,11 @@ class ConfigService {
 
   public isWeatherApiAvailable(): boolean {
     return this.config?.weatherApiAvailable === true;
+  }
+
+  /** 当前生效的天气供应商标识，未配置时返回空串 */
+  public getWeatherProviderId(): string {
+    return this.config?.weatherProvider || '';
   }
 
   // 从后端获取配置（需认证）

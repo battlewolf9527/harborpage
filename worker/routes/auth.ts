@@ -2,19 +2,21 @@ import type { Env } from '../types';
 import { sha256, timingSafeEqual } from '../utils/crypto';
 import { authenticate, generateJwt, requireAuth } from '../middleware/auth';
 import { API_ERROR_CODES } from '../utils/constants';
+import { getWeatherProvider } from '../weather/registry';
 
 async function configHandler(_request: Request, _url: URL, env: Env): Promise<Response> {
   const hasBucket = !!env.BUCKET;
   const hasR2Url = !!env.R2_URL;
   const r2StorageAvailable = hasBucket && hasR2Url;
   const enableR2Cdn = r2StorageAvailable && env.ENABLE_R2_CDN === 'true';
-  const weatherApiAvailable = !!(env.WEATHER_API_KEY && env.WEATHER_API_HOST);
+  const weatherProvider = getWeatherProvider(env);
 
   return Response.json({
     r2Url: env.R2_URL || '',
     enableR2Cdn,
     r2StorageAvailable,
-    weatherApiAvailable,
+    weatherApiAvailable: weatherProvider !== null,
+    weatherProvider: weatherProvider?.id ?? '',
   });
 }
 

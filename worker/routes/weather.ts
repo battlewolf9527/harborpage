@@ -1,55 +1,14 @@
 import type { Env } from '../types';
 import { requireAuth } from '../middleware/auth';
 import { API_ERROR_CODES } from '../utils/constants';
-import type { ApiErrorCode } from '../utils/constants';
+import { getWeatherProvider } from '../weather/registry';
 
-function getWeatherApiConfig(env: Env): { apiKey: string; apiHost: string } | null {
-  const apiKey = env.WEATHER_API_KEY;
-  const apiHost = env.WEATHER_API_HOST;
-  if (!apiKey || !apiHost) {
-    return null;
-  }
-  return { apiKey, apiHost };
-}
+/** 未指定语言时的兜底（前端传 i18n 语言，如 zh-CN / en-US） */
+const DEFAULT_APP_LANG = 'zh-CN';
 
-/** 和风天气支持的语言，缺省为中文 */
-const WEATHER_LANGS = ['zh', 'en'];
-
-function resolveLang(url: URL): string {
+function resolveAppLang(url: URL): string {
   const lang = url.searchParams.get('lang');
-  return lang && WEATHER_LANGS.includes(lang) ? lang : 'zh';
-}
-
-async function fetchWeatherApi(
-  env: Env,
-  path: string,
-  params: Record<string, string>,
-  errorCode: ApiErrorCode
-): Promise<Response> {
-  const config = getWeatherApiConfig(env);
-  if (!config) {
-    return Response.json({ error: API_ERROR_CODES.WEATHER_API_NOT_CONFIGURED }, { status: 500 });
-  }
-
-  const queryString = Object.entries({ ...params, key: config.apiKey })
-    .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
-    .join('&');
-  const fullUrl = `https://${config.apiHost}${path}?${queryString}`;
-
-  try {
-    const response = await fetch(fullUrl, {
-      headers: { 'Accept-Encoding': 'gzip' },
-    });
-
-    if (!response.ok) {
-      return Response.json({ error: errorCode }, { status: 500 });
-    }
-
-    const data = await response.json();
-    return Response.json(data);
-  } catch {
-    return Response.json({ error: errorCode }, { status: 500 });
-  }
+  return lang && lang.length <= 20 ? lang : DEFAULT_APP_LANG;
 }
 
 async function geoHandler(request: Request, url: URL, env: Env): Promise<Response> {
@@ -62,7 +21,16 @@ async function geoHandler(request: Request, url: URL, env: Env): Promise<Respons
     return Response.json({ error: API_ERROR_CODES.INVALID_LOCATION }, { status: 400 });
   }
 
-  return fetchWeatherApi(env, '/geo/v2/city/lookup', { location, lang: resolveLang(url) }, API_ERROR_CODES.GEO_REQUEST_FAILED);
+  const provider = getWeatherProvider(env);
+  if (!provider) {
+    return Response.json({ error: API_ERROR_CODES.WEATHER_API_NOT_CONFIGURED }, { status: 500 });
+  }
+
+  const locations = await provider.lookupCity(location, provider.toProviderLang(resolveAppLang(url)), env);
+  if (locations === null) {
+    return Response.json({ error: API_ERROR_CODES.GEO_REQUEST_FAILED }, { status: 500 });
+  }
+  return Response.json({ locations });
 }
 
 async function weatherHandler(request: Request, url: URL, env: Env): Promise<Response> {
@@ -82,7 +50,16 @@ async function weatherHandler(request: Request, url: URL, env: Env): Promise<Res
     return Response.json({ error: API_ERROR_CODES.INVALID_COORDINATES }, { status: 400 });
   }
 
-  return fetchWeatherApi(env, '/v7/weather/now', { location: `${lon},${lat}`, lang: resolveLang(url) }, API_ERROR_CODES.WEATHER_REQUEST_FAILED);
+  const provider = getWeatherProvider(env);
+  if (!provider) {
+    return Response.json({ error: API_ERROR_CODES.WEATHER_API_NOT_CONFIGURED }, { status: 500 });
+  }
+
+  const weather = await provider.getCurrentWeather(lat, lon, provider.toProviderLang(resolveAppLang(url)), env);
+  if (weather === null) {
+    return Response.json({ error: API_ERROR_CODES.WEATHER_REQUEST_FAILED }, { status: 500 });
+  }
+  return Response.json(weather);
 }
 
 // 模块级缓存：避免每次请求都重新创建闭包

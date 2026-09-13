@@ -34,7 +34,7 @@
   "errors": {
     "apiNotConfigured": "Weather API is not configured",
     "citySearchRequestFailed": "City search API request failed: {{status}} {{statusText}}",
-    "citySearchCodeFailed": "City search API error: {{code}}",
+    "cityNotFound": "No matching city found",
     "weatherRequestFailed": "Weather API request failed: {{status}} {{statusText}}",
     "fetchWeatherFailed": "Failed to fetch weather data: {{detail}}",
     "ipLocationRequestFailed": "IP location API request failed"

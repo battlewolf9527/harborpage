@@ -50,7 +50,10 @@
 		"R2_URL": "https://<YOUR_R2_DOMAIN>/icons",
 		
 		// 启用R2自动图标缓存
-		"ENABLE_R2_CDN": "false"
+		"ENABLE_R2_CDN": "false",
+
+		// 天气供应商 + 天气功能开关：可选 qweather / openmeteo；不填写则不启用天气功能
+		"WEATHER_PROVIDER": "qweather"
 	}
 	// 敏感环境变量请使用 wrangler secret put 命令设置，切勿放在 vars 中：
 	//   wrangler secret put PASSWORD

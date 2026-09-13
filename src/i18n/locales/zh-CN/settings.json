@@ -46,8 +46,8 @@
     "bright": "调亮"
   },
   "features": {
-    "weather": "天气",
-    "weatherAria": "显示天气组件",
+    "weather": "时间天气",
+    "weatherAria": "显示时间天气组件",
     "search": "搜索框",
     "searchAria": "显示搜索框",
     "notes": "笔记",

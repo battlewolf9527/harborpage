@@ -102,7 +102,7 @@
 ### 🌤️ 天气显示
 - 实时天气信息显示
 - 支持浏览器定位和IP定位
-- 和风天气API支持
+- 多供应商天气 API 支持（内置和风天气、Open-Meteo 适配器，可通过 `WEATHER_PROVIDER` 切换 / 扩展）
 - 显示当前温度和天气状态
 - 显示时间和日期（点击日期切换农历）
 - 时钟使用 ref 直接 DOM 操作，避免每秒触发 React 重渲染
@@ -260,6 +260,7 @@ npm run deploy
    - 将 KV 命名空间 ID 填入 `kv_namespaces[0].id`
    - 将 R2 存储桶名称填入 `r2_buckets[0].bucket_name`
    - 配置 `R2_URL`（启用 R2 CDN 时需要）
+   - 配置 `WEATHER_PROVIDER`（非敏感，直接写在 `vars` 中，取值 `qweather` / `openmeteo`）
 
 ### 环境变量说明
 
@@ -267,8 +268,9 @@ npm run deploy
 |--------|------|----------|
 | `PASSWORD` | 登录密码 | 是 |
 | `JWT_SECRET` | JWT 签名密钥 | 是 |
-| `WEATHER_API_KEY` | 和风天气 API 密钥 | 否 |
-| `WEATHER_API_HOST` | 和风天气 API 主机地址 | 否 |
+| `WEATHER_PROVIDER` | 天气功能开关 + 供应商（在 `wrangler.jsonc` 的 `vars` 中配置，可选 `qweather`、`openmeteo`；**不填写则不启用天气功能**） | 否 |
+| `WEATHER_API_KEY` | 天气 API 密钥（和风天气；使用 `openmeteo` 时无需配置） | 否 |
+| `WEATHER_API_HOST` | 天气 API 主机地址（和风天气；使用 `openmeteo` 时无需配置） | 否 |
 | `R2_URL` | R2 存储访问地址（启用 R2 CDN 时需要） | 否 |
 | `ENABLE_R2_CDN` | 是否启用 R2 CDN（默认关闭） | 否 |
 
@@ -332,7 +334,8 @@ npm run deploy
 harborpage/
 ├── shared/                          # 前后端共享代码
 │   ├── apiErrors.ts                 # API 错误码 / 图标源标识（语言无关，供前端 i18n 翻译）
-│   └── constants.ts                 # TRACKED_KEYS 持久化追踪键（含 palette / paletteAliases / paletteLightness）
+│   ├── constants.ts                 # TRACKED_KEYS 持久化追踪键（含 palette / paletteAliases / paletteLightness）
+│   └── weather.ts                   # 归一化天气模型（供应商无关的图标码 / 地点 / 实时天气契约）
 ├── public/                          # 静态资源
 ├── screenshots/                     # 界面预览截图
 ├── samples/                         # 设计参考样例（纯 HTML）
@@ -428,6 +431,11 @@ harborpage/
 │   │   └── auth.ts                  # 认证中间件
 │   ├── routes/                      # API 路由（auth/data/icon/icon-upload/icon-cleanup/title/bing/wallpaper/wallpaper-upload/weather）
 │   ├── utils/                       # constants/crypto/icon/md5/streamLimit
+│   ├── weather/                     # 天气供应商抽象层
+│   │   ├── types.ts                 # WeatherProvider 适配器接口
+│   │   ├── registry.ts              # 供应商注册表 / WEATHER_PROVIDER 选择
+│   │   ├── providers/qweather.ts    # 和风天气适配器
+│   │   └── providers/openmeteo.ts   # Open-Meteo 适配器（无需密钥）
 │   ├── index.ts                     # Worker 入口
 │   └── types.ts                     # Worker 类型
 ├── .dev.vars.sample                 # 本地环境变量示例
@@ -442,7 +450,7 @@ harborpage/
 ### 认证
 - `POST /api/login` - 用户登录
 - `GET /api/auth/status` - 检查认证状态
-- `GET /api/config` - 获取前端运行时配置（需认证，返回 `r2Url` / `enableR2Cdn` / `r2StorageAvailable` / `weatherApiAvailable`）
+- `GET /api/config` - 获取前端运行时配置（需认证，返回 `r2Url` / `enableR2Cdn` / `r2StorageAvailable` / `weatherApiAvailable` / `weatherProvider`）
 
 ### 数据管理
 - `GET /api/data` - 获取全部用户数据
@@ -467,8 +475,10 @@ harborpage/
 - `POST /api/favicon/sources` - 保存 Favicon 源配置
 
 ### 天气服务
-- `GET /api/weather?lat={lat}&lon={lon}` - 获取天气信息
-- `GET /api/geo?location={location}` - 城市搜索
+- `GET /api/weather?lat={lat}&lon={lon}&lang={lang}` - 获取归一化实时天气（温度 / 天气现象 / 湿度 / 归一化图标码）
+- `GET /api/geo?location={location}&lang={lang}` - 城市搜索（返回归一化地点列表）
+
+> 说明：和风天气支持「按坐标反查城市」，因此定位后可显示城市名；Open-Meteo 官方 Geocoding 仅支持按名称搜索，使用 `openmeteo` 时城市名会回退为「未知城市」，但天气数据不受影响。
 
 ### 壁纸代理
 - `GET /api/wallpaper?url={url}` - 壁纸图片代理（域名白名单限制）
@@ -602,6 +612,7 @@ MIT License
 - [Vite](https://vitejs.dev/)
 - [Cloudflare Workers](https://workers.cloudflare.com/)
 - [和风天气](https://www.qweather.com/)
+- [Open-Meteo](https://open-meteo.com/)
 - [Zustand](https://zustand-demo.pmnd.rs/)
 - [lunisolar](https://lunisolar.js.org/)
 - [qweather-icons](https://github.com/qwd/Icons)

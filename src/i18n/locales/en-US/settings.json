@@ -46,8 +46,8 @@
     "bright": "Brighten"
   },
   "features": {
-    "weather": "Weather",
-    "weatherAria": "Show weather widget",
+    "weather": "Time & Weather",
+    "weatherAria": "Show time&weather widget",
     "search": "Search Box",
     "searchAria": "Show search box",
     "notes": "Notes",

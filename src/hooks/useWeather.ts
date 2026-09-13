@@ -5,15 +5,56 @@ import { getServices } from '../services/serviceContainer';
 import DataRepository from '../services/DataRepository';
 import { useWeatherLunar } from './useWeatherLunar';
 import { useWeatherLocation } from './useWeatherLocation';
+import { translateApiError } from '../utils/apiErrorUtils';
+import type { NormalizedLocation, NormalizedWeather, WeatherIconCode } from '../../shared/weather';
 import createLogger from '../utils/logger';
 
 const logger = createLogger('useWeather');
 
 const WEATHER_CACHE_EXPIRY = 60 * 60 * 1000; // 1小时缓存
 
-/** 和风天气只区分中英两种返回语言 */
-function toWeatherLang(language: string): 'zh' | 'en' {
-  return language.startsWith('en') ? 'en' : 'zh';
+/** 归一化图标码 → qweather-icons 字体类名（前端不再感知任何单一供应商的图标编号） */
+const WEATHER_ICON_CLASS_MAP: Record<WeatherIconCode, string> = {
+  SUNNY: 'qi-sunny',
+  SUNNY_NIGHT: 'qi-clear-night',
+  PARTLY_CLOUDY: 'qi-few-clouds',
+  PARTLY_CLOUDY_NIGHT: 'qi-few-clouds-night',
+  CLOUDY: 'qi-cloudy',
+  CLOUDY_NIGHT: 'qi-cloudy-night',
+  OVERCAST: 'qi-overcast',
+  SHOWER: 'qi-shower-rain',
+  THUNDERSTORM: 'qi-thundershower',
+  DRIZZLE: 'qi-drizzle-rain',
+  LIGHT_RAIN: 'qi-light-rain',
+  RAIN: 'qi-moderate-rain',
+  HEAVY_RAIN: 'qi-heavy-rain',
+  RAINSTORM: 'qi-extreme-rain',
+  FREEZING_RAIN: 'qi-freezing-rain',
+  LIGHT_SNOW: 'qi-light-snow',
+  SNOW: 'qi-moderate-snow',
+  HEAVY_SNOW: 'qi-heavy-snow',
+  SNOWSTORM: 'qi-snowstorm',
+  SLEET: 'qi-sleet',
+  RAIN_SNOW: 'qi-rain-and-snow',
+  MIST: 'qi-mist',
+  FOG: 'qi-foggy',
+  HAZE: 'qi-haze',
+  SAND: 'qi-sand',
+  DUST: 'qi-dust',
+  DUSTSTORM: 'qi-duststorm',
+  HOT: 'qi-hot',
+  COLD: 'qi-cold',
+  UNKNOWN: 'qi-unknown',
+};
+
+function getWeatherIconClass(icon: WeatherIconCode): string {
+  return WEATHER_ICON_CLASS_MAP[icon] ?? WEATHER_ICON_CLASS_MAP.UNKNOWN;
+}
+
+/** 归一化地点 → "上级行政区 - 地点名" 展示文本 */
+function formatCityName(location: NormalizedLocation): string {
+  const { admin, name } = location;
+  return `${admin || ''}${admin && name ? ' - ' : ''}${name || ''}`;
 }
 
 export interface WeatherData {
@@ -29,9 +70,16 @@ interface WeatherCacheEntry {
   timestamp: number;
 }
 
+/** /api/geo 响应（成功时为 locations，失败时为 error 错误码） */
+interface GeoResponse {
+  locations?: NormalizedLocation[];
+  error?: unknown;
+}
+
 export function useWeather() {
   const { t, i18n } = useTranslation('weather');
-  const lang = toWeatherLang(i18n.language);
+  // 直接传应用语言（如 zh-CN / en-US），由后端供应商适配器决定映射为哪种上游语言
+  const appLang = i18n.language;
   const { configService } = getServices();
   const weatherApiAvailable = configService.isWeatherApiAvailable();
 
@@ -44,27 +92,27 @@ export function useWeather() {
   const fetchCityName = useCallback(async (latitude: number, longitude: number): Promise<string | null> => {
     try {
       const { authService } = getServices();
-      const geoUrl = `/api/geo?location=${longitude},${latitude}&lang=${lang}`;
+      const geoUrl = `/api/geo?location=${longitude},${latitude}&lang=${encodeURIComponent(appLang)}`;
       const response = await fetch(geoUrl, {
         headers: authService.getAuthHeaders(),
       });
       DataRepository.handleAuthResponse(response);
+      const data = await response.json() as GeoResponse;
       if (!response.ok) {
-        throw new Error(t('errors.citySearchRequestFailed', { status: response.status, statusText: response.statusText }));
+        throw new Error(translateApiError(
+          data?.error,
+          t('errors.citySearchRequestFailed', { status: response.status, statusText: response.statusText }),
+        ));
       }
-      const data = await response.json();
-      if (data.code === '200' && data.location && data.location.length > 0) {
-        const location = data.location[0];
-        const cityName = `${location.adm2 || ''}${location.adm2 && location.name ? ' - ' : ''}${location.name || ''}`;
-        return cityName;
-      } else {
-        throw new Error(t('errors.citySearchCodeFailed', { code: data.code }));
+      if (data.locations && data.locations.length > 0) {
+        return formatCityName(data.locations[0]);
       }
+      throw new Error(t('errors.cityNotFound'));
     } catch (error) {
       logger.error('Failed to get city name', error);
       return null;
     }
-  }, [t, lang]);
+  }, [t, appLang]);
 
   const fetchWeatherData = useCallback(async (latitude: number, longitude: number) => {
     const { configService } = getServices();
@@ -80,8 +128,8 @@ export function useWeather() {
       const { authService } = getServices();
       const lat = latitude.toFixed(2);
       const lon = longitude.toFixed(2);
-      // 缓存键包含语言：天气现象与城市名由 API 按语言返回，换语言后必须重新获取
-      const cacheKey = `weather_${lang}_${lat}_${lon}`;
+      // 缓存键包含供应商与语言：天气现象、城市名与图标均随二者变化，换任一项后必须重新获取
+      const cacheKey = `weather_${configService.getWeatherProviderId()}_${appLang}_${lat}_${lon}`;
       const cachedData = DataRepository.loadCache<WeatherCacheEntry>(cacheKey);
 
       if (cachedData) {
@@ -104,41 +152,40 @@ export function useWeather() {
       const displayCity = city ?? t('location.unknownCity');
       setCityName(displayCity);
 
-      const url = `/api/weather?lat=${latitude}&lon=${longitude}&lang=${lang}`;
+      const url = `/api/weather?lat=${latitude}&lon=${longitude}&lang=${encodeURIComponent(appLang)}`;
       const response = await fetch(url, {
         headers: authService.getAuthHeaders(),
       });
       DataRepository.handleAuthResponse(response);
+      const data = await response.json() as (NormalizedWeather & { error?: unknown });
       if (!response.ok) {
-        throw new Error(t('errors.weatherRequestFailed', { status: response.status, statusText: response.statusText }));
+        throw new Error(translateApiError(
+          data?.error,
+          t('errors.weatherRequestFailed', { status: response.status, statusText: response.statusText }),
+        ));
       }
-      const data = await response.json();
-      if (data.code === '200') {
-        const weatherData: WeatherData = {
-          temperature: parseInt(data.now.temp, 10) || 0,
-          weather: data.now.text,
-          icon: getWeatherIcon(data.now.icon),
-          city: displayCity,
-          humidity: parseInt(data.now.humidity, 10) || 0,
-        };
-        setWeather(weatherData);
+      const weatherData: WeatherData = {
+        temperature: data.temperature,
+        weather: data.weatherText,
+        icon: getWeatherIconClass(data.icon),
+        city: displayCity,
+        humidity: data.humidity,
+      };
+      setWeather(weatherData);
 
-        // 仅在城市名获取成功时缓存，避免占位符"未知城市"被缓存 1 小时
-        if (city !== null) {
-          DataRepository.saveCache<WeatherCacheEntry>(cacheKey, {
-            weatherData,
-            timestamp: Date.now()
-          });
-        }
-      } else {
-        throw new Error(`Weather API error: ${data.code}`);
+      // 仅在城市名获取成功时缓存，避免占位符"未知城市"被缓存 1 小时
+      if (city !== null) {
+        DataRepository.saveCache<WeatherCacheEntry>(cacheKey, {
+          weatherData,
+          timestamp: Date.now()
+        });
       }
       setWeatherLoading(false);
     } catch (error) {
       setWeatherError(t('errors.fetchWeatherFailed', { detail: error instanceof Error ? error.message : String(error) }));
       setWeatherLoading(false);
     }
-  }, [fetchCityName, t, lang]);
+  }, [fetchCityName, t, appLang]);
 
   const { locationMethod, locationDetail } = useWeatherLocation({
     fetchWeatherData,
@@ -165,8 +212,4 @@ export function useWeather() {
     handleDateClick,
     weatherApiAvailable,
   };
-}
-
-function getWeatherIcon(iconCode: string): string {
-  return `qi-${iconCode}`;
 }

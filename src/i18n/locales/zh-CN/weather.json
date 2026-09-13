@@ -34,7 +34,7 @@
   "errors": {
     "apiNotConfigured": "天气API未配置",
     "citySearchRequestFailed": "城市搜索API请求失败: {{status}} {{statusText}}",
-    "citySearchCodeFailed": "城市搜索API错误: {{code}}",
+    "cityNotFound": "未找到匹配的城市",
     "weatherRequestFailed": "天气API请求失败: {{status}} {{statusText}}",
     "fetchWeatherFailed": "获取天气数据失败: {{detail}}",
     "ipLocationRequestFailed": "IP定位API请求失败"

@@ -102,7 +102,7 @@ Windows and dialogs:
 ### 🌤️ Weather Display
 - Real-time weather information
 - Supports both browser geolocation and IP-based location
-- QWeather API support
+- Multi-provider weather API support (built-in QWeather and Open-Meteo adapters; switch / extend via `WEATHER_PROVIDER`)
 - Shows the current temperature and weather condition
 - Shows time and date (click the date to toggle the lunar calendar)
 - The clock uses direct DOM manipulation via ref to avoid triggering a React re-render every second
@@ -260,6 +260,7 @@ npm run deploy
    - Put the KV namespace ID into `kv_namespaces[0].id`
    - Put the R2 bucket name into `r2_buckets[0].bucket_name`
    - Configure `R2_URL` (needed when R2 CDN is enabled)
+   - Configure `WEATHER_PROVIDER` (not sensitive, set directly in `vars`; values: `qweather` / `openmeteo`)
 
 ### Environment Variables
 
@@ -267,8 +268,9 @@ npm run deploy
 |--------|------|----------|
 | `PASSWORD` | Login password | Yes |
 | `JWT_SECRET` | JWT signing secret | Yes |
-| `WEATHER_API_KEY` | QWeather API key | No |
-| `WEATHER_API_HOST` | QWeather API host | No |
+| `WEATHER_PROVIDER` | Weather feature switch + provider (set in `vars` of `wrangler.jsonc`; `qweather` or `openmeteo`. **When empty, the weather feature is disabled**) | No |
+| `WEATHER_API_KEY` | Weather API key (QWeather; not needed when using `openmeteo`) | No |
+| `WEATHER_API_HOST` | Weather API host (QWeather; not needed when using `openmeteo`) | No |
 | `R2_URL` | R2 storage access URL (needed when R2 CDN is enabled) | No |
 | `ENABLE_R2_CDN` | Whether to enable the R2 CDN (off by default) | No |
 
@@ -332,7 +334,8 @@ npm run deploy
 harborpage/
 ├── shared/                          # Code shared between frontend and backend
 │   ├── apiErrors.ts                 # API error codes / icon source identifiers (language-neutral, for frontend i18n)
-│   └── constants.ts                 # TRACKED_KEYS persistence tracking keys (including palette / paletteAliases / paletteLightness)
+│   ├── constants.ts                 # TRACKED_KEYS persistence tracking keys (including palette / paletteAliases / paletteLightness)
+│   └── weather.ts                   # Normalized weather model (provider-agnostic icon codes / locations / current weather contract)
 ├── public/                          # Static assets
 ├── screenshots/                     # UI preview screenshots
 ├── samples/                         # Design reference samples (plain HTML)
@@ -428,6 +431,11 @@ harborpage/
 │   │   └── auth.ts                  # Authentication middleware
 │   ├── routes/                      # API routes (auth/data/icon/icon-upload/icon-cleanup/title/bing/wallpaper/wallpaper-upload/weather)
 │   ├── utils/                       # constants/crypto/icon/md5/streamLimit
+│   ├── weather/                     # Weather provider abstraction layer
+│   │   ├── types.ts                 # WeatherProvider adapter interface
+│   │   ├── registry.ts              # Provider registry / WEATHER_PROVIDER selection
+│   │   ├── providers/qweather.ts    # QWeather adapter
+│   │   └── providers/openmeteo.ts   # Open-Meteo adapter (no API key required)
 │   ├── index.ts                     # Worker entry point
 │   └── types.ts                     # Worker types
 ├── .dev.vars.sample                 # Local environment variable sample
@@ -442,7 +450,7 @@ harborpage/
 ### Authentication
 - `POST /api/login` - User login
 - `GET /api/auth/status` - Check authentication status
-- `GET /api/config` - Get the frontend runtime configuration (requires auth; returns `r2Url` / `enableR2Cdn` / `r2StorageAvailable` / `weatherApiAvailable`)
+- `GET /api/config` - Get the frontend runtime configuration (requires auth; returns `r2Url` / `enableR2Cdn` / `r2StorageAvailable` / `weatherApiAvailable` / `weatherProvider`)
 
 ### Data Management
 - `GET /api/data` - Get all user data
@@ -467,8 +475,10 @@ harborpage/
 - `POST /api/favicon/sources` - Save the favicon source configuration
 
 ### Weather Service
-- `GET /api/weather?lat={lat}&lon={lon}` - Get weather information
-- `GET /api/geo?location={location}` - City search
+- `GET /api/weather?lat={lat}&lon={lon}&lang={lang}` - Get normalized current weather (temperature / condition / humidity / normalized icon code)
+- `GET /api/geo?location={location}&lang={lang}` - City search (returns a normalized location list)
+
+> Note: QWeather supports reverse geocoding (coordinates to city), so the city name is available after locating. Open-Meteo's official Geocoding API only supports forward name search, so with `openmeteo` the city name falls back to "Unknown City"; weather data is unaffected.
 
 ### Wallpaper Proxy
 - `GET /api/wallpaper?url={url}` - Wallpaper image proxy (with domain allowlist restriction)
@@ -602,6 +612,7 @@ MIT License
 - [Vite](https://vitejs.dev/)
 - [Cloudflare Workers](https://workers.cloudflare.com/)
 - [QWeather](https://www.qweather.com/)
+- [Open-Meteo](https://open-meteo.com/)
 - [Zustand](https://zustand-demo.pmnd.rs/)
 - [lunisolar](https://lunisolar.js.org/)
 - [qweather-icons](https://github.com/qwd/Icons)
