@@ -1,231 +1,254 @@
-# HarborPage - 个人导航页面
+# HarborPage - Personal Navigation Page
 
-一个基于 React + Vite + Cloudflare Workers 构建的现代化个人导航页面，支持网站图标管理、文件夹分类、搜索引擎切换、天气显示、待办事项、笔记、数据导入导出等功能。
+A modern personal navigation page built with React + Vite + Cloudflare Workers, supporting website icon management, folder categorization, search engine switching, weather display, to-do lists, notes, data import/export, and more, with a built-in Simplified Chinese / English bilingual interface.
 
-## 📸 界面预览
+## 📸 Interface Preview
 
-主界面全景：
+Main interface overview:
 
 <p align="center">
-  <img src="screenshots/Demo.jpg" width="620" alt="主界面" />
+  <img src="screenshots/Demo.jpg" width="620" alt="Main interface" />
   <br />
-  <sub><b>主界面</b> · 壁纸 + 图标网格 + 搜索 / 天气 / 两侧半藏水晶球入口</sub>
+  <sub><b>Main interface</b> · wallpaper + icon grid + search / weather / half-hidden crystal ball entries on both sides</sub>
 </p>
 
-三个边缘入口球功能：
+The three edge entry balls:
 
 <table align="center">
   <tr>
     <td align="center">
-      <img src="screenshots/Pages.jpg" width="396" alt="多页面侧边栏" />
+      <img src="screenshots/Pages.jpg" width="396" alt="Multi-page sidebar" />
       <br />
-      <sub><b>多页面</b> · 左缘入口球展开 PagesSidebar</sub>
+      <sub><b>Multi-page</b> · left-edge entry ball expands PagesSidebar</sub>
     </td>
     <td align="center">
-      <img src="screenshots/TodoList.jpg" width="396" alt="待办侧边栏" />
+      <img src="screenshots/TodoList.jpg" width="396" alt="Todo sidebar" />
       <br />
-      <sub><b>待办事项</b> · 右缘入口球展开待办侧边栏</sub>
+      <sub><b>To-do</b> · right-edge entry ball expands the todo sidebar</sub>
     </td>
     <td align="center">
-      <img src="screenshots/Notes.jpg" width="396" alt="笔记便签栏" />
+      <img src="screenshots/Notes.jpg" width="396" alt="Note bar" />
       <br />
-      <sub><b>笔记</b> · 底部入口球悬停展开便签栏</sub>
+      <sub><b>Notes</b> · bottom entry ball reveals the note bar on hover</sub>
     </td>
   </tr>
 </table>
 
-窗口与对话框：
+Windows and dialogs:
 
 <p align="center">
-  <img src="screenshots/Folder.jpg" width="560" alt="文件夹窗口" />
+  <img src="screenshots/Folder.jpg" width="560" alt="Folder window" />
   <br />
-  <sub><b>文件夹窗口</b> · 水晶方块图标 + 材质色分层玻璃（配色随文件夹颜色联动）</sub>
+  <sub><b>Folder window</b> · crystal block icons + layered material glass (colors follow the folder color)</sub>
 </p>
 
 <p align="center">
-  <img src="screenshots/About.png" width="240" alt="关于对话框" />
+  <img src="screenshots/About.png" width="240" alt="About dialog" />
   <br />
-  <sub><b>关于</b> · 关于 HarborPage 对话框</sub>
+  <sub><b>About</b> · the About HarborPage dialog</sub>
 </p>
 
-## ✨ 功能特性
+## ✨ Features
 
-### 🌐 网站图标管理
-- 添加、修改、删除网站快捷方式
-- 多来源图标获取：HTML 解析、常见路径探测、多 Favicon 源 fallback
-- 支持三种图标输入方式：图标 URL、文字（生成带颜色文字图标）、Emoji
-- 图标智能获取对话框：自动从多种渠道收集候选图标供用户选择
-- 图标缓存到 Cloudflare R2（可选），前端信号量并发控制（3 并发）
-- 拖拽排序和移动图标
-- 右键菜单快速操作
-- 长按进入编辑模式
-- 图标 / 文件夹图标以「水晶方块」玻璃质感呈现，可用全局调色板 16 色或自定义颜色着色（详见下方「配色体系」）
+### 🌐 Website Icon Management
+- Add, edit, and delete website shortcuts
+- Multi-source icon retrieval: HTML parsing, common path probing, multi-favicon-source fallback
+- Three ways to provide an icon: icon URL, text (generates a colored text icon), or emoji
+- Smart icon fetch dialog: automatically collects candidate icons from multiple channels for you to choose from
+- Icons cached to Cloudflare R2 (optional), with semaphore-based concurrency control on the frontend (3 concurrent)
+- Drag-and-drop sorting and icon moving
+- Context menu for quick actions
+- Long press to enter edit mode
+- Icon / folder icons are rendered with a "crystal block" glass texture, colorable with the 16 global palette colors or a custom color (see "Color System" below)
 
-### 📁 文件夹功能
-- 拖拽图标到另一个图标上创建文件夹
-- 文件夹图标显示前4个网站的图标（田字形排列）
-- 支持文件夹名称修改
-- 拖拽图标移入/移出文件夹
-- 空文件夹显示📁图标
-- 文件夹窗口整体配色随文件夹当前颜色联动（半透明材质分层染色，头部/内容区/底部各有层次，保留玻璃质感）
-- 文件夹窗口空白处右键可直接添加网站到当前文件夹
-- 空文件夹内容区至少保留一行图标高度，方便查看与拖入操作
-- 支持整文件夹在页面之间移动（包含内部所有子网站）
+### 📁 Folder Features
+- Drag an icon onto another icon to create a folder
+- Folder icons show the icons of the first 4 websites (in a 2×2 grid)
+- Folder names can be renamed
+- Drag icons into and out of folders
+- Empty folders display a 📁 icon
+- The folder window's overall color follows the folder's current color (layered translucent material tinting — header/content/footer each have their own layer while preserving the glass texture)
+- Right-click on empty space in the folder window to add a website directly to that folder
+- The empty folder content area keeps at least one row of icon height so it is easy to view and drop into
+- A whole folder can be moved between pages (including all its child websites)
 
-### 🎨 配色体系：全局调色板与取色器
-- **16 个全局调色板槽**：位置固定（`palette-1 … palette-16`，只表位置、不含颜色语义），出厂默认 16 色（白色置首，其余按色相渐变），槽位颜色可在设置面板中随时重设
-- **取色器窗口**：在 16 个系统预设色 + 「自定义」之间取色（彩虹渐变 + 原生取色器）；修改槽位时可「恢复默认」还原出厂色
-- **选择模式（给元素设色）**：网站、文件夹、笔记的颜色选择共用同一调色板——点槽即选中该槽颜色；再次点击已选中的槽位或「自定义」按钮会弹出取色器
-- **设置模式（设置面板）**：点击任意槽直接弹取色器改色，绑定该槽位的图标、文件夹、笔记实时联动变色
-- **自然换行布局**：16 槽与自定义按钮处于同一 flex-wrap 流，按所在容器宽度自然排列（如笔记编辑窗一行铺开、修改站点弹窗自动折行、文件夹设色 4×4、设置侧栏 2×8）
-- **友好的颜色提示**：出厂预设槽提示中文色名（白色、黄色、蓝色…），自定义颜色提示十六进制值
-- **平滑兼容**：旧数据中的颜色名 / 快照色照常显示并在读取后自动升级为槽位引用；调色板改动参与云端同步与导入导出
+### 🎨 Color System: Global Palette and Color Picker
+- **16 global palette slots**: fixed positions (`palette-1 … palette-16`, representing position only, with no color semantics); ships with 16 default colors (white first, the rest in a hue gradient); slot colors can be reset at any time in the settings panel
+- **Color picker window**: pick between the 16 system preset colors and "Custom" (rainbow gradient + native color picker); while editing a slot you can "Reset to default" to restore the factory color
+- **Selection mode (assign a color to an element)**: websites, folders, and notes all share the same palette — clicking a slot selects that slot's color; clicking the already-selected slot again or the "Custom" button opens the color picker
+- **Settings mode (settings panel)**: clicking any slot opens the color picker directly; icons, folders, and notes bound to that slot recolor in real time
+- **Natural wrapping layout**: the 16 slots and the custom button live in the same flex-wrap flow and arrange themselves by container width (e.g. a single row in the note editor, wrapping in the edit-site dialog, 4×4 for folder coloring, 2×8 in the settings sidebar)
+- **Friendly color hints**: factory preset slots show a Chinese color name (white, yellow, blue…), custom colors show their hex value
+- **Smooth compatibility**: color names / snapshot colors in old data are still displayed and automatically upgraded to slot references on read; palette changes participate in cloud sync and import/export
 
-### 🗂️ 多页面功能
-- 页面级隔离：每个页面拥有独立的网站和文件夹集合
-- 屏幕左缘半藏一颗「水晶球」入口球（翠绿→琥珀身份色，六层渐变 + 呼吸辉光），悬停滑出显形、点击展开 PagesSidebar（面板打开后入口球旋转淡出让位，点面板外任意处收起）
-- 页面创建、重命名、删除（至少保留一页）
-- 拖拽排序页面（HTML5 原生拖拽 + 上下半区指示线）
-- 网站/文件夹跨页移动：右键菜单「移动到页面…」，支持「仅移动」与「移动并跳转」
-- 刷新页面默认显示第一页（当前选中的页面不写入持久化存储）
-- 旧格式（根级 websites 无 pages）数据自动迁移至名为「默认页面」的页面
-- 导入旧格式数据时始终落于「默认页面」（不存在则自动创建），导入完成后自动跳转到该页
+### 🗂️ Multi-Page Features
+- Page-level isolation: each page has its own set of websites and folders
+- A half-hidden "crystal ball" entry ball on the left edge of the screen (emerald→amber identity color, six gradient layers + breathing glow); it slides out on hover and expands PagesSidebar on click (after the panel opens the ball rotates and fades out to make room; click anywhere outside the panel to collapse)
+- Create, rename, and delete pages (at least one page is always kept)
+- Drag-and-drop page sorting (native HTML5 drag with upper/lower half drop indicators)
+- Cross-page moving of websites/folders: context menu "Move to page…", supporting both "Move only" and "Move and jump"
+- Refreshing the page always shows the first page by default (the currently selected page is not written to persistent storage)
+- Old-format data (root-level `websites` with no `pages`) is automatically migrated into a page named "Default Page"
+- Importing old-format data always lands on "Default Page" (created automatically if missing), and jumps to that page after the import completes
 
-### 🔍 搜索功能
-- 多搜索引擎支持（Google、百度、必应等）
-- 自定义添加、编辑、删除搜索引擎
-- 搜索引擎图标自动获取
-- 拖拽排序搜索引擎
-- 主页面下拉快速切换搜索引擎（临时切换，不写入持久化，不触发保存提示）
-- 设置面板中可修改默认搜索引擎（正常持久化、同步到云端）
+### 🔍 Search Features
+- Multiple search engines (Google, Baidu, Bing, etc.)
+- Add, edit, and delete custom search engines
+- Automatic search engine icon retrieval
+- Drag-and-drop search engine sorting
+- Quick search engine switching from the main page dropdown (temporary switch — not persisted, does not trigger a save prompt)
+- The default search engine can be changed in the settings panel (properly persisted and synced to the cloud)
 
-### 🌤️ 天气显示
-- 实时天气信息显示
-- 支持浏览器定位和IP定位
-- 和风天气API支持
-- 显示当前温度和天气状态
-- 显示时间和日期（点击日期切换农历）
-- 时钟使用 ref 直接 DOM 操作，避免每秒触发 React 重渲染
+### 🌤️ Weather Display
+- Real-time weather information
+- Supports both browser geolocation and IP-based location
+- QWeather API support
+- Shows the current temperature and weather condition
+- Shows time and date (click the date to toggle the lunar calendar)
+- The clock uses direct DOM manipulation via ref to avoid triggering a React re-render every second
 
-### ✅ 待办事项
-- 屏幕右缘半藏一颗「水晶球」入口球（靛蓝→品红身份色，与页面入口球同款画法），点击展开待办侧边栏（关闭：点面板外任意处）
-- 添加、编辑、删除待办事项
-- 标记完成状态
-- 数据持久化存储到 Cloudflare KV
-- 未完成数量徽章显示（叠加在入口球左上角）
+### ✅ To-Do List
+- A half-hidden "crystal ball" entry ball on the right edge of the screen (indigo→magenta identity color, drawn the same way as the page entry ball); click to expand the todo sidebar (close: click anywhere outside the panel)
+- Add, edit, and delete to-dos
+- Mark completion status
+- Data persisted to Cloudflare KV
+- Unfinished-count badge (overlaid on the top-left of the entry ball)
 
-### 📝 笔记功能
-- 屏幕底部居中的「水晶球」便签栏：收起时只露半颗 📝 peek 球，鼠标悬停即整栏升起展开
-- 笔记球最多显示 8 篇，每颗球按笔记颜色做成水晶球、取标题首字显示，悬停弹出缩略预览气泡（含更新时间与「编辑」入口）
-- 笔记球支持拖拽排序；点击任意球直接打开编辑器（全文查看、修改标题/颜色/内容、保存或删除）
-- 左侧「+」新建笔记（点「保存」才真正创建）、右侧「⚙︎」打开笔记管理器（查看全部、批量重排、重命名、调色、删除），超过 8 篇时叠加 +N 徽章
-- 支持标题和内容、创建与更新时间记录
-- 笔记颜色取自全局调色板（16 槽 + 自定义），与网站/文件夹颜色体系统一联动
+### 📝 Notes
+- A centered "crystal ball" note bar at the bottom of the screen: when collapsed only half of a 📝 peek ball is visible; hovering raises and expands the whole bar
+- The bar shows up to 8 notes; each ball is rendered as a crystal ball in the note's color with the first character of the title, and hovering opens a thumbnail preview bubble (with the update time and an "Edit" entry point)
+- Note balls support drag-and-drop sorting; clicking any ball opens the editor directly (full text view, edit title/color/content, save or delete)
+- The "+" on the left creates a new note (it is only really created when you click "Save"), and the "⚙︎" on the right opens the note manager (view all, batch reorder, rename, recolor, delete); when there are more than 8 notes a +N badge is shown
+- Supports title and content, with created and updated timestamps
+- Note colors come from the global palette (16 slots + custom), unified with the website/folder color system
 
-### 🎨 壁纸管理
-- Bing每日壁纸
-- 随机Bing壁纸
-- 本地图片上传（R2 或 IndexedDB 降级存储）
-- 纯色背景
-- 模糊度和遮罩浓度调节
-- 壁纸代理支持（域名白名单限制）
-- 自动定时更换壁纸
+### 🎨 Wallpaper Management
+- Gradient background (default)
+- Solid color background
+- Bing daily wallpaper
+- Random Bing wallpaper
+- Custom image URL
+- Local image upload (R2 or IndexedDB fallback storage)
+- Blur and overlay opacity adjustment
+- Wallpaper proxy support (with domain allowlist restriction)
+- Automatic scheduled rotation: enable it and set a 1–24 hour interval (only effective for Bing daily / random Bing / custom URL, with `lastAutoChangeAt` as the anchor for the countdown)
 
-### 📤 数据导入导出
-- 分类导出：搜索引擎、页面（含网站）、网站（旧格式）、待办列表、笔记、其它设置、调色板
-- 分类导入：勾选需要导入的数据类别（调色板仅在被改动过时提供，按槽位合并）
-- 导入时自动检测文件中不存在的数据并禁用选择
-- 导入进度条显示当前进度及任务内容
-- 导入时遮罩层禁止用户操作
-- 导入时 ID 冲突自动处理（合并模式生成新 ID）
-- 导入后图标自动预缓存
+### 📤 Data Import/Export
+- Categorized export: search engines, pages (including websites), websites (old format), todo list, notes, other settings, palette
+- Categorized import: check the data categories to import (the palette is only offered when it has been modified, and is merged by slot)
+- On import, data categories not present in the file are detected automatically and disabled
+- Import progress bar showing the current progress and task
+- An overlay blocks user interaction during import
+- ID conflicts are handled automatically on import (merge mode generates new IDs)
+- Icons are pre-cached automatically after import
 
-### 🔐 安全认证
-- JWT 登录认证
-- 密码 SHA-256 加密传输
-- 7天 Token 有效期
-- 自动登出处理
-- 敏感信息存储在 Cloudflare Secrets
-- 构建产物自动清理 .dev.vars 机密文件
+### 🔐 Security & Authentication
+- JWT login authentication
+- Password transmitted with SHA-256 encryption
+- 7-day token validity
+- Automatic logout handling
+- Sensitive information stored in Cloudflare Secrets
+- Build output automatically cleans up the `.dev.vars` secrets file
 
-### ⚙️ 设置面板（右侧抽屉式，分组管理）
-- **个性化**：网站标题、更改壁纸、桌面图标设置（行列数）、管理图标源、调色板管理（2×8 设置模式，点击任意槽改色，使用该颜色的元素自动更新）
-- **偏好设置**：管理搜索引擎、自动保存设置
-- **数据管理**：从云端加载数据、导入预设站点、数据导入/导出、清空所有站点
-- **账户与关于**：注销登录、关于 HarborPage
+### 🌏 Multilingual Interface (i18n)
+- Ships with Simplified Chinese / English UI copy covering 16 namespaces (common, settings, auth, about, weather, todos, notes, search, pages, folder, wallpaper, sites, icons, importExport, feature dock, system)
+- Automatic language detection: locally stored preference → browser language → Simplified Chinese as the default
+- Switch anytime in Settings → Personalization → Interface language; the change takes effect immediately and is persisted locally (key `harborpage_language`)
+- Backend APIs return only language-neutral error codes / icon source identifiers (`shared/apiErrors.ts`), which the frontend translates centrally (`src/utils/apiErrorUtils.ts`)
 
-### 💾 自动保存
-- 未保存变更检测与提示
-- 倒计时自动保存（可配置时长）
-- 保存进度指示
-- 手动保存与自动保存并存
-- 页面刷新前未保存提示
+### ⚙️ Settings Panel (right-side drawer with grouped sections)
+- **Personalization**: site title, interface language, change wallpaper, desktop icon settings (rows/columns), manage icon sources, palette management (2×8 settings mode — click any slot to recolor and give slots an alias, plus a global lightness adjustment from −50 to 50 with live preview; icons, folders, and notes using that slot update automatically)
+- **Preferences**: manage search engines, auto-save settings
+- **Feature toggles**: show/hide switches for the weather / search / notes / todos / multi-page modules (turning one off hides both its entry ball and its panel)
+- **Data management**: load data from the cloud, import preset sites, data import/export, clear all sites
+- **Account & About**: sign out, About HarborPage
 
-## 🛠️ 技术栈
+### 💾 Auto-Save
+- Unsaved change detection and prompting
+- Countdown auto-save (configurable duration)
+- Save progress indication
+- Manual and automatic saving coexist
+- Unsaved changes prompt before page refresh
 
-### 前端
-- **React 19** - 用户界面库
-- **TypeScript** - 类型安全
-- **Vite 7** - 构建工具
-- **Zustand 5** - 状态管理
-- **lunisolar 2** - 农历日期转换
-- **qweather-icons 1** - 天气图标
-- **Crypto-JS** - SHA-256 加密
+## 🛠️ Tech Stack
 
-### 后端
-- **Cloudflare Workers** - 无服务器计算
-- **Cloudflare KV** - 数据存储
-- **Cloudflare R2** - 图标文件存储
-- **jose 6** - JWT 认证
-- **Wrangler 4** - Cloudflare CLI 工具
+### Frontend
+- **React 19** - UI library
+- **TypeScript** - Type safety
+- **Vite 7** - Build tool
+- **Zustand 5** - State management
+- **i18next 26 + react-i18next 17** - Internationalization (i18n)
+- **lunisolar 2** - Lunar calendar conversion
+- **qweather-icons 1** - Weather icons
+- **Crypto-JS** - SHA-256 encryption
 
-## 📦 安装和部署
+### Backend
+- **Cloudflare Workers** - Serverless compute
+- **Cloudflare KV** - Data storage
+- **Cloudflare R2** - Icon file storage
+- **jose 6** - JWT authentication
+- **Wrangler 4** - Cloudflare CLI
 
-### 前置要求
-- Node.js 18+
-- Cloudflare 账号
+## 📦 Installation and Deployment
+
+### Prerequisites
+- Node.js 20.19+ / 22.12+ (required by Vite 7)
+- A Cloudflare account
 - Wrangler CLI 4+
 
-### 本地开发
+### Local Development
 
 ```bash
-# 安装依赖
+# Install dependencies
 npm install
 
-# 复制环境变量配置
+# Copy the environment variable configuration
 cp .dev.vars.sample .dev.vars
 cp wrangler.sample.jsonc wrangler.jsonc
 
-# 填写 .dev.vars 中的敏感信息
-# 填写 wrangler.jsonc 中的 KV 和 R2 资源 ID
+# Fill in the sensitive values in .dev.vars
+# Fill in the KV and R2 resource IDs in wrangler.jsonc
 
-# 启动开发服务器（带热重载）
+# Start the dev server (with hot reload)
 npm run dev
 ```
 
-### 部署到 Cloudflare
+### Common Scripts
+
+| Command | Description |
+|------|------|
+| `npm run dev` | Start the dev server (`wrangler dev`, with hot reload) |
+| `npm run dev:vite` | Start only the Vite frontend dev server |
+| `npm run build` | Type-check and build the production output |
+| `npm run build:watch` | Build and watch for changes |
+| `npm run preview` | Build, then preview the Worker locally |
+| `npm run deploy` | Build and deploy to Cloudflare Workers |
+| `npm run cf-typegen` | Generate Cloudflare Workers types |
+| `npm run lint` | Run ESLint |
+
+### Deploying to Cloudflare
 
 ```bash
-# 构建项目
+# Build the project
 npm run build
 
-# 部署到 Cloudflare Workers
+# Deploy to Cloudflare Workers
 npm run deploy
 ```
 
-### 配置步骤
+### Configuration Steps
 
-1. **创建 KV 命名空间**
+1. **Create a KV namespace**
    ```bash
    wrangler kv:namespace create USER_DATA
    ```
 
-2. **创建 R2 存储桶（可选，用于图标缓存）**
+2. **Create an R2 bucket (optional, for icon caching)**
    ```bash
    wrangler r2:bucket create harbor
    ```
 
-3. **设置敏感环境变量（生产环境）**
+3. **Set the sensitive environment variables (production)**
    ```bash
    wrangler secret put PASSWORD
    wrangler secret put JWT_SECRET
@@ -233,334 +256,352 @@ npm run deploy
    wrangler secret put WEATHER_API_HOST
    ```
 
-4. **配置 wrangler.jsonc**
-   - 将 KV 命名空间 ID 填入 `kv_namespaces[0].id`
-   - 将 R2 存储桶名称填入 `r2_buckets[0].bucket_name`
-   - 配置 `R2_URL`（启用 R2 CDN 时需要）
+4. **Configure wrangler.jsonc**
+   - Put the KV namespace ID into `kv_namespaces[0].id`
+   - Put the R2 bucket name into `r2_buckets[0].bucket_name`
+   - Configure `R2_URL` (needed when R2 CDN is enabled)
 
-### 环境变量说明
+### Environment Variables
 
-| 变量名 | 说明 | 是否必需 |
+| Name | Description | Required |
 |--------|------|----------|
-| `PASSWORD` | 登录密码 | 是 |
-| `JWT_SECRET` | JWT 签名密钥 | 是 |
-| `WEATHER_API_KEY` | 和风天气 API 密钥 | 否 |
-| `WEATHER_API_HOST` | 和风天气 API 主机地址 | 否 |
-| `R2_URL` | R2 存储访问地址（启用 R2 CDN 时需要） | 否 |
-| `ENABLE_R2_CDN` | 是否启用 R2 CDN（默认关闭） | 否 |
+| `PASSWORD` | Login password | Yes |
+| `JWT_SECRET` | JWT signing secret | Yes |
+| `WEATHER_API_KEY` | QWeather API key | No |
+| `WEATHER_API_HOST` | QWeather API host | No |
+| `R2_URL` | R2 storage access URL (needed when R2 CDN is enabled) | No |
+| `ENABLE_R2_CDN` | Whether to enable the R2 CDN (off by default) | No |
 
-### KV 命名空间绑定
-- `USER_DATA` - 用户数据存储
+### KV Namespace Bindings
+- `USER_DATA` - User data storage
 
-### R2 存储绑定
-- `BUCKET` - 图标文件存储（可选）
+### R2 Bucket Bindings
+- `BUCKET` - Icon file storage (optional)
 
-## 🎯 使用指南
+## 🎯 Usage Guide
 
-### 基本操作
-1. **登录**：打开页面后输入密码登录
-2. **切换页面**：点击屏幕左缘的翠绿→琥珀「水晶球」入口球展开 PagesSidebar，点击页面切换（点面板外任意处收起）；拖拽手柄可重新排序
-3. **新建页面**：PagesSidebar 顶部「+ 新建页面」按钮
-4. **重命名/删除页面**：页面项右侧铅笔图标重命名（Enter 提交 / Esc 取消）、垃圾桶图标删除（需二次确认，至少保留一页）
-5. **添加网站**：右键页面空白处直接打开「新增网站」窗口；长按空白进入编辑模式后点击「+」也可新增。文件夹窗口内右键空白处添加的站点会进入当前文件夹
-6. **修改网站**：右键点击网站图标，选择"修改"
-7. **删除网站**：右键点击网站图标，选择"删除"
-8. **给元素设置颜色**：网站/文件夹的编辑弹窗与笔记编辑器共用同一套调色板——点选 16 个槽位之一即上色；点「自定义」或再次点击已选中的槽位会弹出取色器
-9. **管理调色板**：设置 → 个性化 → 调色板，点击任意色块重设该槽颜色，使用该槽的图标、文件夹、笔记实时联动
-10. **创建文件夹**：拖拽一个网站图标到另一个网站图标上
-11. **移动图标**：拖拽网站图标到文件夹图标上移入文件夹
-12. **移出文件夹**：在文件夹中拖拽图标到文件夹窗口外
-13. **跨页移动网站/文件夹**：右键点击网站或文件夹 → 「移动到页面…」→ 选择「仅移动」或「移动并跳转」
-14. **打开待办**：点击屏幕右缘的靛蓝→品红「水晶球」入口球展开待办侧边栏（点面板外任意处收起），左上角徽章实时显示未完成数量
-15. **打开笔记栏**：鼠标悬停屏幕底部中央的 📝「水晶球」便签球即整栏展开——悬停笔记球看缩略预览、点击球打开编辑器、拖拽球排序、右侧「⚙︎」管理全部笔记
+### Basic Operations
+1. **Log in**: open the page and enter the password
+2. **Switch pages**: click the emerald→amber "crystal ball" entry ball on the left edge of the screen to expand PagesSidebar, then click a page to switch (click anywhere outside the panel to collapse); drag the handle to reorder
+3. **Create a page**: the "+ New Page" button at the top of PagesSidebar
+4. **Rename/delete a page**: use the pencil icon on the right of a page item to rename (Enter to confirm / Esc to cancel) and the trash icon to delete (with a second confirmation, at least one page is kept)
+5. **Add a website**: right-click on empty space on the page to open the "Add Website" window directly; you can also long-press empty space to enter edit mode and click "+". Sites added by right-clicking empty space inside a folder window go into the current folder
+6. **Edit a website**: right-click the website icon and choose "Edit"
+7. **Delete a website**: right-click the website icon and choose "Delete"
+8. **Assign a color to an element**: the website/folder edit dialog and the note editor share the same palette — click one of the 16 slots to apply that color; clicking "Custom" or clicking the already-selected slot again opens the color picker
+9. **Manage the palette**: Settings → Personalization → Palette; click any swatch to reset that slot's color, and icons, folders, and notes using that slot update in real time
+10. **Create a folder**: drag one website icon onto another website icon
+11. **Move an icon**: drag a website icon onto a folder icon to move it into the folder
+12. **Move out of a folder**: drag an icon in the folder window to outside the window
+13. **Move websites/folders across pages**: right-click a website or folder → "Move to page…" → choose "Move only" or "Move and jump"
+14. **Open the to-dos**: click the indigo→magenta "crystal ball" entry ball on the right edge of the screen to expand the todo sidebar (click anywhere outside the panel to collapse); the badge at the top-left shows the unfinished count in real time
+15. **Open the note bar**: hover the 📝 "crystal ball" note ball at the bottom center of the screen and the whole bar expands — hover a note ball for a thumbnail preview, click a ball to open the editor, drag a ball to reorder, and use "⚙︎" on the right to manage all notes
+16. **Switch the interface language**: Settings → Personalization → Interface language, and toggle between Simplified Chinese / English (effective immediately and persisted locally)
 
-### 图标设置
-- **留空**：自动获取网站 favicon
-- **图标 URL**：直接填写图片链接
-- **文字**：输入任意文字（如 "Ba"），生成带颜色的文字图标
-- **Emoji**：输入 emoji 字符（如 🚀）
-- **上传**：手动上传图标到 R2
-- **智能获取**：自动从 HTML、常见路径、图标源获取候选图标
+### Icon Settings
+- **Leave empty**: automatically fetch the website favicon
+- **Icon URL**: enter an image URL directly
+- **Text**: enter any text (e.g. "Ba") to generate a colored text icon
+- **Emoji**: enter an emoji character (e.g. 🚀)
+- **Upload**: manually upload an icon to R2
+- **Smart fetch**: automatically collect candidate icons from the HTML, common paths, and icon sources
 
-### 搜索功能
-1. 在搜索框中输入关键词
-2. 点击搜索引擎图标或下拉切换搜索引擎（**主页面切换为临时选择，刷新后回到默认搜索引擎**）
-3. 按回车或点击搜索按钮执行搜索
-4. 如需永久修改默认搜索引擎：设置面板 → 搜索设置 → 管理搜索引擎
+### Search
+1. Type a keyword into the search box
+2. Click a search engine icon or use the dropdown to switch engines (**switching on the main page is temporary — refreshing returns to the default engine**)
+3. Press Enter or click the search button to run the search
+4. To permanently change the default search engine: Settings panel → Search settings → Manage search engines
 
-### 壁纸设置
-1. 点击设置按钮（⚙️）打开设置面板
-2. 选择"壁纸设置"
-3. 选择壁纸来源（Bing每日壁纸/随机Bing壁纸/本地图片/纯色背景）
-4. 调整模糊度和遮罩浓度
+### Wallpaper Settings
+1. Click the settings button (⚙️) to open the settings panel
+2. Choose "Wallpaper settings"
+3. Choose a wallpaper source (gradient / solid color / Bing daily wallpaper / random Bing wallpaper / custom image URL / local image)
+4. Adjust the blur and overlay opacity
+5. To rotate automatically: enable it and set a 1–24 hour interval (only effective for Bing daily / random Bing / custom URL)
 
-### 数据导入导出
-1. 打开设置面板
-2. 选择"导入导出"
-3. 导出：勾选需要导出的数据类别，点击导出
-4. 导入：选择导入文件后，勾选需要导入的数据类别，确认导入
-5. 导入过程中会显示进度条，禁止其他操作
+### Data Import/Export
+1. Open the settings panel
+2. Choose "Import/Export"
+3. Export: check the data categories to export and click Export
+4. Import: choose the import file, check the data categories to import, and confirm the import
+5. A progress bar is shown during import and other interaction is blocked
 
-## 📁 项目结构
+## 📁 Project Structure
 
 ```
 harborpage/
-├── shared/                          # 前后端共享代码
-│   └── constants.ts                 # TRACKED_KEYS 持久化追踪键（含 palette）
-├── public/                          # 静态资源
-├── screenshots/                     # 界面预览截图
-├── samples/                         # 设计参考样例（纯 HTML）
-│   ├── CrystalBall.html             # 水晶球画法参考（边缘入口球 / 笔记球）
-│   ├── Crystal_block.html           # 水晶方块（图标）边缘内高光参考
-│   ├── New.html / v3.html           # 界面版式参考
-├── src/                             # 前端源代码
-│   ├── assets/                      # 静态资源
-│   ├── components/                  # React 组件（样式为同文件名 .css）
-│   │   ├── common/                  # 通用组件
-│   │   │   ├── AboutDialog.tsx      # 「关于」弹窗
-│   │   │   ├── AutoFetchDialog.tsx  # 智能获取图标对话框
-│   │   │   ├── ColorPickerWindow.tsx# 取色器窗口（16 预设 + 自定义 + 恢复默认）
-│   │   │   ├── ConfirmDialog.tsx    # 确认对话框
-│   │   │   ├── CrystalShell.tsx     # 水晶图标光效层集合（站点/文件夹图标共用）
-│   │   │   ├── DraggableIconWrapper.tsx # 拖拽包装层
-│   │   │   ├── EditWebsite.tsx      # 网站/文件夹编辑表单（含调色板）
-│   │   │   ├── ErrorBoundary.tsx    # 错误边界
-│   │   │   ├── FeatureDock.tsx      # 功能 Dock：消费注册表，按槽位配置渲染共享入口球
-│   │   │   ├── FolderItem.tsx       # 文件夹图标
-│   │   │   ├── FolderNameDialog.tsx # 文件夹命名对话框
-│   │   │   ├── IconGrid.tsx         # 图标网格
-│   │   │   ├── IconItem.tsx         # 图标项（水晶方块）
-│   │   │   ├── ImportProgressOverlay.tsx # 导入进度遮罩
-│   │   │   ├── LoginModal.tsx       # 登录弹窗
-│   │   │   ├── MoveToPageDialog.tsx # 跨页移动对话框
-│   │   │   ├── Notes.tsx            # 笔记组件
-│   │   │   ├── PalettePicker.tsx    # 调色板（选择/设置模式，flex-wrap 自然换行）
-│   │   │   ├── PeekBall.tsx         # 共享「水晶球」入口球（纯呈现；样式 PeekBall.css）
-│   │   │   ├── SaveProgressIndicator.tsx / SavePrompt.tsx / SaveTooltip.tsx  # 保存反馈
-│   │   │   ├── Toast.tsx            # 轻提示
-│   │   │   ├── TodoList.tsx         # 待办列表
-│   │   │   ├── TreeSelector.tsx     # 树形选择器
-│   │   │   └── WebsiteItem.tsx      # 网站项（含右键菜单）
-│   │   ├── features/                # 功能组件
-│   │   │   ├── FolderWindow.tsx     # 文件夹窗口（配色随文件夹颜色）
-│   │   │   ├── PagesSidebar.tsx     # 页面侧边栏（多页面切换/排序/重命名/删除）
-│   │   │   ├── Search.tsx           # 搜索栏
-│   │   │   ├── SearchManager.tsx    # 搜索引擎管理
-│   │   │   ├── TodoSidebar.tsx      # 待办侧边栏
-│   │   │   ├── WallpaperManager.tsx # 壁纸管理
-│   │   │   └── Weather.tsx          # 天气显示
-│   │   ├── layout/                  # 布局组件
-│   │   │   ├── Background.tsx       # 背景层
-│   │   │   └── IconsContainer.tsx   # 图标容器
-│   │   └── ui/                      # UI 组件
-│   │       ├── AutoSaveSettings.tsx # 自动保存设置
-│   │       ├── FaviconSettings.tsx  # 图标源设置
-│   │       ├── IconSettings.tsx     # 桌面图标设置
-│   │       ├── ImportExport.tsx     # 数据导入导出（含调色板类别）
-│   │       ├── ImportPresetDialog.tsx # 预设站点导入
-│   │       ├── NoteBar.tsx          # 底部水晶便签栏（peek 展开）
-│   │       ├── NoteEditorDialog.tsx # 笔记编辑器（含调色板取色）
-│   │       ├── NotesManagerDialog.tsx # 笔记管理器
-│   │       ├── Settings.tsx         # 设置面板（含调色板管理）
-│   │       └── SettingsWindow.tsx   # 设置窗口外壳
-│   ├── data/                        # 数据文件
-│   │   └── presetSites.json         # 预设站点数据
-│   ├── hooks/                       # 自定义 Hooks
+├── shared/                          # Code shared between frontend and backend
+│   ├── apiErrors.ts                 # API error codes / icon source identifiers (language-neutral, for frontend i18n)
+│   └── constants.ts                 # TRACKED_KEYS persistence tracking keys (including palette / paletteAliases / paletteLightness)
+├── public/                          # Static assets
+├── screenshots/                     # UI preview screenshots
+├── samples/                         # Design reference samples (plain HTML)
+│   ├── CrystalBall.html             # Crystal ball drawing reference (edge entry balls / note balls)
+│   ├── Crystal_block.html           # Crystal block (icon) inset edge highlight reference
+│   ├── New.html / v3.html           # Layout reference
+├── src/                             # Frontend source code
+│   ├── assets/                      # Static assets
+│   ├── components/                  # React components (styles use a .css file with the same name)
+│   │   ├── common/                  # Shared components
+│   │   │   ├── AboutDialog.tsx      # "About" dialog
+│   │   │   ├── AutoFetchDialog.tsx  # Smart icon fetch dialog
+│   │   │   ├── ColorPickerWindow.tsx # Color picker window (16 presets + custom + reset to default)
+│   │   │   ├── ConfirmDialog.tsx    # Confirmation dialog
+│   │   │   ├── CrystalShell.tsx     # Crystal icon light-effect layers (shared by site/folder icons)
+│   │   │   ├── DraggableIconWrapper.tsx # Drag wrapper layer
+│   │   │   ├── EditWebsite.tsx      # Website/folder edit form (including palette)
+│   │   │   ├── ErrorBoundary.tsx    # Error boundary
+│   │   │   ├── FeatureDock.tsx      # Feature dock: consumes the registry, renders shared entry balls per slot config
+│   │   │   ├── FolderItem.tsx       # Folder icon
+│   │   │   ├── FolderNameDialog.tsx # Folder name dialog
+│   │   │   ├── IconGrid.tsx         # Icon grid
+│   │   │   ├── IconItem.tsx         # Icon item (crystal block)
+│   │   │   ├── ImportProgressOverlay.tsx # Import progress overlay
+│   │   │   ├── LoginModal.tsx       # Login modal
+│   │   │   ├── MoveToPageDialog.tsx # Cross-page move dialog
+│   │   │   ├── Notes.tsx            # Notes component
+│   │   │   ├── PalettePicker.tsx    # Palette (selection/settings mode, natural flex-wrap)
+│   │   │   ├── PeekBall.tsx         # Shared "crystal ball" entry ball (presentational only; styles in PeekBall.css)
+│   │   │   ├── SaveProgressIndicator.tsx / SavePrompt.tsx / SaveTooltip.tsx  # Save feedback
+│   │   │   ├── Toast.tsx            # Toast notifications
+│   │   │   ├── TodoList.tsx         # Todo list
+│   │   │   ├── TreeSelector.tsx     # Tree selector
+│   │   │   └── WebsiteItem.tsx      # Website item (with context menu)
+│   │   ├── features/                # Feature components
+│   │   │   ├── FolderWindow.tsx     # Folder window (colors follow the folder color)
+│   │   │   ├── PagesSidebar.tsx     # Pages sidebar (multi-page switch/sort/rename/delete)
+│   │   │   ├── Search.tsx           # Search bar
+│   │   │   ├── SearchManager.tsx    # Search engine management
+│   │   │   ├── TodoSidebar.tsx      # Todo sidebar
+│   │   │   ├── WallpaperManager.tsx # Wallpaper management
+│   │   │   └── Weather.tsx          # Weather display
+│   │   ├── layout/                  # Layout components
+│   │   │   ├── Background.tsx       # Background layer
+│   │   │   └── IconsContainer.tsx   # Icon container
+│   │   └── ui/                      # UI components
+│   │       ├── AutoSaveSettings.tsx # Auto-save settings
+│   │       ├── FaviconSettings.tsx  # Icon source settings
+│   │       ├── IconSettings.tsx     # Desktop icon settings
+│   │       ├── ImportExport.tsx     # Data import/export (including the palette category)
+│   │       ├── ImportPresetDialog.tsx # Preset site import
+│   │       ├── NoteBar.tsx          # Bottom crystal note bar (peek to expand)
+│   │       ├── NoteEditorDialog.tsx # Note editor (with palette color picking)
+│   │       ├── NotesManagerDialog.tsx # Note manager
+│   │       ├── Settings.tsx         # Settings panel (including palette management)
+│   │       └── SettingsWindow.tsx   # Settings window shell
+│   ├── data/                        # Data files
+│   │   └── presetSites.json         # Preset site data
+│   ├── hooks/                       # Custom hooks
 │   │   ├── useAuth / useAutoSave / useAutoSaveSettings / useClickOutside / useFeatureEntry
 │   │   ├── useDataInitialization / useDeleteIcon / useDragAndDrop / useIconDropHandler
 │   │   ├── useImport / useLongPress / useAddWebsiteShortcut / useTreeSelection
-│   │   └── useWallpaperInit / useWeather / useWeatherLocation / useWeatherLunar
-│   ├── services/                    # 服务层
+│   │   └── useWallpaperInit / useWallpaperAutoChange / useWeather / useWeatherLocation / useWeatherLunar
+│   ├── i18n/                        # Internationalization (i18next)
+│   │   ├── locales/                 # 16 namespaces each for zh-CN / en-US
+│   │   ├── index.ts                 # Language detection / initialization / switching
+│   │   └── i18next.d.ts             # Type declarations
+│   ├── services/                    # Service layer
 │   │   ├── AuthService / ConfigService / FaviconConfigService / ChangeTracker
-│   │   ├── DataRepository           # 统一持久化层
+│   │   ├── DataRepository           # Unified persistence layer
 │   │   ├── DataManager / storeInitializer
 │   │   ├── IconManager / IconDownloadQueue / autoFetchService / iconUtils
 │   │   └── Services / serviceContainer
-│   ├── store/                       # 状态管理（Zustand）
-│   │   ├── useFeatureDockStore.ts   # 功能 Dock 注册中心（入口描述符 entries + 面板开合 open）
-│   │   ├── usePagesStore.ts         # 页面 + 页面级网站集合（真源）
-│   │   ├── useIconsStore.ts         # 当前页图标视图（派生）
-│   │   ├── usePaletteStore.ts       # 全局调色板（16 槽）
+│   ├── store/                       # State management (Zustand)
+│   │   ├── useFeatureDockStore.ts   # Feature dock registry (entry descriptors `entries` + panel open/close `open`)
+│   │   ├── usePagesStore.ts         # Pages + page-level website collections (source of truth)
+│   │   ├── useIconsStore.ts         # Current page icon view (derived)
+│   │   ├── usePaletteStore.ts       # Global palette (16 slots)
 │   │   ├── useNotesStore / useTodoStore / useSearchStore / useSettingsStore
 │   │   ├── useWallpaperStore / useImportStore / useIconsUIStore
 │   │   └── index.ts / persistence.ts / selectors.ts
-│   ├── types/index.ts               # 类型定义（含 palette-1…16 槽位说明）
-│   ├── utils/                       # 工具函数
-│   │   ├── paletteColors.ts         # 调色板核心（槽位归一化/色名描述/选择构造）
-│   │   ├── noteColors.ts            # 笔记预设色
-│   │   ├── colorUtils.ts            # 颜色换算（hex/hsl 等）
+│   ├── types/index.ts               # Type definitions (including the palette-1…16 slot documentation)
+│   ├── utils/                       # Utility functions
+│   │   ├── paletteColors.ts         # Palette core (slot normalization / color-name description / selection construction / global lightness)
+│   │   ├── noteColors.ts            # Note preset colors
+│   │   ├── colorUtils.ts            # Color conversion (hex/hsl, etc.)
+│   │   ├── apiErrorUtils.ts         # API error code → i18n copy translation
+│   │   ├── wallpaperRefresh.ts      # Bing wallpaper fetch / random wallpaper / cache busting
 │   │   └── deviceUtils / idUtils / importExportUtils / logger / wallpaperStorage
 │   ├── App.tsx / main.tsx / constants.ts / index.css / App.css
-├── worker/                          # Cloudflare Workers 代码
+├── worker/                          # Cloudflare Workers code
 │   ├── middleware/
-│   │   └── auth.ts                  # 认证中间件
-│   ├── routes/                      # API 路由（auth/data/icon/icon-upload/icon-cleanup/title/bing/wallpaper/wallpaper-upload/weather）
+│   │   └── auth.ts                  # Authentication middleware
+│   ├── routes/                      # API routes (auth/data/icon/icon-upload/icon-cleanup/title/bing/wallpaper/wallpaper-upload/weather)
 │   ├── utils/                       # constants/crypto/icon/md5/streamLimit
-│   ├── index.ts                     # Worker 入口
-│   └── types.ts                     # Worker 类型
-├── .dev.vars.sample                 # 本地环境变量示例
-├── .env.sample                      # 前端构建变量示例
-├── wrangler.sample.jsonc            # Wrangler 配置示例
+│   ├── index.ts                     # Worker entry point
+│   └── types.ts                     # Worker types
+├── .dev.vars.sample                 # Local environment variable sample
+├── .env.sample                      # Frontend build variable sample
+├── wrangler.sample.jsonc            # Wrangler configuration sample
 ├── vite.config.ts / package.json / tsconfig*.json
 └── LICENSE
 ```
 
-## 🔧 API 接口
+## 🔧 API Endpoints
 
-### 认证
-- `POST /api/login` - 用户登录
-- `GET /api/auth/status` - 检查认证状态
+### Authentication
+- `POST /api/login` - User login
+- `GET /api/auth/status` - Check authentication status
+- `GET /api/config` - Get the frontend runtime configuration (requires auth; returns `r2Url` / `enableR2Cdn` / `r2StorageAvailable` / `weatherApiAvailable`)
 
-### 数据管理
-- `GET /api/data` - 获取全部用户数据
-- `GET /api/data?key={key}` - 获取单个数据项
-- `POST /api/data?key={key}` - 保存用户数据
-- `DELETE /api/data?key={key}` - 删除用户数据
+### Data Management
+- `GET /api/data` - Get all user data
+- `GET /api/data?key={key}` - Get a single data entry
+- `POST /api/data?key={key}` - Save user data
+- `DELETE /api/data?key={key}` - Delete user data
 
-### 图标管理
-- `GET /api/icon?type={type}&hashInput={hashInput}&downloadUrl={downloadUrl}` - 获取图标（从R2获取或下载）
-- `POST /api/icon` - 下载并缓存图标到 R2
-- `POST /api/icon/upload` - 上传图标（需认证，R2可用时，文件大小限制100KB）
-- `DELETE /api/icon?type={type}&hashInput={hashInput}` - 删除图标（需认证）
-- `DELETE /api/icon?action=cleanup` - 清理未使用的图标（需认证，支持分批清理）
-- `GET /api/icon/autofetch?url={url}` - 获取网站图标候选列表（仅分析页面结构，不下载）
-- `POST /api/icon/download` - 下载单个图标并返回 data URL（供前端并发调用）
-- `POST /api/icon/autofetch/cache` - 将 data URL 图标缓存到 R2
-- `POST /api/icon/cache-url` - 将指定 URL 的图标缓存到 R2
+### Icon Management
+- `GET /api/icon?type={type}&hashInput={hashInput}&downloadUrl={downloadUrl}` - Get an icon (from R2 or by downloading)
+- `POST /api/icon` - Download and cache an icon to R2
+- `POST /api/icon/upload` - Upload an icon (requires auth; when R2 is available, file size limit is 100KB)
+- `DELETE /api/icon?type={type}&hashInput={hashInput}` - Delete an icon (requires auth)
+- `DELETE /api/icon?action=cleanup` - Clean up unused icons (requires auth, supports batched cleanup)
+- `GET /api/icon/autofetch?url={url}` - Get the list of website icon candidates (analyzes the page structure only, does not download)
+- `POST /api/icon/download` - Download a single icon and return a data URL (for concurrent frontend calls)
+- `POST /api/icon/autofetch/cache` - Cache a data URL icon to R2
+- `POST /api/icon/cache-url` - Cache the icon at the given URL to R2
 
-### 图标源管理
-- `GET /api/favicon/sources` - 获取 Favicon 源配置
-- `POST /api/favicon/sources` - 保存 Favicon 源配置
+### Icon Source Management
+- `GET /api/icon/sources/defaults` - Get the system default icon sources (no auth required)
+- `GET /api/favicon/sources` - Get the favicon source configuration
+- `POST /api/favicon/sources` - Save the favicon source configuration
 
-### 天气服务
-- `GET /api/weather?lat={lat}&lon={lon}` - 获取天气信息
-- `GET /api/geo?location={location}` - 城市搜索
+### Weather Service
+- `GET /api/weather?lat={lat}&lon={lon}` - Get weather information
+- `GET /api/geo?location={location}` - City search
 
-### 壁纸代理
-- `GET /api/wallpaper?url={url}` - 壁纸图片代理（域名白名单限制）
-- `POST /api/wallpaper/upload` - 上传壁纸到 R2
+### Wallpaper Proxy
+- `GET /api/wallpaper?url={url}` - Wallpaper image proxy (with domain allowlist restriction)
+- `POST /api/wallpaper/upload` - Upload a wallpaper to R2
 
-### Bing API 代理
-- `GET /api/bing/*` - 代理 Bing API 请求
+### Bing API Proxy
+- `GET /api/bing/*` - Proxy Bing API requests
 
-### 标题获取
-- `GET /api/title?url={url}` - 获取网站标题
+### Title Retrieval
+- `GET /api/title?url={url}` - Get the website title
 
-## 🎨 自定义
+## 🎨 Customization
 
-### 添加自定义搜索引擎
-1. 打开设置面板
-2. 选择"搜索设置"
-3. 点击"管理搜索引擎"
-4. 点击添加或编辑现有搜索引擎
+### Adding a Custom Search Engine
+1. Open the settings panel
+2. Choose "Search settings"
+3. Click "Manage search engines"
+4. Click to add or edit an existing search engine
 
-### 配置 Favicon 源
-1. 打开设置面板
-2. 选择"图标源设置"
-3. 添加、编辑、删除或拖拽排序 Favicon 源
-- 系统默认提供 Google、DuckDuckGo、gstatic 三个源
-- 按优先级依次尝试，直到获取到有效图标
+### Configuring Favicon Sources
+1. Open the settings panel
+2. Choose "Icon source settings"
+3. Add, edit, delete, or drag to reorder favicon sources
+- The system provides three sources by default: Google, DuckDuckGo, and Favicon (the defaults are served by the backend; the frontend fetches them via `GET /api/icon/sources/defaults`)
+- They are tried in priority order until a valid icon is obtained
 
-### 修改图标行列数
-1. 打开设置面板
-2. 选择"图标设置"
-3. 调整行数和列数
+### Changing the Icon Row/Column Count
+1. Open the settings panel
+2. Choose "Icon settings"
+3. Adjust the row and column counts
 
-### 启用 R2 图标缓存
-1. 创建 R2 存储桶并绑定
-2. 配置 `R2_URL` 环境变量
-3. 设置 `ENABLE_R2_CDN` 为 `"true"`
+### Enabling R2 Icon Caching
+1. Create and bind an R2 bucket
+2. Configure the `R2_URL` environment variable
+3. Set `ENABLE_R2_CDN` to `"true"`
 
-## 📝 开发说明
+## 📝 Development Notes
 
-### 组件化开发
-项目采用组件化开发模式，每个功能模块都有独立的组件和样式文件。
+### Component-Based Development
+The project follows a component-based development model: every feature module has its own component and stylesheet.
 
-### 功能 Dock 架构（Peek 球入口体系）
+### Feature Dock Architecture (Peek Ball Entry System)
 
-多页面 / 待办 / 便签的「边缘入口球」统一由一套倒置依赖体系驱动（映射 WPF 的"功能创建入口球 → 宿主配置并渲染"模型）：
+The "edge entry balls" for multi-page / todos / notes are all driven by a single inverted-dependency system (mirroring WPF's "feature creates the entry ball → host configures and renders it" model):
 
-- **注册中心**：`useFeatureDockStore`（Zustand）持有 `entries`（入口描述符）与 `open`（面板开合）两张表
-- **功能侧注册**：功能组件通过 `useFeatureEntry(id, descriptor)` 在挂载时 `register`、卸载时 `unregister` —— 功能开关关闭（或未登录）→ 组件卸载 → 入口球自动消失、`open` 状态一并清理，宿主无需维护开关；每次渲染后 `updateEntry` 把最新 label / 角标 / 悬停回调同步进注册表
-- **宿主渲染**：`FeatureDock` 不 import 任何功能组件，只按静态槽位表消费注册表。每槽配置三项工作参数——放置位置（placement）、呈现方式（presentation）、交互方式（interaction），`entry` 缺失则对应槽不渲染
-- **共享入口球**：`PeekBall` 为纯呈现组件（与功能零耦合），只收 `entry`（内容）+ `slot`（工作参数）+ `active` + `onOpen/onToggle`
-- **开合联动**：`open` 是球与功能面板的单一事实源——球读它决定 `is-active` 视觉；面板读它决定挂载（`present`）与展开（`expanded`）。面板挂载/收起由定时器异步驱动（先以收起态挂载一帧 → 30ms 补展开滑入；关闭先收起 → 退场动画播完卸载并清理二次确认等瞬态），同步 setState 不放在 effect / 渲染期调整内，规避 React 19 首个交互偶发丢状态问题
-- **槽位与交互**：`pages` / `todos` = `panel-slide` + `click-toggle`（点击展开，打开后球旋转 180° 淡出让位、点面板外收起）；`notes` = `bar-reveal` + `hover-open`（悬停展开、经 `onHoverEnd` 离开即收，触屏点按兜底打开）
+- **Registry**: `useFeatureDockStore` (Zustand) holds two tables — `entries` (entry descriptors) and `open` (panel open/close)
+- **Feature-side registration**: feature components call `useFeatureEntry(id, descriptor)` to `register` on mount and `unregister` on unmount — turning the feature switch off (or logging out) unmounts the component, which automatically removes the entry ball and clears the `open` state, so the host never has to maintain the switch; after each render `updateEntry` syncs the latest label / badge / hover callback into the registry
+- **Host rendering**: `FeatureDock` does not import any feature component; it only consumes the registry according to a static slot table. Each slot configures three working parameters — placement, presentation, and interaction — and a slot is not rendered when its `entry` is missing
+- **Shared entry ball**: `PeekBall` is a purely presentational component (zero coupling with features); it only receives `entry` (content) + `slot` (working parameters) + `active` + `onOpen/onToggle`
+- **Open/close coordination**: `open` is the single source of truth for the ball and the feature panel — the ball reads it to decide its `is-active` visuals, and the panel reads it to decide mounting (`present`) and expansion (`expanded`). Panel mount/collapse is driven asynchronously by timers (mount in the collapsed state for one frame → expand and slide in 30ms later; on close, collapse first → unmount after the exit animation finishes and clear transient state such as the second-confirmation prompt); synchronous setState is never placed inside an effect or a render-time adjustment, avoiding React 19's occasional dropped-state issue on first interaction
+- **Slots and interaction**: `pages` / `todos` = `panel-slide` + `click-toggle` (expand on click; once open the ball rotates 180° and fades out to make room, and clicking outside the panel collapses); `notes` = `bar-reveal` + `hover-open` (expands on hover and collapses on leave via `onHoverEnd`, with tap as a touch fallback)
 
-### 视觉设计（水晶球体系）
-- 页面（左缘）、待办（右缘）、笔记栏 peek（底缘）三个「边缘入口球」与笔记球统一采用 `samples/CrystalBall.html` 的水晶球画法
-- 水晶球 = 同一元素上的六层渐变（深色玻璃底 → 低透明身份色内部光 → 主/次高光 → 底部月牙反光）+ inset 内壁折射 + 底部身份色氛围光，**不使用白描边环**（避免塑料感）
-- 三个边缘入口球由共享 `PeekBall` 组件统一渲染（`FeatureDock` 按槽位放置）：身份色 `--tint` / `--tint-2` 来自功能注册的描述符并内联到球根，7 个 `--ball-*` 派生变量在 PeekBall.css 内 `color-mix` 统一生成
-- 呼吸动画默认 `paused`（避免静止时持续 raster 占用 CPU），仅在 hover / 展开时运行
-- 网站 / 文件夹图标为「水晶方块」玻璃质感：由 `CrystalShell` 提供光效层、IconItem.css 的 `.icon-circle > .cc-*` 驱动，按 `samples/Crystal_block.html` 增加 inset 边缘内高光（玻璃厚度感），颜色以 `--c-hue/--c-sat/--c-lit` HSL 变量驱动并随调色板联动，hover 内光增强
-- 文件夹窗口配色随文件夹当前颜色（`--fc-hue/--fc-sat/--fc-lit`）做分层材质染色（顶部受光 / 中部透明 / 底部回光），仍保留半透明玻璃质感
+### Visual Design (Crystal Ball System)
+- The three "edge entry balls" — pages (left edge), todos (right edge), and the notes peek ball (bottom edge) — and the note balls all use the crystal ball drawing technique from `samples/CrystalBall.html`
+- Crystal ball = six gradient layers on a single element (dark glass base → low-opacity identity-color inner light → primary/secondary highlights → bottom crescent reflection) + inset inner-wall refraction + a bottom identity-color ambient glow, **with no white outline ring** (to avoid a plastic look)
+- The three edge entry balls are rendered uniformly by the shared `PeekBall` component (placed per slot by `FeatureDock`): the identity colors `--tint` / `--tint-2` come from the feature's registered descriptor and are inlined onto the ball root, and the 7 derived `--ball-*` variables are generated uniformly via `color-mix` inside PeekBall.css
+- The breathing animation is `paused` by default (to avoid continuous raster work and CPU usage when idle) and only runs on hover / expansion
+- Website / folder icons use a "crystal block" glass texture: the light-effect layers are provided by `CrystalShell` and driven by `.icon-circle > .cc-*` in IconItem.css, adding an inset edge highlight (a sense of glass thickness) per `samples/Crystal_block.html`; colors are driven by the `--c-hue/--c-sat/--c-lit` HSL variables and follow the palette, with the inner light intensifying on hover
+- The folder window's colors follow the folder's current color (`--fc-hue/--fc-sat/--fc-lit`) with layered material tinting (lit at the top / transparent in the middle / reflected at the bottom), while still preserving the translucent glass texture
 
-### 交互健壮性
-- 所有 `Node.contains()` 调用前先做 `relatedTarget instanceof Node` 守卫：鼠标快速甩出窗口时浏览器会把 relatedTarget 映射为 `window`，未守卫的 `contains(window)` 会抛 `TypeError` 并中断后续逻辑（曾导致笔记栏 hover 收起被卡死）
-- 该守卫覆盖 NoteBar（栏移出/球拖拽/气泡穿越）、PagesSidebar、Todo 侧边栏、NotesManagerDialog、FolderWindow 及 useDragAndDrop / useClickOutside 全部相关路径
+### Interaction Robustness
+- Every `Node.contains()` call is guarded by `relatedTarget instanceof Node` first: when the mouse leaves the window quickly the browser maps relatedTarget to `window`, and an unguarded `contains(window)` throws a `TypeError` that breaks the rest of the logic (this previously caused the note bar's hover-to-collapse to get stuck)
+- This guard covers NoteBar (bar leave / ball dragging / bubble traversal), PagesSidebar, the Todo sidebar, NotesManagerDialog, FolderWindow, and all related paths in useDragAndDrop / useClickOutside
 
-### 状态管理
-使用 Zustand 进行全局状态管理，数据持久化到 Cloudflare KV。Store 选择器使用 `useShallow` 避免不必要的重渲染。
+### Internationalization (i18n)
+- Copy lives in `src/i18n/locales/{zh-CN,en-US}/` with 16 namespaces per language (common / settings / auth / about / weather / todos / notes / search / pages / folder / wallpaper / sites / icons / importExport / dock / system)
+- `SUPPORTED_LANGUAGES = ['zh-CN', 'en-US']` with `zh-CN` as the default; the preference is stored locally under `harborpage_language`
+- Language detection order: local storage → browser language → default language
+- Backend APIs return only language-neutral error codes and icon source identifiers (`shared/apiErrors.ts`); the frontend translates them via `translateApiError` / `translateIconSource` (`src/utils/apiErrorUtils.ts`)
 
-### 服务注入
-服务通过 `serviceContainer` 动态获取，支持服务替换和测试。
+### State Management
+Zustand is used for global state management, with data persisted to Cloudflare KV. Store selectors use `useShallow` to avoid unnecessary re-renders.
 
-### 数据持久化
-- `DataRepository` 作为统一持久化层，禁止直接访问 localStorage
-- 认证错误处理集中在 `DataRepository.handleAuthResponse()`
-- `DataManager` 使用不可变更新（`this.data = { ...this.data, ... }`）
-- localStorage 键统一使用 `harborpage_` 前缀
-- 数据加载优先级：先读 localStorage，命中则直接返回不再请求 KV；localStorage 为空才走 Cloudflare KV API
-- 持久化追踪键（TRACKED_KEYS）：`settings / websites / searchEngines / todos / todoList / notes / wallpaper / pages / palette`
-  - `pages` 取代根级 `websites` 作为网站/文件夹的唯一真源，根级 `websites` 在 persist 时被清空
-  - `palette` 仅保存用户改过的槽位（≠ 出厂默认 16 色的槽），读取与导入时统一归一化补齐
-  - `currentPageId` **不被持久化**，刷新页面永远显示第一页（导入旧数据触发切默认页的特殊路径除外）
-- `saveToLocal` 默认 500ms 防抖写 localStorage；关键原子操作（如跨页移动）使用 `DataRepository.flushLocal` 立即写入，避免用户立刻刷新读到旧值
+### Service Injection
+Services are resolved dynamically through `serviceContainer`, which allows services to be swapped and tested.
 
-### 图标缓存机制
-- 前端通过信号量模式控制并发（3 个并发请求）
-- 图标缓存失败后显示 🌐 图标，避免重复请求
-- 多源 Fallback：Google → DuckDuckGo → gstatic → mzkit
-- Favicon 源由后端统一管理，前端通过 API 获取
+### Data Persistence
+- `DataRepository` is the unified persistence layer; accessing localStorage directly is not allowed
+- Authentication error handling is centralized in `DataRepository.handleAuthResponse()`
+- `DataManager` uses immutable updates (`this.data = { ...this.data, ... }`)
+- localStorage keys uniformly use the `harborpage_` prefix
+- Data loading priority: read localStorage first and return immediately on a hit without requesting KV; only query the Cloudflare KV API when localStorage is empty
+- Persistence tracking keys (TRACKED_KEYS): `settings / websites / searchEngines / todos / todoList / notes / wallpaper / pages / palette / paletteAliases / paletteLightness`
+  - `pages` replaces root-level `websites` as the single source of truth for websites/folders, and root-level `websites` is cleared on persist
+  - `palette` only stores slots the user has changed (≠ the 16 factory default colors), and is normalized/filled in uniformly on read and import
+  - `paletteAliases` stores the slot alias map (slot ID → alias) and `paletteLightness` stores the global lightness (−50~50; it never modifies the stored hex values and is simply layered on at the point of use)
+  - `currentPageId` is **not persisted**; refreshing the page always shows the first page (except for the special path where importing old data triggers a jump to the default page)
+- `saveToLocal` debounces writes to localStorage by 500ms by default; critical atomic operations (such as cross-page moves) use `DataRepository.flushLocal` to write immediately, preventing the user from reading stale values after an immediate refresh
 
-### 图标文件命名规则
-- 用户上传图标：`md5("upload_{id}_{timestamp}").png`
-- 预览保存图标：`md5("save_{id}_{timestamp}").png`
-- 智能获取缓存图标：`md5("cache_{id}_{timestamp}").png`
-- 自动 Favicon 缓存：`md5(domain).png`（固定文件名，便于预测）
-- R2 存储路径前缀：`WebSites/`、`SearchEngines/`
+### Icon Caching
+- The frontend controls concurrency with a semaphore pattern (3 concurrent requests)
+- After an icon cache failure a 🌐 icon is shown to avoid repeated requests
+- Multi-source fallback: Google → DuckDuckGo → Favicon (the default order is defined by the backend's `DEFAULT_FAVICON_SOURCE_CONFIGS`, and user-defined sources can override it)
+- Favicon sources are managed uniformly by the backend and fetched by the frontend through the API
 
-### 安全规范
-- JWT 认证保护所有敏感 API
-- 密码 SHA-256 加密传输
-- 壁纸代理域名白名单限制
-- 请求大小限制（壁纸最大 10MB）
-- 敏感变量存储在 `.dev.vars`（本地）或 Cloudflare Secrets（生产）
-- 构建产物自动清理 `.dev.vars`（通过 `devVarsCleanup` 插件）
+### Icon File Naming Rules
+- User-uploaded icon: `md5("upload_{id}_{timestamp}").png`
+- Preview-saved icon: `md5("save_{id}_{timestamp}").png`
+- Smart-fetch cached icon: `md5("cache_{id}_{timestamp}").png`
+- Automatic favicon cache: `md5(domain).png` (a fixed file name for predictability)
+- R2 storage path prefixes: `WebSites/`, `SearchEngines/`
 
-### 性能优化
-- 时钟组件使用 ref 直接 DOM 操作，避免每秒触发 React 重渲染
-- 图标下载使用信号量并发控制（3 并发）
-- URL 输入防抖（3 秒）后更新预览
-- 功能面板按需挂载：仅在打开时挂载、关闭后卸载，功能数据的订阅与渲染开销随卸载归零
-- `updateEntry` 无变化短路：patch 与当前 entry 逐字段相同时直接返回原 state 引用，阻断功能组件每次重渲染级联带动 FeatureDock / 入口球重渲染
-- Store 选择器使用 `useShallow` 减少不必要的重渲染
-- `useEffect` 依赖项精确控制，避免循环触发
+### Security Practices
+- JWT authentication protects all sensitive APIs
+- Passwords are transmitted with SHA-256 encryption
+- The wallpaper proxy is restricted by a domain allowlist
+- Request size limits (wallpapers up to 10MB)
+- Sensitive variables are stored in `.dev.vars` (locally) or Cloudflare Secrets (production)
+- Build output automatically cleans up `.dev.vars` (via the `devVarsCleanup` plugin)
 
-## 🤝 贡献
+### Performance Optimizations
+- The clock component manipulates the DOM directly via ref to avoid a React re-render every second
+- Icon downloads use semaphore concurrency control (3 concurrent)
+- URL input is debounced (3 seconds) before the preview updates
+- Feature panels are mounted on demand: mounted only when opened and unmounted after closing, so the subscription and rendering cost of their data drops to zero on unmount
+- `updateEntry` short-circuits when nothing changed: when the patch matches the current entry field by field it returns the original state reference directly, preventing a cascade where every re-render of a feature component re-renders FeatureDock / the entry balls
+- Store selectors use `useShallow` to reduce unnecessary re-renders
+- `useEffect` dependencies are controlled precisely to avoid circular triggering
 
-欢迎提交 Issue 和 Pull Request！
+## 🤝 Contributing
 
-## 📄 许可证
+Issues and Pull Requests are welcome!
+
+## 📄 License
 
 MIT License
 
-## 🙏 致谢
+## 🙏 Acknowledgements
 
 - [React](https://react.dev/)
 - [Vite](https://vitejs.dev/)
 - [Cloudflare Workers](https://workers.cloudflare.com/)
-- [和风天气](https://www.qweather.com/)
+- [QWeather](https://www.qweather.com/)
 - [Zustand](https://zustand-demo.pmnd.rs/)
 - [lunisolar](https://lunisolar.js.org/)
 - [qweather-icons](https://github.com/qwd/Icons)
