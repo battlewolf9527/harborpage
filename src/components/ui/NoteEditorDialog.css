@@ -27,6 +27,7 @@
   width: clamp(380px, 46vw, 740px);
   max-width: calc(100vw - 32px);
   max-height: calc(100vh - 64px);
+  max-height: calc(100dvh - 64px);
   z-index: 1021;
   display: flex;
   flex-direction: column;
@@ -164,6 +165,7 @@
   outline: none;
   resize: vertical;
   min-height: clamp(180px, 22vh, 280px);
+  min-height: clamp(180px, 22dvh, 280px);
   transition: border-color var(--motion-fast), box-shadow var(--motion-fast);
   font-family: inherit;
   box-shadow: var(--glass-inner-hl);

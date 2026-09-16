@@ -43,20 +43,13 @@ export function useLongPress(
     }, delay);
   }, [delay, clearTimer]);
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (checkEmptyArea) {
-      const target = e.target as HTMLElement;
-      if (!isClickOnEmptyArea(target)) return;
-    }
-    startTimer();
-  }, [checkEmptyArea, startTimer]);
-
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (checkEmptyArea && !isClickOnEmptyArea(e.target as HTMLElement)) return;
     const touch = e.touches[0];
     touchStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
     touchMovedRef.current = false;
     startTimer();
-  }, [startTimer]);
+  }, [checkEmptyArea, startTimer]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!touchStartRef.current) return;
@@ -76,9 +69,6 @@ export function useLongPress(
   }, [clearTimer]);
 
   return {
-    handleMouseDown,
-    handleMouseUp: clearTimer,
-    handleMouseLeave: clearTimer,
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd,

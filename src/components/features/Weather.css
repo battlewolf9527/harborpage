@@ -2,8 +2,9 @@
 
 .weather-info {
   position: absolute;
-  top: max(12px, 1vw);
-  left: max(12px, 1vw);
+  /* 叠加安全区：全面屏横屏时避免卡片压在刘海/状态栏下（--safe-* 非全面屏为 0px） */
+  top: calc(max(12px, 1vw) + var(--safe-top));
+  left: calc(max(12px, 1vw) + var(--safe-left));
   color: white;
   text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   z-index: 100;
@@ -206,8 +207,8 @@
 /* ========== 响应式：手机竖屏 ========== */
 @media (max-width: 768px) {
   .weather-info {
-    top: max(10px, 1vw);
-    left: max(10px, 1vw);
+    top: calc(max(10px, 1vw) + var(--safe-top));
+    left: calc(max(10px, 1vw) + var(--safe-left));
     max-width: 48vw;
     padding: max(8px, 0.8vw);
   }
@@ -312,8 +313,8 @@
   .weather-info {
     max-width: 60vw;
     padding: 6px 8px;
-    top: 8px;
-    left: 8px;
+    top: calc(8px + var(--safe-top));
+    left: calc(8px + var(--safe-left));
   }
 
   .weather-header {

@@ -7,7 +7,8 @@
 
 .toast {
   position: fixed;
-  top: 28px;
+  /* 叠加安全区：横屏/全面屏时避免 Toast 压在刘海或状态栏下（--safe-* 非全面屏为 0px） */
+  top: calc(28px + var(--safe-top));
   left: 50%;
   transform: translateX(-50%) translateY(-120%);
   z-index: 2000;
@@ -201,9 +202,9 @@
 /* ========== 响应式：手机端 ========== */
 @media (max-width: 768px) {
   .toast {
-    top: 16px;
-    left: 14px;
-    right: 14px;
+    top: calc(16px + var(--safe-top));
+    left: calc(14px + var(--safe-left));
+    right: calc(14px + var(--safe-right));
     transform: translateY(-120%);
     min-width: 0;
     max-width: none;

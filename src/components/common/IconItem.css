@@ -29,6 +29,27 @@
   .icon-item:hover {
     transform: none;
   }
+
+  /* 触屏手势稳定性：屏蔽 iOS 长按图标时弹出的原生菜单（存储图像/拷贝）与文本选择，
+     否则它们会和 useLongPress 的 500ms 长按菜单同时抢手势，
+     导致自定义菜单（编辑/移动到页面/删除）实际点不出来。
+     touch-action 只在手势起点元素上声明即可覆盖其全部子元素。 */
+  .icon-item {
+    touch-action: manipulation;
+  }
+  .icon-item,
+  .icon-item img {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* 点按反馈：Android 的灰色高亮块已在 index.css 全局移除，
+     这里补一个按压回弹（按下 0.12s，松开回到 0.5s 弹性曲线） */
+  .icon-item:active .icon-wrapper {
+    transform: scale(0.96);
+    transition-duration: 0.12s;
+  }
 }
 
 .icon-wrapper {
@@ -510,48 +531,6 @@ body.is-dragging-active .icon-item.dragging .icon-circle > .cc-glass {
   75% {
     transform: translateX(5px);
   }
-}
-
-/* 外部拖放区域样式 - 在图标两侧添加透明的拖放区域，扩大拖放排序的操作空间 */
-.icon-drop-zone {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 50px;
-  height: 80%;
-  z-index: 5;
-  /* 关键修复：静止时该区域不参与任何指针事件 ——
-     它们只是"拖放排序"的投放目标，不能成为图标的点击/拖动热区，
-     否则图标外大片空白也会打开站点、也会误触发图标拖动，
-     甚至会盖住悬浮层（如文件夹颜色浮层 z 值低于它）导致点击穿透。
-     仅在真正拖拽（body.is-dragging-active）时才恢复为投放目标。 */
-  pointer-events: none;
-}
-body.is-dragging-active .icon-drop-zone {
-  pointer-events: auto;
-}
-
-.icon-drop-zone-left {
-  right: 100%;
-  margin-right: 5px;
-}
-
-.icon-drop-zone-right {
-  left: 100%;
-  margin-left: 5px;
-}
-
-/* 拖放时显示视觉反馈 */
-.icon-item.drag-over .icon-drop-zone-left {
-  background: rgba(100, 149, 237, 0.2);
-  border-left: 3px solid #6495ED;
-  border-radius: 8px 0 0 8px;
-}
-
-.icon-item.drag-over .icon-drop-zone-right {
-  background: rgba(100, 149, 237, 0.2);
-  border-right: 3px solid #6495ED;
-  border-radius: 0 8px 8px 0;
 }
 
 /* ============================================================

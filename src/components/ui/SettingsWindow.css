@@ -41,15 +41,25 @@
   to   { transform: translateX(100%); }
 }
 .settings-panel {
+  /* 内容内边距基准；安全区在其之上叠加（--safe-* 非全面屏为 0px，等于无变化） */
+  --panel-pad: clamp(22px, 3.5vw, 36px);
   position: fixed;
   top: 0;
   right: 0;
   width: min(420px, 100vw);
   height: 100%;
+  /* dvh 跟随移动端地址栏收缩，避免抽屉底部内容被地址栏遮住（旧浏览器忽略本行） */
+  height: 100dvh;
   background: var(--glass-surface-700);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  padding: clamp(22px, 3.5vw, 36px);
+  /* 四边内边距分别叠加安全区：抽屉本身仍满幅出血，只有内容避开刘海与 home indicator。
+     右侧安全区同时保证滚动条不会被横屏刘海压住。 */
+  padding:
+    calc(var(--panel-pad) + var(--safe-top))
+    calc(var(--panel-pad) + var(--safe-right))
+    calc(var(--panel-pad) + var(--safe-bottom))
+    var(--panel-pad);
   box-shadow: -12px 0 48px rgba(0,0,0,0.5);
   border-left: var(--glass-border);
   z-index: 1000;
@@ -91,10 +101,12 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  margin-right: calc(-1 * clamp(22px, 3.5vw, 36px));
-  padding-right: clamp(22px, 3.5vw, 36px);
-  margin-bottom: calc(-1 * clamp(22px, 3.5vw, 36px));
-  padding-bottom: clamp(22px, 3.5vw, 36px);
+  /* 负 margin 与面板右侧/底部的内边距一一对应（含安全区），保证滚动条仍贴面板右缘、
+     滚动区仍铺满面板高度，滚到底时内容也不会落到 home indicator 下面。 */
+  margin-right: calc(-1 * (var(--panel-pad) + var(--safe-right)));
+  padding-right: calc(var(--panel-pad) + var(--safe-right));
+  margin-bottom: calc(-1 * (var(--panel-pad) + var(--safe-bottom)));
+  padding-bottom: calc(var(--panel-pad) + var(--safe-bottom));
 }
 
 /* 滚动条：局部级别与全局保持一致，轨道色提高到 0.10 确保可见 */

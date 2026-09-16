@@ -72,8 +72,10 @@
 /* ── 三种放置位置（由主界面槽位配置决定） ── */
 
 /* 左侧中央（多页面） */
+/* 偏移量统一叠加 --safe-left：横屏刘海机（>768px 宽）下球仍留在可点区域内，
+   非全面屏时该 token 为 0px，等同于原值。 */
 .peek-ball--left-center {
-  left: calc(var(--size) / 2 * -1 + 2px);
+  left: calc(var(--size) / 2 * -1 + 2px + var(--safe-left));
   top: 50%;
   transform: translateY(-50%);
   transition:
@@ -82,13 +84,13 @@
 }
 .peek-ball--left-center:hover,
 .peek-ball--left-center.is-active {
-  left: 0;
+  left: var(--safe-left);
   opacity: 1;
 }
 
 /* 右侧中央（待办） */
 .peek-ball--right-center {
-  right: calc(var(--size) / 2 * -1 + 2px);
+  right: calc(var(--size) / 2 * -1 + 2px + var(--safe-right));
   top: 50%;
   transform: translateY(-50%);
   transition:
@@ -97,14 +99,14 @@
 }
 .peek-ball--right-center:hover,
 .peek-ball--right-center.is-active {
-  right: 0;
+  right: var(--safe-right);
   opacity: 1;
 }
 
 /* 底部中央（便签入口）：半沉在视口下缘，悬停/展开才抬升 */
 .peek-ball--bottom-center {
   left: 50%;
-  bottom: calc(var(--size) / 2 * -1);
+  bottom: calc(var(--size) / 2 * -1 + var(--safe-bottom));
   transform: translateX(-50%);
   transition: opacity 300ms ease 80ms;
 }
@@ -337,9 +339,10 @@
   .peek-ball {
     opacity: 0.6;
   }
-  /* 底部入口球：触屏没有 hover，点按需要整球可见 → 从"半埋"抬到贴边全显 */
+  /* 底部入口球：触屏没有 hover，点按需要整球可见 → 从"半埋"抬到贴边全显。
+     再加 --safe-bottom 让它落在 home indicator 上方，避免整颗球压在系统手势区。 */
   .peek-ball--bottom-center {
-    bottom: 8px;
+    bottom: calc(8px + var(--safe-bottom));
   }
   .peek-ball:hover .peek-ball__orb {
     opacity: 1;

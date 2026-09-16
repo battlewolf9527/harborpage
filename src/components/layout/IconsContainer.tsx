@@ -37,12 +37,9 @@ const IconsContainer: React.FC<IconsContainerProps> = memo(({
 
   const {
     dragOverPosition,
-    handleDragStart,
-    handleDragEnd,
-    handleDragOverIcon,
-    handleDragOverOutside,
-    handleDragLeaveIcon,
-    handleDropOnIcon,
+    longPressInfo,
+    clearLongPress,
+    getDragHandleProps,
     isDragging,
     isDragOverIcon,
   } = useDragAndDrop({
@@ -87,12 +84,9 @@ const IconsContainer: React.FC<IconsContainerProps> = memo(({
         onEditIcon={onEditIcon}
         onDeleteIcon={onDeleteIcon}
         onMoveToPage={onMoveToPage}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        onDragOverIcon={handleDragOverIcon}
-        onDragLeaveIcon={handleDragLeaveIcon}
-        onDropOnIcon={handleDropOnIcon}
-        onDragOverOutside={handleDragOverOutside}
+        getDragHandleProps={getDragHandleProps}
+        longPressInfo={longPressInfo}
+        clearLongPress={clearLongPress}
         isDragging={isDragging}
         isDragOverIcon={isDragOverIcon}
         dragOverPosition={dragOverPosition}

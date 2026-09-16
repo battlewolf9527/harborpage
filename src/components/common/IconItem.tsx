@@ -7,38 +7,27 @@ import { usePaletteStore } from '../../store/usePaletteStore';
 import { resolveIconHslVars } from '../../utils/paletteColors';
 import DraggableIconWrapper from './DraggableIconWrapper';
 import CrystalShell from './CrystalShell';
+import type { DragHandleProps } from '../../hooks/usePointerDrag';
 import './IconItem.css';
 
 interface IconItemProps {
   icon: Website;
-  onClick?: (() => void) | undefined;
-  onDragStart?: ((e: React.DragEvent, icon: Website) => void) | undefined;
-  onDragEnd?: (() => void) | undefined;
+  dragHandleProps?: DragHandleProps | undefined;
   isDragging?: boolean | undefined;
-  draggable?: boolean | undefined;
-  onDragOver?: ((e: React.DragEvent) => void) | undefined;
-  onDragLeave?: ((e: React.DragEvent) => void) | undefined;
-  onDrop?: ((e: React.DragEvent) => void) | undefined;
   isDragOverIcon?: boolean | undefined;
   dragOverPosition?: ('before' | 'after' | 'center' | 'invalid' | null) | undefined;
+  onClick?: (() => void) | undefined;
   onContextMenu?: ((e: React.MouseEvent) => void) | undefined;
-  onDragOverOutside?: ((position: 'before' | 'after') => void) | undefined;
 }
 
 const IconItem: React.FC<IconItemProps> = ({
   icon,
-  onClick,
-  onDragStart,
-  onDragEnd,
+  dragHandleProps,
   isDragging,
-  draggable = false,
-  onDragOver,
-  onDragLeave,
-  onDrop,
   isDragOverIcon,
   dragOverPosition,
+  onClick,
   onContextMenu,
-  onDragOverOutside,
 }) => {
   const { iconManager } = getServices();
   const slots = usePaletteStore((s) => s.slots);
@@ -53,16 +42,10 @@ const IconItem: React.FC<IconItemProps> = ({
   return (
     <DraggableIconWrapper
       icon={icon}
+      dragHandleProps={dragHandleProps}
       isDragging={isDragging}
-      draggable={draggable}
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={onDrop}
       isDragOverIcon={isDragOverIcon}
       dragOverPosition={dragOverPosition}
-      onDragOverOutside={onDragOverOutside}
       onClick={onClick}
       onContextMenu={onContextMenu}
       label={<div className="icon-label">{icon.name}</div>}
@@ -79,16 +62,9 @@ const IconItem: React.FC<IconItemProps> = ({
               referrerPolicy="no-referrer"
               onError={(e) => handleIconLoadError(e, icon)}
               /* 关键：禁用 <img> 原生 draggable。
-                 HTML5 Drag & Drop 规范规定"浏览器选择最内层的 draggable=true 元素作为 drag source"。
-                 <img> 默认 draggable=true（浏览器原生允许拖图片到桌面/其他应用），
-                 而且是 draggable 属性出现之前就内置的隐式行为，优先级比外层的显式 draggable 更高。
-                 结果：当用户按下 icon-circle 上的图片开始拖，浏览器把 <img> 当成 drag source，
-                      生成 drag image 用的是图片内容；配合 loading="lazy" + 4K 大图未解码，
-                      Chromium 内核会**静默取消整个 drag 操作**（dragstart 事件还能冒泡触发我们的
-                      handler 写入 draggedIcon state，但内核不再发送 dragover/drop，图标看起来完全拖不动）。
-                 修复：draggable={false} 告诉浏览器"不要拿这个图片当 drag source"，
-                      浏览器就会沿 DOM 往上找最近 draggable=true 的祖先 —
-                      DraggableIconWrapper 的 .icon-item，完全走我们的自定义 drag & drop 链路。 */
+                 默认情况下 <img> 是浏览器原生的 drag source，按下图片即触发原生 HTML5 拖拽，
+                 内核会随即派发 pointercancel，把我们的 Pointer Events 拖拽链路直接掐断。
+                 draggable={false} 关掉原生拖拽，手势完全交给我们自己的拖拽引擎。 */
               draggable={false}
             />
           ) : (

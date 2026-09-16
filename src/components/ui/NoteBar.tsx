@@ -7,6 +7,7 @@ import { useNotesStore } from '../../store/useNotesStore';
 import { usePaletteStore } from '../../store/usePaletteStore';
 import { useFeatureDockStore } from '../../store/useFeatureDockStore';
 import { useFeatureEntry } from '../../hooks/useFeatureEntry';
+import { useListPointerReorder } from '../../hooks/useListPointerReorder';
 import type { Note, PaletteHexMap } from '../../types';
 import NotesManagerDialog from './NotesManagerDialog';
 import NoteEditorDialog from './NoteEditorDialog';
@@ -331,67 +332,25 @@ const NoteBar: React.FC = () => {
     };
   }, [activeBallId, repositionTooltip, resolveAnchor]);
 
-  // ── 拖拽重排（仅作用于 ballNotes 范围内的 8 个球） ────────────────────────
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const [dragOverPosition, setDragOverPosition] = useState<'left' | 'right'>('right');
-
-  const handleDragStart = useCallback((e: React.DragEvent<HTMLDivElement>, ballIndex: number) => {
-    setDragIndex(ballIndex);
-    setDragOverIndex(null);
-    // 拖动过程中收起 tooltip，避免遮挡
-    setActiveBallId(null);
-    e.dataTransfer.effectAllowed = 'move';
-    try { e.dataTransfer.setData('text/plain', String(ballIndex)); } catch { /* noop */ }
-    const src = e.currentTarget as HTMLElement;
-    try {
-      if (src) e.dataTransfer.setDragImage(src, src.offsetWidth / 2, src.offsetHeight / 2);
-    } catch { /* noop */ }
-  }, []);
-
-  const handleDragEnd = useCallback(() => {
-    setDragIndex(null);
-    setDragOverIndex(null);
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>, ballIndex: number) => {
-    if (dragIndex === null || dragIndex === ballIndex) return;
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const midX = rect.left + rect.width / 2;
-    const pos: 'left' | 'right' = e.clientX < midX ? 'left' : 'right';
-    setDragOverIndex(ballIndex);
-    setDragOverPosition(pos);
-  }, [dragIndex]);
-
-  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>, ballIndex: number) => {
-    const related = e.relatedTarget;
-    if (related instanceof Node && e.currentTarget.contains(related)) return;
-    if (dragOverIndex === ballIndex) setDragOverIndex(null);
-  }, [dragOverIndex]);
-
-  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>, ballIndex: number) => {
-    e.preventDefault();
-    if (dragIndex === null) {
-      setDragOverIndex(null);
-      return;
-    }
-    const original = notes;
-    const fromOrig = original.indexOf(ballNotes[dragIndex]);
-    const overOrig = original.indexOf(ballNotes[ballIndex]);
-    if (fromOrig < 0 || overOrig < 0) {
-      setDragIndex(null);
-      setDragOverIndex(null);
-      return;
-    }
-    const rawInsert = dragOverPosition === 'left' ? overOrig : overOrig + 1;
-    if (fromOrig !== rawInsert) {
-      reorderNotes(fromOrig, rawInsert);
-    }
-    setDragIndex(null);
-    setDragOverIndex(null);
-  }, [dragIndex, dragOverPosition, notes, ballNotes, reorderNotes]);
+  // ── 拖拽重排（仅作用于 ballNotes 范围内的 8 个球；横向列表，松手才落库）────
+  const { draggingKey, overKey, overPosition, getItemProps } = useListPointerReorder({
+    keys: ballNotes.map((note) => note.id),
+    axis: 'x',
+    onDragStart: () => {
+      // 拖动过程中收起 tooltip，避免遮挡
+      setActiveBallId(null);
+    },
+    onReorder: (from, over, position) => {
+      // reorderNotes 作用于完整数组，所以先把球下标还原成 notes 里的真实下标
+      const fromOrig = notes.indexOf(ballNotes[from]);
+      const overOrig = notes.indexOf(ballNotes[over]);
+      if (fromOrig < 0 || overOrig < 0) return;
+      const rawInsert = position === 'before' ? overOrig : overOrig + 1;
+      if (fromOrig !== rawInsert) {
+        reorderNotes(fromOrig, rawInsert);
+      }
+    },
+  });
 
   // ── 点击球 → 直接打开编辑器 ───────────────────────────────────────────────
   const handleBallClick = useCallback((note: Note) => {
@@ -603,11 +562,11 @@ const NoteBar: React.FC = () => {
                 {t('bar.emptyHintPrefix')}<span className="mini-plus">+</span>{t('bar.emptyHintSuffix')}
               </div>
             )}
-            {ballNotes.map((note, index) => {
+            {ballNotes.map((note) => {
               const { style: colorStyle } = noteDisplayMeta(note, slots, lightness);
               const synthId = `note:${note.id}`;
-              const isDragging = dragIndex === index;
-              const isDragOver = dragOverIndex === index;
+              const isDragging = draggingKey === note.id;
+              const isDragOver = overKey === note.id;
               return (
                 <div
                   key={note.id}
@@ -615,15 +574,15 @@ const NoteBar: React.FC = () => {
                 >
                   <div
                     ref={(el) => { ballRefs.current.set(note.id, el); }}
+                    {...getItemProps(note.id)}
                     className={`noteball note
                       ${isDragging ? 'dragging' : ''}
-                      ${isDragOver && dragOverPosition === 'left' ? 'drop-left' : ''}
-                      ${isDragOver && dragOverPosition === 'right' ? 'drop-right' : ''}
+                      ${isDragOver && overPosition === 'before' ? 'drop-left' : ''}
+                      ${isDragOver && overPosition === 'after' ? 'drop-right' : ''}
                     `}
                     style={colorStyle}
                     role="button"
                     tabIndex={0}
-                    draggable
                     aria-label={t('bar.ballAria', { title: note.title || t('untitled') })}
                     onClick={() => handleBallClick(note)}
                     onKeyDown={(e) => {
@@ -636,11 +595,6 @@ const NoteBar: React.FC = () => {
                     onMouseLeave={(e) => handleSynthLeave(synthId, e)}
                     onFocus={() => showTooltipFor(synthId)}
                     onBlur={scheduleTooltipHide}
-                    onDragStart={(e) => handleDragStart(e, index)}
-                    onDragEnd={handleDragEnd}
-                    onDragOver={(e) => handleDragOver(e, index)}
-                    onDragLeave={(e) => handleDragLeave(e, index)}
-                    onDrop={(e) => handleDrop(e, index)}
                     data-note-id={note.id}
                   >
                     <span className="noteball-glyph">{firstGlyph(note.title, t('bar.emptyGlyph'))}</span>

@@ -9,6 +9,7 @@ import { renderSearchEngineIcon, preloadIconForUrl } from '../../services/iconUt
 import { getServices } from '../../services/serviceContainer';
 import createLogger from '../../utils/logger';
 import { generateId } from '../../utils/idUtils';
+import { useListPointerReorder } from '../../hooks/useListPointerReorder';
 
 const logger = createLogger('SearchManager');
 
@@ -26,7 +27,6 @@ const SearchManager: React.FC = () => {
   const { iconManager } = getServices();
   const { searchEngines, defaultSearchEngineId, setSearchEngines, setDefaultSearchEngineId } = useSearchSelector();
 
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dialog, setDialog] = useState<DialogState | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [engineToDelete, setEngineToDelete] = useState<string | null>(null);
@@ -127,30 +127,20 @@ const SearchManager: React.FC = () => {
     setEngineToDelete(null);
   };
 
-  const handleDragStart = useCallback((index: number) => {
-    setDragIndex(index);
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    if (dragIndex === null || dragIndex === index) return;
-    const newEngines = [...searchEngines];
-    const [moved] = newEngines.splice(dragIndex, 1);
-    newEngines.splice(index, 0, moved);
-    setDragIndex(index);
-    setSearchEngines(newEngines);
-  }, [dragIndex, searchEngines, setSearchEngines]);
-
-  const handleDrop = useCallback(() => {
-    if (dragIndex !== null) {
-      setSearchEngines([...searchEngines]);
-    }
-    setDragIndex(null);
-  }, [dragIndex, searchEngines, setSearchEngines]);
-
-  const handleDragEnd = useCallback(() => {
-    setDragIndex(null);
-  }, []);
+  // ── 拖拽排序（Pointer Events，桌面与触屏同一套代码）──────────────────────
+  // 即时重排：指针越过谁就立刻把被拖项移到谁的位置并落库（原实现在 dragover 里就是这么做的）。
+  // 打开编辑/新增弹窗时禁止起拖，避免与弹窗交互冲突。
+  const { draggingKey, getItemProps } = useListPointerReorder({
+    keys: searchEngines.map((engine) => engine.id),
+    live: true,
+    canStart: () => dialog === null,
+    onReorder: (from, over) => {
+      const newEngines = [...searchEngines];
+      const [moved] = newEngines.splice(from, 1);
+      newEngines.splice(over, 0, moved);
+      setSearchEngines(newEngines);
+    },
+  });
 
   return (
     <div className="search-manager">
@@ -168,15 +158,11 @@ const SearchManager: React.FC = () => {
       <div className="engine-list">
         <h4>{t('manager.engineList')}</h4>
         <div className="engine-items">
-          {searchEngines.map((engine, index) => (
+          {searchEngines.map((engine) => (
             <div
               key={engine.id}
-              className={`engine-item ${dragIndex === index ? 'dragging' : ''}`}
-              draggable={dialog === null}
-              onDragStart={() => handleDragStart(index)}
-              onDragOver={(e) => handleDragOver(e, index)}
-              onDrop={handleDrop}
-              onDragEnd={handleDragEnd}
+              {...getItemProps(engine.id)}
+              className={`engine-item ${draggingKey === engine.id ? 'dragging' : ''}`}
             >
               <div className="engine-drag-handle" title={t('manager.dragToSort')}>⋮⋮</div>
 

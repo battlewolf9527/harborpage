@@ -11,7 +11,6 @@ export function useIconDropHandler(
   const setShowFolderNameDialog = useIconsUIStore((s) => s.setShowFolderNameDialog);
 
   const handleDrop = useCallback((
-    _e: React.DragEvent,
     targetIconId: string,
     draggedIcon: Website,
     targetIcon: Website,

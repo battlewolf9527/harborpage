@@ -8,6 +8,8 @@
      - 3840px 4K 屏  ：封顶 2600px，避免图标铺得太开难以操作 */
   width: clamp(1100px, 68%, 2600px);
   max-height: 80vh; /* 限制最大高度，留出空间给其他元素 */
+  /* dvh 跟随移动端地址栏收缩；dvh ≤ vh，只会更保守，不会造成新的溢出 */
+  max-height: 80dvh;
   overflow-y: auto; /* 启用垂直滚动 */
   overflow-x: hidden; /* 隐藏水平滚动 */
   padding: 20px;
@@ -98,6 +100,7 @@
     width: 88%;
     padding: 16px 24px 16px 16px;
     max-height: 68vh;
+    max-height: 68dvh;
     margin-bottom: 36px;
   }
 
@@ -113,6 +116,7 @@
     width: 92%;
     padding: 12px 20px 12px 12px;
     max-height: 58vh;
+    max-height: 58dvh;
     margin-bottom: 28px;
   }
 
@@ -128,6 +132,7 @@
     width: 95%;
     padding: 10px 18px 10px 10px;
     max-height: 54vh;
+    max-height: 54dvh;
     margin-bottom: 24px;
   }
 

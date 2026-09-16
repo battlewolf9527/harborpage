@@ -6,6 +6,7 @@ import { usePagesSelector } from '../../store/selectors';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { useFeatureDockStore } from '../../store/useFeatureDockStore';
 import { useFeatureEntry } from '../../hooks/useFeatureEntry';
+import { useListPointerReorder } from '../../hooks/useListPointerReorder';
 import type { Page } from '../../types';
 
 /** 多页面身份色（入口球与面板共享的品牌色） */
@@ -38,9 +39,6 @@ const PagesSidebar: React.FC = () => {
 
   const [editing, setEditing] = useState<EditingState | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Page | null>(null);
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const [dragOverPosition, setDragOverPosition] = useState<'top' | 'bottom'>('bottom');
   const sidebarRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const lastFocusedPageIdRef = useRef<string | null>(null);
@@ -59,6 +57,16 @@ const PagesSidebar: React.FC = () => {
     deletePage,
     reorderPages,
   } = usePagesSelector();
+
+  // ── 拖拽排序（Pointer Events，桌面与触屏同一套代码）──────────────────────
+  // 纵向列表：只画指示线，松手才落库；编辑中 / 待删除确认中的行不允许起拖。
+  const { draggingKey, overKey, overPosition, getItemProps } = useListPointerReorder({
+    keys: pages.map((page) => page.id),
+    canStart: () => !editing && !pendingDelete,
+    onReorder: (from, over, position) => {
+      reorderPages(from, position === 'before' ? over : over + 1);
+    },
+  });
 
   // —— 面板在场与展开态：完全由宿主 open 状态驱动。
   //    所有 setState 都只发生在「定时器回调」（异步）里，effect 本体只负责
@@ -161,59 +169,6 @@ const PagesSidebar: React.FC = () => {
     setPendingDelete(null);
   }, []);
 
-  // ── 拖拽排序 ────────────────────────────────────────────────────────────
-  const handleDragStart = useCallback((e: React.DragEvent<HTMLDivElement>, index: number) => {
-    if (editing || pendingDelete) {
-      e.preventDefault();
-      return;
-    }
-    setDragIndex(index);
-    setDragOverIndex(null);
-    e.dataTransfer.effectAllowed = 'move';
-    try {
-      e.dataTransfer.setData('text/plain', String(index));
-    } catch { /* noop */ }
-  }, [editing, pendingDelete]);
-
-  const handleDragEnd = useCallback(() => {
-    setDragIndex(null);
-    setDragOverIndex(null);
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>, index: number) => {
-    if (dragIndex === null) return;
-    if (dragIndex === index) return;
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const midY = rect.top + rect.height / 2;
-    const position: 'top' | 'bottom' = e.clientY < midY ? 'top' : 'bottom';
-
-    setDragOverIndex(index);
-    setDragOverPosition(position);
-  }, [dragIndex]);
-
-  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>, index: number) => {
-    const related = e.relatedTarget;
-    if (related instanceof Node && e.currentTarget.contains(related)) return;
-    if (dragOverIndex === index) {
-      setDragOverIndex(null);
-    }
-  }, [dragOverIndex]);
-
-  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>, index: number) => {
-    e.preventDefault();
-    if (dragIndex === null) {
-      setDragOverIndex(null);
-      return;
-    }
-    const insertAt = dragOverPosition === 'top' ? index : index + 1;
-    reorderPages(dragIndex, insertAt);
-    setDragIndex(null);
-    setDragOverIndex(null);
-  }, [dragIndex, dragOverPosition, reorderPages]);
-
   const pageCount = pages.length;
 
   // 倒置依赖：向主界面注册入口描述（当前页名/页数驱动 tooltip 文案）
@@ -251,25 +206,19 @@ const PagesSidebar: React.FC = () => {
             </button>
 
             <div className="pages-list">
-              {pages.map((page, index) => {
+              {pages.map((page) => {
                 const isActive = page.id === currentPageId;
                 const isEditing = editing?.pageId === page.id;
-                const isDragging = dragIndex === index;
-                const isDragOver = dragOverIndex === index;
-                const showIndicatorTop = isDragOver && dragOverPosition === 'top';
-                const showIndicatorBottom = isDragOver && dragOverPosition === 'bottom';
+                const isDragging = draggingKey === page.id;
+                const showIndicatorTop = overKey === page.id && overPosition === 'before';
+                const showIndicatorBottom = overKey === page.id && overPosition === 'after';
 
                 return (
                   <div
                     key={page.id}
+                    {...getItemProps(page.id)}
                     className={`page-item ${isActive ? 'active' : ''} ${isDragging ? 'dragging' : ''} ${showIndicatorTop ? 'drop-indicator-top' : ''} ${showIndicatorBottom ? 'drop-indicator-bottom' : ''}`}
-                    draggable={!isEditing && !pendingDelete}
                     onClick={() => !isEditing && handlePageClick(page.id)}
-                    onDragStart={(e) => handleDragStart(e, index)}
-                    onDragEnd={handleDragEnd}
-                    onDragOver={(e) => handleDragOver(e, index)}
-                    onDragLeave={(e) => handleDragLeave(e, index)}
-                    onDrop={(e) => handleDrop(e, index)}
                   >
                     {!isEditing && (
                       <div

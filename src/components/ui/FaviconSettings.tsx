@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { FaviconSource } from '../../types';
 import FaviconConfigService from '../../services/FaviconConfigService';
+import { useListPointerReorder } from '../../hooks/useListPointerReorder';
 import './FaviconSettings.css';
 
 interface FaviconSettingsProps {
@@ -20,7 +21,6 @@ const FaviconSettings: React.FC<FaviconSettingsProps> = ({ onSourcesChange }) =>
   const { t } = useTranslation('icons');
   const [sources, setSources] = useState<FaviconSource[]>(() => FaviconConfigService.getSources());
   const [dialog, setDialog] = useState<DialogState | null>(null);
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ index: number; source: FaviconSource } | null>(null);
 
   const isBuiltIn = (source: FaviconSource): boolean => {
@@ -39,31 +39,24 @@ const FaviconSettings: React.FC<FaviconSettingsProps> = ({ onSourcesChange }) =>
     updateSources(newSources);
   }, [sources, updateSources]);
 
-  const handleDragStart = useCallback((index: number) => {
-    setDragIndex(index);
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    if (dragIndex === null || dragIndex === index) return;
-    const newSources = [...sources];
-    const [moved] = newSources.splice(dragIndex, 1);
-    newSources.splice(index, 0, moved);
-    setDragIndex(index);
-    setSources(newSources);
-  }, [dragIndex, sources]);
-
-  const handleDrop = useCallback(() => {
-    if (dragIndex !== null) {
+  // ── 拖拽排序（Pointer Events，桌面与触屏同一套代码）──────────────────────
+  // 即时重排：指针越过谁就立刻把被拖项移到谁的位置（与迁移前一致）。
+  // 落库只在松手时做一次（迁移前 saveSources 也只在 drop 里调用）。
+  const { draggingKey, getItemProps } = useListPointerReorder({
+    keys: sources.map((source) => source.id),
+    live: true,
+    canStart: () => dialog === null,
+    onReorder: (from, over) => {
+      const newSources = [...sources];
+      const [moved] = newSources.splice(from, 1);
+      newSources.splice(over, 0, moved);
+      setSources(newSources);
+    },
+    onDragEnd: () => {
       FaviconConfigService.saveSources(sources);
       onSourcesChange?.(sources);
-    }
-    setDragIndex(null);
-  }, [dragIndex, sources, onSourcesChange]);
-
-  const handleDragEnd = useCallback(() => {
-    setDragIndex(null);
-  }, []);
+    },
+  });
 
   const deleteSource = useCallback((index: number) => {
     const source = sources[index];
@@ -150,12 +143,8 @@ const FaviconSettings: React.FC<FaviconSettingsProps> = ({ onSourcesChange }) =>
         {sources.map((source, index) => (
           <div
             key={source.id}
-            className={`favicon-source-item ${dragIndex === index ? 'dragging' : ''} ${!source.enabled ? 'disabled' : ''}`}
-            draggable={dialog !== null}
-            onDragStart={() => handleDragStart(index)}
-            onDragOver={(e) => handleDragOver(e, index)}
-            onDrop={handleDrop}
-            onDragEnd={handleDragEnd}
+            {...getItemProps(source.id)}
+            className={`favicon-source-item ${draggingKey === source.id ? 'dragging' : ''} ${!source.enabled ? 'disabled' : ''}`}
           >
             <div className="favicon-source-drag" title={t('faviconSettings.dragToSort')}>⋮⋮</div>
 

@@ -19,7 +19,10 @@
   top: 50%;
   transform: translateY(-50%);
   height: min(600px, 65vh);
+  /* dvh 跟随移动端地址栏收缩，避免侧边栏底部被地址栏遮住（旧浏览器忽略本行） */
+  height: min(600px, 65dvh);
   max-height: 85vh;
+  max-height: 85dvh;
   width: var(--sidebar-width);
   /* ── Aurora 玻璃外壳 ── */
   background: var(--glass-surface-700);
@@ -54,7 +57,8 @@
 }
 
 .todo-sidebar.expanded {
-  right: 0;
+  /* 横屏刘海机下不让面板钻到圆角/刘海下面（非全面屏 --safe-right 为 0px） */
+  right: var(--safe-right);
   box-shadow: var(--shadow-glass-lg);
 }
 
@@ -146,11 +150,13 @@
     width: 86vw;
     max-width: 360px;
     height: 80vh;
+    height: 80dvh;
     min-height: min(500px, 80vh);
+    min-height: min(500px, 80dvh);
     top: 50%;
     border-radius: 16px 0 0 16px;
   }
-  .todo-sidebar.expanded { right: 0; }
+  .todo-sidebar.expanded { right: var(--safe-right); }
 
   .sidebar-content {
     padding: 18px 16px;
@@ -164,7 +170,9 @@
   .todo-sidebar {
     width: 90vw;
     height: 82vh;
+    height: 82dvh;
     min-height: min(480px, 82vh);
+    min-height: min(480px, 82dvh);
   }
   .sidebar-content { padding: 16px 14px 16px 20px; gap: 12px; }
 }

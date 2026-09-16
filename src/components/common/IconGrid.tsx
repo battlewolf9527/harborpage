@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import WebsiteItem from '../common/WebsiteItem';
 import FolderItem from '../common/FolderItem';
 import type { Website } from '../../types';
-import type { DragPosition } from '../../hooks/useDragAndDrop';
+import type { DragPosition, IconLongPressInfo } from '../../hooks/useDragAndDrop';
+import type { DragHandleProps } from '../../hooks/usePointerDrag';
 import './IconGrid.css';
 
 interface IconGridProps {
@@ -13,17 +14,15 @@ interface IconGridProps {
   onEditIcon: ((icon: Website) => void) | undefined;
   onDeleteIcon: ((iconId: string) => void) | undefined;
   onMoveToPage?: ((icon: Website) => void) | undefined;
-  onDragStart: (e: React.DragEvent, icon: Website) => void;
-  onDragEnd: () => void;
-  onDragOverIcon: (e: React.DragEvent, iconId: string) => void;
-  onDragLeaveIcon: (e: React.DragEvent) => void;
-  onDropOnIcon: (e: React.DragEvent, iconId: string) => void;
-  onDragOverOutside: (iconId: string, position: 'before' | 'after') => void;
+  /** 由拖拽引擎下发：为每个图标取一份指针把手 props */
+  getDragHandleProps: (key: string) => DragHandleProps;
+  /** 触屏长按起拖后未移动即松手时的菜单请求（全局只有一条） */
+  longPressInfo: IconLongPressInfo | null;
+  clearLongPress: () => void;
   isDragging: (iconId: string) => boolean;
   isDragOverIcon: (iconId: string) => boolean;
   dragOverPosition: DragPosition | null;
   allowFolders: boolean;
-  onBeforeDrop?: (() => void) | undefined;
 }
 
 /**
@@ -52,17 +51,13 @@ const IconGrid: React.FC<IconGridProps> = ({
   onEditIcon,
   onDeleteIcon,
   onMoveToPage,
-  onDragStart,
-  onDragEnd,
-  onDragOverIcon,
-  onDragLeaveIcon,
-  onDropOnIcon,
-  onDragOverOutside,
+  getDragHandleProps,
+  longPressInfo,
+  clearLongPress,
   isDragging,
   isDragOverIcon,
   dragOverPosition,
   allowFolders,
-  onBeforeDrop,
 }) => {
   const { t } = useTranslation('sites');
   const gridRef = useRef<HTMLDivElement>(null);
@@ -97,25 +92,6 @@ const IconGrid: React.FC<IconGridProps> = ({
   const safeCols = containerWidth > 0 ? calcSafeColumnCount(containerWidth) : iconColumns;
   const actualCols = Math.max(3, Math.min(iconColumns, safeCols));
 
-  // 稳定的回调工厂：通过 data-icon-id 属性传递 id，避免内联函数
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const iconId = (e.currentTarget as HTMLElement).dataset.iconId;
-    if (iconId) onDragOverIcon(e, iconId);
-  }, [onDragOverIcon]);
-
-  const handleFolderDrop = useCallback((e: React.DragEvent) => {
-    const iconId = (e.currentTarget as HTMLElement).dataset.iconId;
-    if (iconId) onDropOnIcon(e, iconId);
-  }, [onDropOnIcon]);
-
-  const handleWebsiteDrop = useCallback((e: React.DragEvent) => {
-    onBeforeDrop?.();
-    const iconId = (e.currentTarget as HTMLElement).dataset.iconId;
-    if (iconId) onDropOnIcon(e, iconId);
-  }, [onBeforeDrop, onDropOnIcon]);
-
   const handleFolderClick = useCallback((icon: Website) => {
     onOpenFolder?.(icon.id, icon.name, icon.children || []);
   }, [onOpenFolder]);
@@ -140,20 +116,19 @@ const IconGrid: React.FC<IconGridProps> = ({
         const dragging = isDragging(icon.id);
         const dragOver = isDragOverIcon(icon.id);
         const overPosition = dragOver ? dragOverPosition : null;
+        // 长按菜单请求只有一条，仅命中当前图标时才下发非空值（其余图标保持 null，不击穿 memo）
+        const menuAnchor =
+          longPressInfo?.iconId === icon.id ? { x: longPressInfo.x, y: longPressInfo.y } : null;
 
         const sharedProps = {
           key: icon.id,
           icon,
-          onDragStart,
-          onDragEnd,
+          dragHandleProps: getDragHandleProps(icon.id),
           isDragging: dragging,
-          draggable: true,
-          onDragOver: handleDragOver,
-          onDragLeave: onDragLeaveIcon,
           isDragOverIcon: dragOver,
           dragOverPosition: overPosition,
-          onDragOverOutside: (position: 'before' | 'after') => onDragOverOutside(icon.id, position),
-          'data-icon-id': icon.id,
+          menuAnchor,
+          onMenuAnchorConsumed: clearLongPress,
         };
 
         if (isFolder) {
@@ -161,7 +136,6 @@ const IconGrid: React.FC<IconGridProps> = ({
             <FolderItem
               {...sharedProps}
               onClick={() => handleFolderClick(icon)}
-              onDrop={handleFolderDrop}
               onMoveToPage={onMoveToPage}
             />
           );
@@ -170,7 +144,6 @@ const IconGrid: React.FC<IconGridProps> = ({
         return (
           <WebsiteItem
             {...sharedProps}
-            onDropOnIcon={handleWebsiteDrop}
             onEdit={onEditIcon}
             onDelete={onDeleteIcon}
             onMoveToPage={onMoveToPage}

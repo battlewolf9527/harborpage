@@ -10,6 +10,7 @@ import ConfirmDialog from '../common/ConfirmDialog';
 import { noteHexStyleVars } from '../../utils/noteColors';
 import { adjustHexLightness } from '../../utils/colorUtils';
 import { buildSelection, resolveColorHex } from '../../utils/paletteColors';
+import { useListPointerReorder } from '../../hooks/useListPointerReorder';
 
 interface NotesManagerDialogProps {
   isOpen: boolean;
@@ -55,11 +56,6 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
   // 删除确认
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
-  // 拖拽状态（作用在「已过滤可见列表」的下标上，拖动后再映射回原 notes 下标）
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const [dragOverPosition, setDragOverPosition] = useState<'top' | 'bottom'>('bottom');
-
   // 搜索过滤：在标题或内容中包含关键字即命中（不区分大小写）
   const keyword = useMemo(() => search.trim().toLowerCase(), [search]);
   const filteredIds = useMemo(() => {
@@ -80,14 +76,18 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
     return notes.filter((n) => filteredIds.has(n.id));
   }, [notes, filteredIds]);
 
-  // 搜索过滤后：拖拽 → 映射到原 notes 的 index 执行 reorderNotes
-  const handleDrop = useCallback(
-    (overIndex: number) => {
-      if (dragIndex === null) return;
-      const insertAt = dragOverPosition === 'top' ? overIndex : overIndex + 1;
+  // ── 拖拽排序（Pointer Events，桌面与触屏同一套代码）──────────────────────
+  // 纵向列表：只画指示线，松手才落库。
+  // 搜索过滤态下禁止起拖（顺序结果不是完整集合，避免用户困惑）。
+  // 落库时要把「可见列表下标」映射回原 notes 下标。
+  const { draggingKey, overKey, overPosition, getItemProps } = useListPointerReorder({
+    keys: visibleNotes.map((note) => note.id),
+    canStart: () => !filteredIds,
+    onReorder: (from, over, position) => {
+      const insertAt = position === 'before' ? over : over + 1;
       // 映射到原 notes 下标
-      const fromOrig = notes.indexOf(visibleNotes[dragIndex]);
-      const overOrig = notes.indexOf(visibleNotes[overIndex]);
+      const fromOrig = notes.indexOf(visibleNotes[from]);
+      const overOrig = notes.indexOf(visibleNotes[over]);
       if (fromOrig < 0 || overOrig < 0) return;
       const rawInsert =
         insertAt >= visibleNotes.length
@@ -96,54 +96,10 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
       // 如果目标不存在（极少见：insertAt === visibleNotes.length）
       const toOrig =
         insertAt >= visibleNotes.length ? notes.length : rawInsert < 0 ? notes.length : rawInsert;
-      if (fromOrig === toOrig) {
-        setDragIndex(null);
-        setDragOverIndex(null);
-        return;
-      }
+      if (fromOrig === toOrig) return;
       reorderNotes(fromOrig, toOrig);
-      setDragIndex(null);
-      setDragOverIndex(null);
     },
-    [dragIndex, dragOverPosition, notes, visibleNotes, reorderNotes],
-  );
-
-  const handleDragStart = useCallback(
-    (e: React.DragEvent<HTMLElement>, index: number) => {
-      // 搜索模式下不允许拖拽（因为顺序结果不是完整集合，避免用户困惑）
-      if (filteredIds) {
-        e.preventDefault();
-        return;
-      }
-      setDragIndex(index);
-      setDragOverIndex(null);
-      e.dataTransfer.effectAllowed = 'move';
-      try { e.dataTransfer.setData('text/plain', String(index)); } catch { /* noop */ }
-    },
-    [filteredIds],
-  );
-
-  const handleDragOver = useCallback(
-    (e: React.DragEvent<HTMLElement>, index: number) => {
-      if (dragIndex === null || dragIndex === index) return;
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-      const mid = rect.top + rect.height / 2;
-      setDragOverIndex(index);
-      setDragOverPosition(e.clientY < mid ? 'top' : 'bottom');
-    },
-    [dragIndex],
-  );
-
-  const handleDragLeave = useCallback(
-    (e: React.DragEvent<HTMLElement>, index: number) => {
-      const related = e.relatedTarget;
-      if (related instanceof Node && e.currentTarget.contains(related)) return;
-      if (dragOverIndex === index) setDragOverIndex(null);
-    },
-    [dragOverIndex],
-  );
+  });
 
   // 新建：只打开空白编辑器，用户点击"创建/保存"时才真正写入 store
   const handleCreate = useCallback(() => {
@@ -245,29 +201,25 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
             </div>
           ) : (
             <ul className="notes-mgr-list">
-              {visibleNotes.map((note, index) => {
+              {visibleNotes.map((note) => {
                 // 绑定槽 → 槽当前色；旧数据静态解析；统一走解析后的内联变量，改色即时生效；
                 // lightness = 全局明暗度（不改存储 hex），表面色渲染时叠加亮度
                 const resolvedHex = resolveColorHex(buildSelection(note.color, note.colorSlot), slots);
                 const colorStyle = resolvedHex
                   ? noteHexStyleVars(adjustHexLightness(resolvedHex, lightness), 0.14)
                   : undefined;
-                const isDragOver = dragOverIndex === index;
+                const isDragging = draggingKey === note.id;
+                const isDragOver = overKey === note.id;
                 return (
                   <li
                     key={note.id}
+                    {...getItemProps(note.id)}
                     className={`notes-mgr-item
-                      ${dragIndex === index ? 'dragging' : ''}
-                      ${isDragOver && dragOverPosition === 'top' ? 'drop-top' : ''}
-                      ${isDragOver && dragOverPosition === 'bottom' ? 'drop-bottom' : ''}
+                      ${isDragging ? 'dragging' : ''}
+                      ${isDragOver && overPosition === 'before' ? 'drop-top' : ''}
+                      ${isDragOver && overPosition === 'after' ? 'drop-bottom' : ''}
                     `}
                     style={colorStyle}
-                    draggable={!filteredIds}
-                    onDragStart={(e) => handleDragStart(e, index)}
-                    onDragEnd={() => { setDragIndex(null); setDragOverIndex(null); }}
-                    onDragOver={(e) => handleDragOver(e, index)}
-                    onDragLeave={(e) => handleDragLeave(e, index)}
-                    onDrop={() => handleDrop(index)}
                   >
                     <div
                       className="notes-mgr-dot"

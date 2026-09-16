@@ -24,6 +24,7 @@
   max-width: 440px;
   width: 90%;
   max-height: 80vh;
+  max-height: 80dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -90,6 +91,7 @@
   flex-direction: column;
   gap: 8px;
   max-height: 50vh;
+  max-height: 50dvh;
 }
 .move-to-page-list::-webkit-scrollbar { width: 6px; }
 .move-to-page-list::-webkit-scrollbar-track { background: transparent; }

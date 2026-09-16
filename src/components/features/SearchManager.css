@@ -82,6 +82,7 @@
   padding: 0;
   width: min(420px, 90%);
   max-height: 90vh;
+  max-height: 90dvh;
   overflow-y: auto;
   overflow-x: hidden;
   animation: glass-modal-scale var(--motion-spring);

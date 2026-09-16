@@ -20,6 +20,7 @@
 .import-dialog {
   width: min(600px, 92vw);
   max-height: 80vh;
+  max-height: 80dvh;
   background: var(--glass-surface-700);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);

@@ -1,4 +1,4 @@
-import React, { useMemo, memo, useState, useRef, useCallback } from 'react';
+import React, { useMemo, memo, useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import './FolderItem.css';
 import { IconType } from '../../services/IconManager';
@@ -8,7 +8,7 @@ import { getServices } from '../../services/serviceContainer';
 import DraggableIconWrapper from './DraggableIconWrapper';
 import CrystalShell from './CrystalShell';
 import { isTouchDevice } from '../../utils/deviceUtils';
-import { useLongPress } from '../../hooks/useLongPress';
+import type { DragHandleProps } from '../../hooks/usePointerDrag';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { usePaletteStore } from '../../store/usePaletteStore';
 import { resolveIconHslVars } from '../../utils/paletteColors';
@@ -16,32 +16,26 @@ import { resolveIconHslVars } from '../../utils/paletteColors';
 interface FolderItemProps {
   icon: Website;
   onClick?: (() => void) | undefined;
-  onDragStart?: ((e: React.DragEvent, icon: Website) => void) | undefined;
-  onDragEnd?: (() => void) | undefined;
+  dragHandleProps?: DragHandleProps | undefined;
   isDragging?: boolean | undefined;
-  draggable?: boolean | undefined;
-  onDragOver?: ((e: React.DragEvent) => void) | undefined;
-  onDragLeave?: ((e: React.DragEvent) => void) | undefined;
-  onDrop?: ((e: React.DragEvent) => void) | undefined;
   isDragOverIcon?: boolean | undefined;
   dragOverPosition?: ('before' | 'after' | 'center' | 'invalid' | null) | undefined;
-  onDragOverOutside?: ((position: 'before' | 'after') => void) | undefined;
+  /** 触屏长按起拖后未移动即松手：需要在本条目处弹出上下文菜单（视口坐标） */
+  menuAnchor?: { x: number; y: number } | null | undefined;
+  /** 菜单已弹出，通知上层清空这次长按请求 */
+  onMenuAnchorConsumed?: (() => void) | undefined;
   onMoveToPage?: ((icon: Website) => void) | undefined;
 }
 
 const FolderItem: React.FC<FolderItemProps> = ({
   icon,
   onClick,
-  onDragStart,
-  onDragEnd,
+  dragHandleProps,
   isDragging,
-  draggable = false,
-  onDragOver,
-  onDragLeave,
-  onDrop,
   isDragOverIcon,
   dragOverPosition,
-  onDragOverOutside,
+  menuAnchor,
+  onMenuAnchorConsumed,
   onMoveToPage,
 }) => {
   const { t } = useTranslation('folder');
@@ -60,7 +54,6 @@ const FolderItem: React.FC<FolderItemProps> = ({
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   const menuRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const pressPositionRef = useRef({ x: 0, y: 0 });
 
   const showMenuAtPosition = useCallback((clientX: number, clientY: number) => {
     if (wrapperRef.current) {
@@ -82,20 +75,13 @@ const FolderItem: React.FC<FolderItemProps> = ({
     showMenuAtPosition(e.clientX, e.clientY);
   }, [showMenuAtPosition]);
 
-  const handleLongPress = useCallback(() => {
-    showMenuAtPosition(pressPositionRef.current.x, pressPositionRef.current.y);
-  }, [showMenuAtPosition]);
-
-  const { handleTouchStart, handleTouchMove, handleTouchEnd } = useLongPress(
-    handleLongPress,
-    { delay: 500, checkEmptyArea: false, moveThreshold: 10 },
-  );
-
-  const onTouchStart = useCallback((e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    pressPositionRef.current = { x: touch.clientX, y: touch.clientY };
-    handleTouchStart(e);
-  }, [handleTouchStart]);
+  // 触屏长按菜单由拖拽引擎产出（长按起拖后未移动即松手），这里只负责把它落到本条目上。
+  // 桌面端右键走 handleContextMenu，两条路径共用同一个菜单。
+  useEffect(() => {
+    if (!menuAnchor) return;
+    showMenuAtPosition(menuAnchor.x, menuAnchor.y);
+    onMenuAnchorConsumed?.();
+  }, [menuAnchor, showMenuAtPosition, onMenuAnchorConsumed]);
 
   const handleMoveToPage = useCallback(() => {
     onMoveToPage?.(icon);
@@ -121,23 +107,14 @@ const FolderItem: React.FC<FolderItemProps> = ({
       role="listitem"
       aria-label={icon.name}
       style={{ position: 'relative' }}
-      onTouchStart={onTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
       onContextMenu={handleContextMenu}
     >
       <DraggableIconWrapper
         icon={icon}
+        dragHandleProps={dragHandleProps}
         isDragging={isDragging}
-        draggable={draggable}
-        onDragStart={onDragStart}
-        onDragEnd={onDragEnd}
-        onDragOver={onDragOver}
-        onDragLeave={onDragLeave}
-        onDrop={onDrop}
         isDragOverIcon={isDragOverIcon}
         dragOverPosition={dragOverPosition}
-        onDragOverOutside={onDragOverOutside}
         onClick={onClick}
         ariaLabel={icon.name}
         label={<div className="icon-label">{icon.name}</div>}
@@ -159,12 +136,11 @@ const FolderItem: React.FC<FolderItemProps> = ({
                       loading="lazy"
                       referrerPolicy="no-referrer"
                       onError={(e) => handleIconLoadError(e, child)}
-                        /* 与 IconItem 里的 icon-image 同样修复：
-                           <img> 原生 draggable=true 会抢占外层 FolderItem wrapper 的 draggable，
-                           导致文件夹整体拖不动。draggable={false} 强制用 wrapper 作为 drag source。 */
-                        draggable={false}
-                      />
-                    </div>
+                      /* 与 IconItem 里的 icon-image 同理：<img> 默认是浏览器原生的 drag source，
+                         按下图片会触发原生 HTML5 拖拽并派发 pointercancel，掐断我们的拖拽引擎。 */
+                      draggable={false}
+                    />
+                  </div>
                 ))}
               </div>
             ) : (

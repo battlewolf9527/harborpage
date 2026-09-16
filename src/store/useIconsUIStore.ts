@@ -9,7 +9,6 @@ interface IconsUIState {
   iconToDelete: string | null;
   showFolderNameDialog: boolean;
   showSettings: boolean;
-  isEditMode: boolean;
 
   setShowAddIcon: (show: boolean) => void;
   setShowEditIcon: (show: boolean) => void;
@@ -18,7 +17,6 @@ interface IconsUIState {
   setIconToDelete: (id: string | null) => void;
   setShowFolderNameDialog: (show: boolean) => void;
   setShowSettings: (show: boolean) => void;
-  setIsEditMode: (mode: boolean) => void;
 
   resetDialogs: () => void;
 }
@@ -31,7 +29,6 @@ const initialUIState = {
   iconToDelete: null,
   showFolderNameDialog: false,
   showSettings: false,
-  isEditMode: false,
 };
 
 export const useIconsUIStore = create<IconsUIState>((set) => ({
@@ -44,7 +41,6 @@ export const useIconsUIStore = create<IconsUIState>((set) => ({
   setIconToDelete: (id) => set({ iconToDelete: id }),
   setShowFolderNameDialog: (show) => set({ showFolderNameDialog: show }),
   setShowSettings: (show) => set({ showSettings: show }),
-  setIsEditMode: (mode) => set({ isEditMode: mode }),
 
   resetDialogs: () => set({
     showAddIcon: false,

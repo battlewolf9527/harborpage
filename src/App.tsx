@@ -91,9 +91,9 @@ function App() {
   } = useIconsDataSelector();
 
   const {
-    isEditMode, showAddIcon, showEditIcon, editingIcon,
+    showAddIcon, showEditIcon, editingIcon,
     showFolderNameDialog,
-    showSettings, setIsEditMode, setShowAddIcon, setShowEditIcon,
+    showSettings, setShowAddIcon, setShowEditIcon,
     setEditingIcon, setShowSettings, setShowFolderNameDialog,
   } = useIconsUISelector();
 
@@ -145,14 +145,10 @@ function App() {
     }
   }, [setShowAddIcon]);
 
-  const handleClick = useCallback((e: React.MouseEvent) => {
-    if (isClickOnEmptyArea(e.target as HTMLElement)) {
-      setIsEditMode(false);
-    }
-  }, [setIsEditMode]);
-
-  const { handleMouseDown, handleMouseUp, handleMouseLeave } = useLongPress(() => {
-    setIsEditMode(true);
+  // 触屏长按空白处 → 直接展开「新增网站」侧边栏。
+  // 桌面端由右键负责，触屏没有 contextmenu 可用，所以长按只在触屏生效。
+  const { handleTouchStart, handleTouchMove, handleTouchEnd } = useLongPress(() => {
+    setShowAddIcon(true);
   });
 
   const handleAddIcon = useCallback((icon: Website) => {
@@ -172,10 +168,9 @@ function App() {
       // 否则添加到根级别
       addIcon(icon);
     }
-    setIsEditMode(false);
     setShowAddIcon(false);
     setAddIconInitialUrl(undefined);
-  }, [addIcon, openFolder, websites, setWebsiteIcons, setIsEditMode, setShowAddIcon]);
+  }, [addIcon, openFolder, websites, setWebsiteIcons, setShowAddIcon]);
 
   const handleCreateFolder = useCallback((name?: string) => {
     createFolder(name);
@@ -198,7 +193,7 @@ function App() {
 
   if (isCheckingAuth) {
     return (
-      <div className="app-container" data-click-area="empty" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+      <div className="app-container" data-click-area="empty" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh' }}>
         <div className="login-spinner" style={{ width: '40px', height: '40px', borderWidth: '4px' }}></div>
       </div>
     );
@@ -219,10 +214,9 @@ function App() {
       className="app-container" 
       data-click-area="empty"
       onContextMenu={handleContextMenu} 
-      onClick={handleClick}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseLeave}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       <Background />
       {/* 等账号设置加载完成后再挂载天气组件，避免天气关闭时仍触发定位/天气请求 */}
@@ -251,18 +245,6 @@ function App() {
         onDeleteIcon={handleDeleteIcon}
         onMoveToPage={handleOpenMoveDialog}
       />
-      
-      {isEditMode && (
-        <div className="add-icon-button-container">
-          <button 
-            className="add-icon-button"
-            onClick={() => setShowAddIcon(true)}
-            aria-label={t('addWebsite')}
-          >
-            +
-          </button>
-        </div>
-      )}
       
       <FolderWindow
         folderName={openFolder?.name || ''}

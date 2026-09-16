@@ -24,6 +24,7 @@
   max-width: 480px;
   width: 92%;
   max-height: 86vh;
+  max-height: 86dvh;
   overflow-y: auto;
   box-shadow: var(--shadow-glass-lg);
   animation: glass-modal-scale var(--motion-spring) both;
@@ -120,6 +121,7 @@
   gap: 20px;
   overflow-y: auto;
   max-height: 50vh;
+  max-height: 50dvh;
   padding-right: 4px;
 }
 

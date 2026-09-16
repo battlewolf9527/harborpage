@@ -38,6 +38,14 @@
   --weather-temp-min: 18px;
   --touch-target: 44px;
 
+  /* ── 安全区（全面屏圆角/刘海/home indicator）──
+     只有在 index.html 声明 viewport-fit=cover 后 env() 才会是非 0 的真实值，
+     其余情况回退 0px，等于没有偏移，不会影响普通屏幕。 */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+
   /* ═══════════════════════════════════════════════════════════════
      ── Aurora Dark Glass：三层玻璃表面 ──
      surface-300 = 最表层（按钮/chip/输入框）  更深、更实
@@ -155,6 +163,8 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  /* dvh 跟随移动端地址栏收缩，避免 100vh 在移动 Safari 下溢出。旧浏览器忽略本行。 */
+  min-height: 100dvh;
 }
 
 /* ========== 超小屏（iPhone SE 等 < 375px）基础缩放 ========== */
@@ -173,6 +183,50 @@ body {
     min-height: 44px;
     min-width: 44px;
   }
+
+  /* 去掉 Android 点击控件时刷出的灰色高亮块，点按反馈改由下面的 :active 兜底提供 */
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* 触屏点按兜底：组件自带的 :active 样式特异性更高（或带 !important），会正常覆盖本条。
+     这里刻意只做「不加位移、不改盒模型」的暗化，避免破坏任何按钮自身的定位与布局；
+     带背景的玻璃按钮靠亮度变化呈现按下感，与 NoteBar 的 brightness(0.95) 保持同一套语言。 */
+  button:active,
+  [role="button"]:active,
+  a:active {
+    filter: brightness(0.9);
+  }
+
+  /* iOS Safari 聚焦字号 < 16px 的表单控件时会自动放大整个页面（且不会自动缩回），
+     这里把文本类输入控件字号托底到 16px 根除该行为。
+     用 max(16px, 1em)：原本就 ≥16px 的场合保持不变，只有更小的被抬到 16px。
+     必须 !important —— 各组件规则（.search-input 等）特异性更高且散落在不同文件，
+     靠源码顺序覆盖不可靠。排除 checkbox/radio 等无文本控件，避免影响其尺寸计算。 */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select {
+    font-size: max(16px, 1em) !important;
+  }
+}
+
+/* ========== 指针拖拽浮层（usePointerDrag 克隆出来的 ghost） ==========
+   克隆源元素后 fixed 跟随指针，视觉上由源元素自身样式提供，这里只做必要兜底。
+   pointer-events: none 是硬性要求：命中测试靠 document.elementFromPoint，
+   ghost 一旦可命中就会挡住自己正下方的投放目标，导致永远落在自己身上。
+   偏移用的 transform 由 JS 内联写入，故此处不声明 transform。 */
+.drag-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.85;
+  /* 克隆自列表项的元素可能挂着入场动画/过渡，浮层里必须关掉，否则拖动中会自己动 */
+  animation: none !important;
+  transition: none !important;
+  will-change: transform;
+  contain: layout paint;
 }
 
 /* 共享动画定义 —— 全站复用，避免重复声明

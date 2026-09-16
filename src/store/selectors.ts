@@ -75,13 +75,11 @@ export const useIconsDataSelector = () => {
 };
 
 export const useIconsUISelector = () => useIconsUIStore(useShallow((s) => ({
-  isEditMode: s.isEditMode,
   showAddIcon: s.showAddIcon,
   showEditIcon: s.showEditIcon,
   editingIcon: s.editingIcon,
   showFolderNameDialog: s.showFolderNameDialog,
   showSettings: s.showSettings,
-  setIsEditMode: s.setIsEditMode,
   setShowAddIcon: s.setShowAddIcon,
   setShowEditIcon: s.setShowEditIcon,
   setEditingIcon: s.setEditingIcon,

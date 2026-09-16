@@ -1,51 +1,44 @@
-import React, { useState, useRef, useCallback, memo } from 'react';
+import React, { useState, useRef, useCallback, useEffect, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import IconItem from './IconItem';
 import type { Website } from '../../types';
+import type { DragHandleProps } from '../../hooks/usePointerDrag';
 import { isTouchDevice } from '../../utils/deviceUtils';
-import { useLongPress } from '../../hooks/useLongPress';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import './WebsiteItem.css';
 
 interface WebsiteItemProps {
   icon: Website;
-  onDragStart?: ((e: React.DragEvent, icon: Website) => void) | undefined;
-  onDragEnd?: (() => void) | undefined;
+  dragHandleProps?: DragHandleProps | undefined;
   isDragging?: boolean | undefined;
-  draggable?: boolean | undefined;
-  onDragOver?: ((e: React.DragEvent) => void) | undefined;
-  onDragLeave?: ((e: React.DragEvent) => void) | undefined;
-  onDropOnIcon?: ((e: React.DragEvent) => void) | undefined;
   isDragOverIcon?: boolean | undefined;
   dragOverPosition?: ('before' | 'after' | 'center' | 'invalid' | null) | undefined;
+  /** 触屏长按起拖后未移动即松手：需要在本条目处弹出上下文菜单（视口坐标） */
+  menuAnchor?: { x: number; y: number } | null | undefined;
+  /** 菜单已弹出，通知上层清空这次长按请求 */
+  onMenuAnchorConsumed?: (() => void) | undefined;
   onEdit?: ((icon: Website) => void) | undefined;
   onDelete?: ((iconId: string) => void) | undefined;
   onMoveToPage?: ((icon: Website) => void) | undefined;
-  onDragOverOutside?: ((position: 'before' | 'after') => void) | undefined;
 }
 
 const WebsiteItem: React.FC<WebsiteItemProps> = ({
   icon,
-  onDragStart,
-  onDragEnd,
+  dragHandleProps,
   isDragging,
-  draggable = false,
-  onDragOver,
-  onDragLeave,
-  onDropOnIcon,
   isDragOverIcon,
   dragOverPosition,
+  menuAnchor,
+  onMenuAnchorConsumed,
   onEdit,
   onDelete,
   onMoveToPage,
-  onDragOverOutside,
 }) => {
   const { t } = useTranslation('sites');
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   const menuRef = useRef<HTMLDivElement>(null);
   const itemRef = useRef<HTMLDivElement>(null);
-  const pressPositionRef = useRef({ x: 0, y: 0 });
 
   const handleItemClick = useCallback(() => {
     window.open(icon.url, '_blank', 'noopener,noreferrer');
@@ -70,20 +63,13 @@ const WebsiteItem: React.FC<WebsiteItemProps> = ({
     showMenuAtPosition(e.clientX, e.clientY);
   }, [showMenuAtPosition]);
 
-  const handleLongPress = useCallback(() => {
-    showMenuAtPosition(pressPositionRef.current.x, pressPositionRef.current.y);
-  }, [showMenuAtPosition]);
-
-  const { handleTouchStart, handleTouchMove, handleTouchEnd } = useLongPress(
-    handleLongPress,
-    { delay: 500, checkEmptyArea: false, moveThreshold: 10 }
-  );
-
-  const onTouchStart = useCallback((e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    pressPositionRef.current = { x: touch.clientX, y: touch.clientY };
-    handleTouchStart(e);
-  }, [handleTouchStart]);
+  // 触屏长按菜单由拖拽引擎产出（长按起拖后未移动即松手），这里只负责把它落到本条目上。
+  // 桌面端右键走 handleContextMenu，两条路径共用同一个菜单。
+  useEffect(() => {
+    if (!menuAnchor) return;
+    showMenuAtPosition(menuAnchor.x, menuAnchor.y);
+    onMenuAnchorConsumed?.();
+  }, [menuAnchor, showMenuAtPosition, onMenuAnchorConsumed]);
 
   const handleEdit = useCallback(() => {
     onEdit?.(icon);
@@ -130,24 +116,15 @@ const WebsiteItem: React.FC<WebsiteItemProps> = ({
       role="listitem"
       aria-label={icon.name}
       style={{ position: 'relative' }}
-      onTouchStart={onTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
     >
       <IconItem
         icon={icon}
-        onClick={handleItemClick}
-        onDragStart={onDragStart}
-        onDragEnd={onDragEnd}
+        dragHandleProps={dragHandleProps}
         isDragging={isDragging}
-        draggable={draggable}
-        onDragOver={onDragOver}
-        onDragLeave={onDragLeave}
-        onDrop={onDropOnIcon}
         isDragOverIcon={isDragOverIcon}
         dragOverPosition={dragOverPosition}
+        onClick={handleItemClick}
         onContextMenu={handleContextMenu}
-        onDragOverOutside={onDragOverOutside}
       />
       {showContextMenu && (
         <div

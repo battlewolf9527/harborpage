@@ -25,8 +25,10 @@
   transform: translate(-50%, -50%);
   width: clamp(440px, 60vw, 940px);
   height: clamp(500px, 74vh, 780px);
+  height: clamp(500px, 74dvh, 780px);
   max-width: calc(100vw - 32px);
   max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
   z-index: 1019;
   background: var(--glass-surface-700);
   backdrop-filter: var(--glass-blur);

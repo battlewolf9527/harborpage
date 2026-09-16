@@ -9,6 +9,9 @@ import { useClickOutside } from '../../hooks/useClickOutside';
 import { usePaletteStore } from '../../store/usePaletteStore';
 import { defaultMaterialHex, resolveColorHex, type ColorSelection } from '../../utils/paletteColors';
 import { adjustHexLightness, hexToHsl } from '../../utils/colorUtils';
+import { isTouchDevice } from '../../utils/deviceUtils';
+import { isPointerOutsideRect } from '../../utils/dropGeometry';
+import type { DragHit, DragPoint } from '../../hooks/usePointerDrag';
 
 interface FolderWindowProps {
   folderName: string;
@@ -328,7 +331,8 @@ const FolderWindow: React.FC<FolderWindowProps> = memo(({
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [isDraggingOut, setIsDraggingOut] = useState(false);
-  const [showEditButton, setShowEditButton] = useState(false);
+  /* 重命名按钮：桌面端靠 hover 显隐；触屏没有 hover，直接常显 */
+  const [showEditButton, setShowEditButton] = useState(() => isTouchDevice());
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [editingName, setEditingName] = useState(folderName);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -401,22 +405,45 @@ const FolderWindow: React.FC<FolderWindowProps> = memo(({
     setShowColorMenu((prev) => !prev);
   }, []);
 
+  /** 拖拽中指针移动：实时判断指针是否已越出文件夹窗口，供「拖出即移出文件夹」的视觉提示使用。
+   *  迁移前靠 .folder-overlay 上的 dragover 事件，现在直接拿指针坐标与窗口矩形比对。 */
+  const handleDragMovePoint = useCallback((point: DragPoint) => {
+    const windowRect = windowRef.current?.getBoundingClientRect();
+    if (!windowRect) return;
+    setIsDraggingOut(isPointerOutsideRect(windowRect, point.x, point.y));
+  }, []);
+
+  /** 拖拽收尾（内部排序 / 入夹逻辑已执行完）：指针下方没有任何图标 = 拖出了文件夹窗口。
+   *  此时把图标交还宿主（App），由它写回主网格。 */
+  const handleDragEndOutside = useCallback(
+    (icon: Website, _point: DragPoint, hit: DragHit | null) => {
+      if (!hit && isDraggingOut && onIconDragOut) {
+        onIconDragOut(icon);
+      }
+      setIsDraggingOut(false);
+    },
+    [isDraggingOut, onIconDragOut],
+  );
+
+  /** 拖拽被 Esc / pointercancel 中断：这条路径不会有落库，但同样要复位「拖出窗口」的视觉状态 */
+  const handleDragCancelOutside = useCallback(() => {
+    setIsDraggingOut(false);
+  }, []);
+
   const {
-    draggedIcon,
-    dragOverIcon,
     dragOverPosition,
-    handleDragStart,
-    handleDragEnd,
-    handleDragOverIcon,
-    handleDragOverOutside,
-    handleDragLeaveIcon,
-    handleDropOnIcon,
+    longPressInfo,
+    clearLongPress,
+    getDragHandleProps,
     isDragging,
     isDragOverIcon,
   } = useDragAndDrop({
     icons,
     onIconsChange,
     allowFolderCreation: false,
+    onDragMovePoint: handleDragMovePoint,
+    onDragEndPoint: handleDragEndOutside,
+    onDragCancel: handleDragCancelOutside,
   });
 
   const handleClose = useCallback(() => {
@@ -472,47 +499,6 @@ const FolderWindow: React.FC<FolderWindowProps> = memo(({
       if (confirmEl) confirmEl.removeEventListener('mousedown', stopPropagation);
     };
   }, [showRenameDialog, showConfirmDialog]);
-
-  const handleDragEndWithOut = useCallback(() => {
-    if (draggedIcon && isDraggingOut && onIconDragOut && !dragOverIcon) {
-      onIconDragOut(draggedIcon);
-    }
-    handleDragEnd();
-    setIsDraggingOut(false);
-  }, [draggedIcon, isDraggingOut, onIconDragOut, dragOverIcon, handleDragEnd]);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    if (draggedIcon) {
-      const windowRect = windowRef.current?.getBoundingClientRect();
-      if (windowRect) {
-        const isInside =
-          e.clientX >= windowRect.left &&
-          e.clientX <= windowRect.right &&
-          e.clientY >= windowRect.top &&
-          e.clientY <= windowRect.bottom;
-        setIsDraggingOut(!isInside);
-      }
-    }
-  }, [draggedIcon]);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    if (!draggedIcon) return;
-    // 检查 relatedTarget：只有当真正离开 folder-overlay 边界时才标记为 dragging-out
-    // 避免子元素间 dragenter/dragleave 冒泡导致的闪烁
-    const leavingTo = e.relatedTarget;
-    const overlayEl = overlayRef.current;
-    if (overlayEl && leavingTo instanceof Node && overlayEl.contains(leavingTo)) {
-      // 仍然在 overlay 内部的子元素之间移动，不改变状态
-      return;
-    }
-    setIsDraggingOut(true);
-  }, [draggedIcon]);
-
-  const handleDragEnter = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    if (draggedIcon) setIsDraggingOut(false);
-  }, [draggedIcon]);
 
   const handleEditFolderName = useCallback(() => {
     setEditingName(folderName);
@@ -588,9 +574,6 @@ const FolderWindow: React.FC<FolderWindowProps> = memo(({
       className={`folder-overlay ${isClosing ? 'closing' : ''}`}
       ref={overlayRef}
       onClick={handleOverlayClick}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDragEnter={handleDragEnter}
     >
       <div className="folder-window" ref={windowRef} style={folderThemeStyle}>
         <FolderHeader
@@ -598,7 +581,10 @@ const FolderWindow: React.FC<FolderWindowProps> = memo(({
           showEditButton={showEditButton}
           onEditStart={handleEditFolderName}
           onMouseEnter={() => setShowEditButton(true)}
-          onMouseLeave={() => setShowEditButton(false)}
+          onMouseLeave={() => {
+            /* 触屏上点击别处会补一次 mouseleave，不能因此把按钮收起来 */
+            if (!isTouchDevice()) setShowEditButton(false);
+          }}
           onClose={handleClose}
           headerActions={
             <FolderColorControl
@@ -620,17 +606,13 @@ const FolderWindow: React.FC<FolderWindowProps> = memo(({
               onEditIcon={onEditIcon}
               onDeleteIcon={onDeleteIcon}
               onMoveToPage={onMoveToPage}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEndWithOut}
-              onDragOverIcon={handleDragOverIcon}
-              onDragLeaveIcon={handleDragLeaveIcon}
-              onDropOnIcon={handleDropOnIcon}
-              onDragOverOutside={handleDragOverOutside}
+              getDragHandleProps={getDragHandleProps}
+              longPressInfo={longPressInfo}
+              clearLongPress={clearLongPress}
               isDragging={isDragging}
               isDragOverIcon={isDragOverIcon}
               dragOverPosition={dragOverPosition}
               allowFolders={false}
-              onBeforeDrop={() => setIsDraggingOut(false)}
             />
           </div>
         </div>

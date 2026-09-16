@@ -87,11 +87,13 @@
   /* 关键：flex cross-axis 底对齐 → 每颗球的下沿都锁到 inner 底沿 */
   align-items: flex-end;
   justify-content: center;
-  /* 非对称：顶部巨量缓冲（hover 弹跳/辉光安全区） + 底部几乎贴屏 */
+  /* 非对称：顶部巨量缓冲（hover 弹跳/辉光安全区） + 底部几乎贴屏。
+     底部用 max() 叠加 --safe-bottom：全面屏上球排落在 home indicator 之上，
+     非全面屏（--safe-bottom = 0px）仍取原来的 clamp 值，视觉不变。 */
   padding:
     clamp(70px, 5.4vw, 100px)
     clamp(40px, 3vw, 56px)
-    clamp(10px, 0.8vw, 14px)
+    max(clamp(10px, 0.8vw, 14px), var(--safe-bottom))
     clamp(40px, 3vw, 56px);
   background: transparent;
   backdrop-filter: none;
