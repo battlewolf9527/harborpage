@@ -238,6 +238,11 @@
   border-left: 4px solid var(--note-accent);
   box-shadow: 0 2px 8px rgba(0,0,0,0.22);
   transition: transform var(--motion-fast), box-shadow var(--motion-fast), border-color var(--motion-fast), background var(--motion-fast);
+  /* 整个条目就是拖拽把手（getItemProps 挂在本元素上），按住任意位置都能拖动。
+     若不禁用选区，从正文文字上按下再拖会拉出浏览器的划选蓝底，看起来像条目被「选中」；
+     排序由 useListPointerReorder 用 pointer 事件接管，不需要选区参与。 */
+  -webkit-user-select: none;
+  user-select: none;
 }
 .notes-mgr-item:hover {
   transform: translateY(-1px);

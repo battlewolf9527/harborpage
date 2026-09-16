@@ -238,6 +238,10 @@
   transition: all var(--motion-fast);
   gap: 12px;
   box-shadow: var(--glass-inner-hl);
+  /* 条目本身就是拖拽把手（getItemProps 挂在本元素上），按住引擎名再拖会拉出划选蓝底，
+     排序由指针事件接管，不需要选区参与，故整条禁用选区 */
+  -webkit-user-select: none;
+  user-select: none;
 }
 .engine-item:hover {
   background: var(--glass-surface-hover);

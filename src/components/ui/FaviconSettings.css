@@ -68,6 +68,9 @@
   transition: all var(--motion-fast);
   cursor: grab;
   box-shadow: var(--glass-inner-hl);
+  /* 同 SearchManager：整条即拖拽把手，禁用选区以免拖动时出现划选蓝底 */
+  -webkit-user-select: none;
+  user-select: none;
 }
 .favicon-source-item:hover {
   background: var(--glass-surface-hover);

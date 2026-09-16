@@ -67,6 +67,14 @@
   width: clamp(72px, 10vw, 120px);
   justify-content: center;
   position: relative;
+  /* 拖拽把手内部禁用浏览器选区。鼠标在图标块里的空白处按下再拖动时（文件夹预览
+     四周的留白最容易碰到），浏览器会像划选网页那样从那里拉出一片蓝底选区，看起来
+     就像图标被"选中"了；而拖动本身由 usePointerDrag 用 pointer 事件接管，不需要
+     选区参与。图标圆形/预览图是原子内容，所以从它们上面按下时不会触发这个问题，
+     从留白处按下才会 —— 这条声明让两者表现一致。
+     标签文字是 .icon-wrapper 的兄弟节点，不受影响，仍可正常选中复制。 */
+  -webkit-user-select: none;
+  user-select: none;
   /* 关键：把 border 纳入 box-sizing 计算。
      旧版没显式设这个属性，默认是 content-box，加 border 会真实把 wrapper
      撑大 4px，导致栅格抖动。现在显式切 border-box，
