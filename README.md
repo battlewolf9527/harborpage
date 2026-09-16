@@ -56,9 +56,9 @@ Windows and dialogs:
 - Three ways to provide an icon: icon URL, text (generates a colored text icon), or emoji
 - Smart icon fetch dialog: automatically collects candidate icons from multiple channels for you to choose from
 - Icons cached to Cloudflare R2 (optional), with semaphore-based concurrency control on the frontend (3 concurrent)
-- Drag-and-drop sorting and icon moving
+- Drag-and-drop sorting and icon moving: the drop area covers the whole icon grid — both the icon box and the gaps between icons are droppable, and each gap belongs to the nearest neighboring icon
 - Context menu for quick actions
-- Long press to enter edit mode
+- On touch devices a long press on an icon opens the same action menu (long press to start dragging, release in place to open the menu); a long press on empty space enters edit mode
 - Icon / folder icons are rendered with a "crystal block" glass texture, colorable with the 16 global palette colors or a custom color (see "Color System" below)
 
 ### 📁 Folder Features
@@ -85,7 +85,7 @@ Windows and dialogs:
 - Page-level isolation: each page has its own set of websites and folders
 - A half-hidden "crystal ball" entry ball on the left edge of the screen (emerald→amber identity color, six gradient layers + breathing glow); it slides out on hover and expands PagesSidebar on click (after the panel opens the ball rotates and fades out to make room; click anywhere outside the panel to collapse)
 - Create, rename, and delete pages (at least one page is always kept)
-- Drag-and-drop page sorting (native HTML5 drag with upper/lower half drop indicators)
+- Drag-and-drop page sorting (unified Pointer Events implementation: dragging starts on pointer movement on desktop and on long press on touch; upper/lower half drop indicators)
 - Cross-page moving of websites/folders: context menu "Move to page…", supporting both "Move only" and "Move and jump"
 - Refreshing the page always shows the first page by default (the currently selected page is not written to persistent storage)
 - Old-format data (root-level `websites` with no `pages`) is automatically migrated into a page named "Default Page"
@@ -397,6 +397,7 @@ harborpage/
 │   ├── hooks/                       # Custom hooks
 │   │   ├── useAuth / useAutoSave / useAutoSaveSettings / useClickOutside / useFeatureEntry
 │   │   ├── useDataInitialization / useDeleteIcon / useDragAndDrop / useIconDropHandler
+│   │   ├── useListPointerReorder (1-D list reordering) / usePointerDrag (shared pointer drag engine)
 │   │   ├── useImport / useLongPress / useAddWebsiteShortcut / useTreeSelection
 │   │   └── useWallpaperInit / useWallpaperAutoChange / useWeather / useWeatherLocation / useWeatherLunar
 │   ├── i18n/                        # Internationalization (i18next)
@@ -424,7 +425,7 @@ harborpage/
 │   │   ├── colorUtils.ts            # Color conversion (hex/hsl, etc.)
 │   │   ├── apiErrorUtils.ts         # API error code → i18n copy translation
 │   │   ├── wallpaperRefresh.ts      # Bing wallpaper fetch / random wallpaper / cache busting
-│   │   └── deviceUtils / idUtils / importExportUtils / logger / wallpaperStorage
+│   │   └── deviceUtils / dropGeometry / idUtils / importExportUtils / logger / wallpaperStorage
 │   ├── App.tsx / main.tsx / constants.ts / index.css / App.css
 ├── worker/                          # Cloudflare Workers code
 │   ├── middleware/
@@ -542,6 +543,14 @@ The "edge entry balls" for multi-page / todos / notes are all driven by a single
 ### Interaction Robustness
 - Every `Node.contains()` call is guarded by `relatedTarget instanceof Node` first: when the mouse leaves the window quickly the browser maps relatedTarget to `window`, and an unguarded `contains(window)` throws a `TypeError` that breaks the rest of the logic (this previously caused the note bar's hover-to-collapse to get stuck)
 - This guard covers NoteBar (bar leave / ball dragging / bubble traversal), PagesSidebar, the Todo sidebar, NotesManagerDialog, FolderWindow, and all related paths in useDragAndDrop / useClickOutside
+
+### Drag System (unified Pointer Events implementation)
+- Every drag call site shares `usePointerDrag` and no longer uses HTML5 Drag & Drop (touch browsers never synthesize `dragstart` from a touch, so native dragging simply does not work on mobile): mouse / pen starts dragging after 4px of movement, touch after a 500ms long press; swiping away inside that long-press window is treated as scrolling and the page is let through
+- Hit testing is uniformly `document.elementFromPoint(x, y).closest('[data-*]')`, with the attribute chosen by the caller (`data-icon-id` for the icon grid); the drag ghost declares `pointer-events: none` so it never blocks the drop target underneath it
+- Hit fallback `hitAreaSelector`: when the pointer is inside the drag container but not on top of a target (grid columns are split evenly by `1fr`, leaving large gaps between icons), the nearest target in the same row (excluding the drag source) is used — each gap is split at its midpoint between the two neighboring icons, so the whole grid is operable; once the pointer leaves the container the hit is `null`, which the folder's "dropped outside the window = moved out of the folder" logic depends on
+- `onDragMove` is throttled by rAF; auto-scrolling kicks in when the pointer rests against the edge of a scroll container (a native drag capability that had to be reimplemented for Pointer Events); while dragging, `body.is-dragging-active` globally lowers `backdrop-filter` to relieve GPU pressure
+- A gesture always ends in one of three ways: a real drop (`onDragEnd`), touch "long press to start dragging, then release in place" (`onLongPressTap`, which opens the action menu and resets the drag state as a non-drop), or an abnormal interruption (`onDragCancel` on Esc / pointercancel / window blur); the click that follows the gesture is swallowed so releasing does not accidentally open an icon link
+- The five 1-D list reorder sites (pages / notes / search engines / favicon sources / notes manager) share `useListPointerReorder`; drop geometry lives in `utils/dropGeometry.ts` (grid: left/right 25% means before/after; lists: before/after by the midpoint)
 
 ### Internationalization (i18n)
 - Copy lives in `src/i18n/locales/{zh-CN,en-US}/` with 16 namespaces per language (common / settings / auth / about / weather / todos / notes / search / pages / folder / wallpaper / sites / icons / importExport / dock / system)

@@ -56,9 +56,9 @@
 - 支持三种图标输入方式：图标 URL、文字（生成带颜色文字图标）、Emoji
 - 图标智能获取对话框：自动从多种渠道收集候选图标供用户选择
 - 图标缓存到 Cloudflare R2（可选），前端信号量并发控制（3 并发）
-- 拖拽排序和移动图标
+- 拖拽排序和移动图标：投放区覆盖整个图标网格，图标盒子与图标之间的空隙都能投放，空隙按最近的相邻图标归属
 - 右键菜单快速操作
-- 长按进入编辑模式
+- 触屏长按图标弹出同一套操作菜单（长按起拖、原地松手即弹菜单），长按空白处进入编辑模式
 - 图标 / 文件夹图标以「水晶方块」玻璃质感呈现，可用全局调色板 16 色或自定义颜色着色（详见下方「配色体系」）
 
 ### 📁 文件夹功能
@@ -85,7 +85,7 @@
 - 页面级隔离：每个页面拥有独立的网站和文件夹集合
 - 屏幕左缘半藏一颗「水晶球」入口球（翠绿→琥珀身份色，六层渐变 + 呼吸辉光），悬停滑出显形、点击展开 PagesSidebar（面板打开后入口球旋转淡出让位，点面板外任意处收起）
 - 页面创建、重命名、删除（至少保留一页）
-- 拖拽排序页面（HTML5 原生拖拽 + 上下半区指示线）
+- 拖拽排序页面（Pointer Events 统一实现：桌面位移即拖、触屏长按起拖；上下半区指示线）
 - 网站/文件夹跨页移动：右键菜单「移动到页面…」，支持「仅移动」与「移动并跳转」
 - 刷新页面默认显示第一页（当前选中的页面不写入持久化存储）
 - 旧格式（根级 websites 无 pages）数据自动迁移至名为「默认页面」的页面
@@ -397,6 +397,7 @@ harborpage/
 │   ├── hooks/                       # 自定义 Hooks
 │   │   ├── useAuth / useAutoSave / useAutoSaveSettings / useClickOutside / useFeatureEntry
 │   │   ├── useDataInitialization / useDeleteIcon / useDragAndDrop / useIconDropHandler
+│   │   ├── useListPointerReorder（一维列表排序）/ usePointerDrag（统一指针拖拽引擎）
 │   │   ├── useImport / useLongPress / useAddWebsiteShortcut / useTreeSelection
 │   │   └── useWallpaperInit / useWallpaperAutoChange / useWeather / useWeatherLocation / useWeatherLunar
 │   ├── i18n/                        # 国际化（i18next）
@@ -424,7 +425,7 @@ harborpage/
 │   │   ├── colorUtils.ts            # 颜色换算（hex/hsl 等）
 │   │   ├── apiErrorUtils.ts         # API 错误码 → i18n 文案翻译
 │   │   ├── wallpaperRefresh.ts      # Bing 壁纸抓取 / 随机壁纸 / 缓存破除
-│   │   └── deviceUtils / idUtils / importExportUtils / logger / wallpaperStorage
+│   │   └── deviceUtils / dropGeometry / idUtils / importExportUtils / logger / wallpaperStorage
 │   ├── App.tsx / main.tsx / constants.ts / index.css / App.css
 ├── worker/                          # Cloudflare Workers 代码
 │   ├── middleware/
@@ -542,6 +543,14 @@ harborpage/
 ### 交互健壮性
 - 所有 `Node.contains()` 调用前先做 `relatedTarget instanceof Node` 守卫：鼠标快速甩出窗口时浏览器会把 relatedTarget 映射为 `window`，未守卫的 `contains(window)` 会抛 `TypeError` 并中断后续逻辑（曾导致笔记栏 hover 收起被卡死）
 - 该守卫覆盖 NoteBar（栏移出/球拖拽/气泡穿越）、PagesSidebar、Todo 侧边栏、NotesManagerDialog、FolderWindow 及 useDragAndDrop / useClickOutside 全部相关路径
+
+### 拖拽体系（Pointer Events 统一实现）
+- 全部拖拽调用点共用 `usePointerDrag`，不使用 HTML5 Drag & Drop（触屏浏览器不会从触摸生成 dragstart，原生拖拽在移动端完全不工作）：鼠标 / 手写笔位移 > 4px 即起拖，触屏长按 500ms 起拖；长按窗口内先划走则判定为滚动、放行页面
+- 命中测试统一为 `document.elementFromPoint(x, y).closest('[data-*]')`，命中属性由调用点指定（图标网格为 `data-icon-id`）；拖拽浮层（ghost）声明 `pointer-events: none`，避免挡住自己正下方的投放目标
+- 命中兜底 `hitAreaSelector`：指针在拖拽容器内、却没有压在目标上时（网格列宽由 1fr 均分，图标之间会留下大片空隙），取同一行水平方向最近的目标（拖动源自己除外）——空隙按中点归属相邻图标，于是整个网格都是可操作空间；指针离开容器则命中为 `null`，文件夹的「拖到窗口外 = 移出文件夹」判定依赖这一点
+- `onDragMove` 按 rAF 节流；指针贴住滚动容器边缘时自动滚动（原生拖拽自带的能力，改 Pointer Events 后自行补上）；拖拽期间以 `body.is-dragging-active` 全局降低 backdrop-filter，减轻 GPU 压力
+- 手势终态三选一：正常投放 `onDragEnd`、触屏「长按起拖后原地松手」`onLongPressTap`（弹操作菜单，同时按「未投放」复位拖拽状态）、异常中断（Esc / pointercancel / 窗口失焦）`onDragCancel`；结束后吞掉紧随其后的 click，避免松手顺带打开图标链接
+- 5 处一维列表排序（页面 / 便签 / 搜索源 / Favicon 源 / 笔记管理器）共用 `useListPointerReorder`；落点几何统一走 `utils/dropGeometry.ts`（网格左右各 25% 判 before/after，列表按中线判 before/after）
 
 ### 国际化（i18n）
 - 文案集中在 `src/i18n/locales/{zh-CN,en-US}/`，两套语言各 16 个命名空间（common / settings / auth / about / weather / todos / notes / search / pages / folder / wallpaper / sites / icons / importExport / dock / system）
