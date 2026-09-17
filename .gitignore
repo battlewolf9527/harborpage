@@ -35,3 +35,5 @@ wrangler.jsonc
 wrangler.*.jsonc
 !wrangler.sample.jsonc
 .trae
+# local export backup (personal data, do not commit)
+harborpage_backup.json
