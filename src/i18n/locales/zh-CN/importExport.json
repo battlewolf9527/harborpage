@@ -33,7 +33,8 @@
     "filename": "文件名",
     "content": "导出内容",
     "hint": "不含壁纸与图标文件",
-    "success": "导出成功"
+    "success": "导出成功",
+    "contentIncomplete": "部分笔记正文加载失败，已中止导出，请重试"
   },
   "import": {
     "trigger": "导入数据",

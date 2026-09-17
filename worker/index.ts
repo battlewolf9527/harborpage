@@ -3,6 +3,7 @@ import { handleAuthRoutes } from './routes/auth';
 import { handleDataRoutes } from './routes/data';
 import { handleIconRoutes } from './routes/icon';
 import { handleIconUpload } from './routes/icon-upload';
+import { handleNotesRoutes } from './routes/notes';
 import { handleWeatherRoutes } from './routes/weather';
 import { handleWallpaperRoutes } from './routes/wallpaper';
 import { handleWallpaperUpload } from './routes/wallpaper-upload';
@@ -33,6 +34,7 @@ const handlers = [
   handleWallpaperUpload,
   handleAuthRoutes,
   handleDataRoutes,
+  handleNotesRoutes,
   handleIconRoutes,
   handleWeatherRoutes,
   handleBingRoutes,

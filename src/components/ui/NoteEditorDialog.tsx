@@ -33,13 +33,14 @@ interface NoteEditorDialogProps {
 
 const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onClose }) => {
   const { t } = useTranslation('notes');
-  const { notes, addNote, updateNote, deleteNote, applyNoteColor } = useNotesStore(
+  const { notes, addNote, updateNote, deleteNote, applyNoteColor, loadContent } = useNotesStore(
     useShallow((s) => ({
       notes: s.notes,
       addNote: s.addNote,
       updateNote: s.updateNote,
       deleteNote: s.deleteNote,
       applyNoteColor: s.applyNoteColor,
+      loadContent: s.loadContent,
     })),
   );
   const slots = usePaletteStore((s) => s.slots);
@@ -82,11 +83,15 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
   const [editorState, setEditorState] = useState<EditorState>(initEditorState);
   const { activeId, draft, color, colorSlot } = editorState;
   type DraftShape = Pick<Note, 'title' | 'content'>;
-  const setDraft = (d: React.SetStateAction<DraftShape>) =>
+  /** 用户动手标记：正文异步回填前若用户已输入，不覆盖其输入 */
+  const userEditedRef = useRef(false);
+  const setDraft = (d: React.SetStateAction<DraftShape>) => {
+    userEditedRef.current = true;
     setEditorState((s) => ({
       ...s,
       draft: typeof d === 'function' ? (d as (prev: DraftShape) => DraftShape)(s.draft) : d,
     }));
+  };
   /** 颜色选择：槽 → 记快照色并绑定 colorSlot；自定义 → 记色并清除 colorSlot */
   const handleColorChange = useCallback((sel: ColorSelection) => {
     setEditorState((s) => {
@@ -129,6 +134,49 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
       if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
     };
   }, []);
+
+  // ── 正文按需加载（分片存储后初始化只带元数据，正文单独存在 note:{id}）──────
+  // 加载中/失败时禁用输入与保存，杜绝用空正文覆盖云端分片。
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [reloadToken, setReloadToken] = useState(0);
+  const loadAppliedRef = useRef(false);
+
+  useEffect(() => {
+    if (!isOpen || !noteId || loadAppliedRef.current) return;
+    // 用 getState 取最新 store，避免把 notes 放进依赖后，加载结果被 cleanup 丢弃
+    const target = useNotesStore.getState().notes.find((n) => n.id === noteId);
+    if (!target || target.contentLoaded) {
+      loadAppliedRef.current = true;
+      return;
+    }
+    let cancelled = false;
+    void loadContent(noteId).then((content) => {
+      if (cancelled) return;
+      if (content === null) {
+        setLoadFailed(true);
+        return;
+      }
+      loadAppliedRef.current = true;
+      setLoadFailed(false);
+      // 用户已动手输入则不覆盖
+      setEditorState((s) => (userEditedRef.current ? s : { ...s, draft: { ...s.draft, content } }));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, noteId, loadContent, reloadToken]);
+
+  const handleRetryLoad = useCallback(() => {
+    setLoadFailed(false);
+    loadAppliedRef.current = false;
+    setReloadToken((token) => token + 1);
+  }, []);
+
+  const targetNote = noteId ? notes.find((n) => n.id === noteId) : undefined;
+  /** 正文未就绪（加载中 / 加载失败）：此时禁止编辑与保存，避免空正文覆盖云端 */
+  const contentPending = !!targetNote && !targetNote.contentLoaded;
+  const contentLoading = contentPending && !loadFailed;
+  const editorLocked = contentLoading || loadFailed;
 
   const runClosing = useCallback(() => {
     if (closeTimerRef.current) return;
@@ -181,6 +229,8 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
 
   // ── 保存 ──────────────────────────────────────────────────────────────
   const handleSave = useCallback(() => {
+    // 正文未就绪时禁止保存：空正文写回会把云端分片覆盖成空
+    if (editorLocked) return;
     const title = draft.title.trim() || t('untitled');
     const content = draft.content.trim();
     // 保存快照色：绑定槽 → 槽当前色（改色后快照保鲜）；静态 → 归一化后的 hex/原名
@@ -212,7 +262,7 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
       });
     }
     runClosing();
-  }, [activeId, draft, color, colorSlot, slots, applyNoteColor, updateNote, addNote, notes, runClosing, t]);
+  }, [activeId, draft, color, colorSlot, slots, applyNoteColor, updateNote, addNote, notes, runClosing, t, editorLocked]);
 
   // Ctrl/Cmd+S 保存；Enter 在标题输入 → 跳到正文；最后输入框(正文) Ctrl/⌘ + Enter 保存
   const handleTitleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -314,20 +364,31 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
             type="text"
             placeholder={t('editor.titlePlaceholder')}
             value={draft.title}
+            disabled={editorLocked}
             onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
             onKeyDown={handleTitleKeyDown}
           />
           <textarea
             ref={contentTextareaRef}
             className="note-editor-content"
-            placeholder={t('editor.contentPlaceholder')}
+            placeholder={contentLoading ? t('editor.contentLoading') : t('editor.contentPlaceholder')}
             rows={10}
             value={draft.content}
+            disabled={editorLocked}
             onChange={(e) => setDraft((d) => ({ ...d, content: e.target.value }))}
             onKeyDown={handleContentKeyDown}
           />
           <div className="note-editor-meta">
-            {activeId ? (
+            {loadFailed ? (
+              <span className="note-editor-load-error">
+                {t('editor.contentLoadFailed')}
+                <button type="button" className="note-editor-retry" onClick={handleRetryLoad}>
+                  {t('editor.retry')}
+                </button>
+              </span>
+            ) : contentLoading ? (
+              <span>{t('editor.contentLoading')}</span>
+            ) : activeId ? (
               <span>
                 {t('editor.createdLabel', {
                   date: (() => {
@@ -367,6 +428,7 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ isOpen, noteId, onC
               type="button"
               className="note-editor-btn primary"
               onClick={handleSave}
+              disabled={editorLocked}
             >
               {isCreate ? t('create') : t('save')}
             </button>

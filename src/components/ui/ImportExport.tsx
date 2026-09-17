@@ -4,6 +4,7 @@ import Toast from '../common/Toast';
 import i18n from '../../i18n';
 import { getServices } from '../../services/serviceContainer';
 import { useImportStore } from '../../store/useImportStore';
+import { useNotesStore } from '../../store/useNotesStore';
 import {
   buildFullExportData,
   validateFullImportData,
@@ -208,14 +209,28 @@ const ImportExport: React.FC = () => {
     [exportSelection],
   );
 
-  const handleConfirmExport = useCallback(() => {
-    const dataManager = getServices().dataManager;
-    const exportData = buildFullExportData(dataManager.getData(), exportSelection);
-    const name = filename.trim() || buildDefaultFilename();
-    downloadFullExportFile(exportData, name);
-    setShowExportDialog(false);
-    setToast({ type: 'success', message: t('export.success') });
-  }, [filename, exportSelection, t]);
+  const [exporting, setExporting] = useState(false);
+
+  const handleConfirmExport = useCallback(async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      // 正文按需存储在 note:{id}：导出前先补齐全部正文，保证导出 JSON 内容完整
+      const failed = await useNotesStore.getState().loadAllContents();
+      if (failed > 0) {
+        setToast({ type: 'error', message: t('export.contentIncomplete') });
+        return;
+      }
+      const dataManager = getServices().dataManager;
+      const exportData = buildFullExportData(dataManager.getData(), exportSelection);
+      const name = filename.trim() || buildDefaultFilename();
+      downloadFullExportFile(exportData, name);
+      setShowExportDialog(false);
+      setToast({ type: 'success', message: t('export.success') });
+    } finally {
+      setExporting(false);
+    }
+  }, [filename, exportSelection, t, exporting]);
 
   const handleCancelExport = useCallback(() => {
     setShowExportDialog(false);
@@ -436,7 +451,7 @@ const ImportExport: React.FC = () => {
                 placeholder={buildDefaultFilename()}
                 autoFocus
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && hasExportSelection) handleConfirmExport();
+                  if (e.key === 'Enter' && hasExportSelection) void handleConfirmExport();
                 }}
               />
               <label className="ie-label ie-section-label">
@@ -477,8 +492,8 @@ const ImportExport: React.FC = () => {
             <div className="ie-dialog-footer">
               <button
                 className="ie-btn ie-btn-primary"
-                onClick={handleConfirmExport}
-                disabled={!hasExportSelection}
+                onClick={() => void handleConfirmExport()}
+                disabled={!hasExportSelection || exporting}
               >
                 {t('actions.export')}
               </button>

@@ -33,7 +33,8 @@
     "filename": "File Name",
     "content": "Export Content",
     "hint": "Wallpapers and icon files are not included",
-    "success": "Export successful"
+    "success": "Export successful",
+    "contentIncomplete": "Some note contents failed to load. Export was cancelled — please try again."
   },
   "import": {
     "trigger": "Import Data",

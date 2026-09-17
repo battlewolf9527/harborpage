@@ -77,7 +77,14 @@ export interface Note {
   color?: string;
   /** 绑定的全局调色板槽 id（palette-N 位置 id，兼容旧预设名；无此字段 = 静态自定义色） */
   colorSlot?: string;
+  /** 正文摘要：随索引一起下发，供列表/便签球悬浮提示展示，避免为了预览拉取全文 */
+  preview?: string;
+  /** 运行时标记：正文是否已加载（不落盘；false/缺失时 content 为空串） */
+  contentLoaded?: boolean;
 }
+
+/** 写入 notes:index 的笔记元数据（正文单独存 note:{id}） */
+export type NoteMeta = Omit<Note, 'content' | 'contentLoaded'> & { preview: string };
 
 // 文件夹状态类型（运行时状态，持久化中不存储此结构）
 export interface OpenFolder {

@@ -20,6 +20,10 @@ export function useDataInitialization(isAuthenticated: boolean, isCheckingAuth: 
         if (cancelled) return;
         const data = dataManager.getData();
         initializeAllStores(data);
+        // 笔记分片化的启动同步：首次升级时把本地镜像里的正文静默推送为分片，
+        // 成功后才允许后续剥离本地正文（详见 DataManager.syncNotesAfterInit）
+        await dataManager.syncNotesAfterInit();
+        if (cancelled) return;
         // 预加载后端默认 favicon 源到内存缓存（前端不再硬编码默认源常量）
         await FaviconConfigService.loadDefaultSources();
         // 注意：不再调用 ChangeTracker.clearAll()

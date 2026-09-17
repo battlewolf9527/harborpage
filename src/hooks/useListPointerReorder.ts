@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { computeListDropPosition } from '../utils/dropGeometry';
 import type { ListDropPosition } from '../utils/dropGeometry';
@@ -59,9 +59,13 @@ interface OverState {
 
 export function useListPointerReorder(options: UseListPointerReorderOptions) {
   // 回调统一放 ref：usePointerDrag 每次渲染都会刷新它自己的 optionsRef，
-  // 因此这里闭包读到的永远是最新一次渲染的 props，不必把回调塞进依赖数组
+  // 因此这里闭包读到的永远是最新一次渲染的 props，不必把回调塞进依赖数组。
+  // 渲染期不允许写 ref，统一在每次渲染后的 effect 里同步。
   const optionsRef = useRef(options);
-  optionsRef.current = options;
+
+  useEffect(() => {
+    optionsRef.current = options;
+  });
 
   const [draggingKey, setDraggingKey] = useState<string | null>(null);
   const [over, setOver] = useState<OverState | null>(null);

@@ -1,6 +1,8 @@
 import type { UserData } from '../types';
 import AuthService from './AuthService';
+import NotesRepository from './NotesRepository';
 import { STORAGE_KEYS, TRACKED_KEYS } from '../constants';
+import { toPersistedNote } from '../utils/noteMeta';
 import createLogger from '../utils/logger';
 
 const logger = createLogger('DataRepository');
@@ -68,12 +70,27 @@ class DataRepository {
     }
     this.saveTimer = setTimeout(() => {
       try {
-        localStorage.setItem(STORAGE_KEYS.DATA, JSON.stringify(data));
+        localStorage.setItem(STORAGE_KEYS.DATA, JSON.stringify(this.toPersistedData(data)));
       } catch (error) {
         logger.error('Failed to save local data', error);
       }
       this.saveTimer = null;
     }, delay);
+  }
+
+  /**
+   * 本地镜像的落盘形态：确认笔记分片格式后剥离正文（正文以 KV 为准，避免顶爆 5MB 配额），
+   * 只保留「尚未确认落到云端」的正文（待写队列中的 id），确保未保存的编辑不丢失。
+   */
+  private toPersistedData(data: UserData): UserData {
+    if (!data.notes || data.notes.length === 0 || !NotesRepository.isSharded()) {
+      return data;
+    }
+    const keepIds = NotesRepository.getPendingIds();
+    return {
+      ...data,
+      notes: data.notes.map((note) => toPersistedNote(note, keepIds.has(note.id))),
+    };
   }
 
   public async saveKeyToAPI(key: string, data: unknown): Promise<boolean> {
@@ -108,6 +125,9 @@ class DataRepository {
     } catch (e) {
       logger.error('Failed to clear data', e);
       return false;
+    } finally {
+      // 丢弃残留的待写队列，避免清空后又被下一次保存写回云端
+      await NotesRepository.clearAll();
     }
   }
 

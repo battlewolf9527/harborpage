@@ -468,8 +468,9 @@ const NoteBar: React.FC = () => {
             </h4>
           </div>
           <div className="noteball-tooltip-body">
-            {activeThumbNote.content
-              ? truncate(activeThumbNote.content, 140)
+            {/* 正文按需加载，未加载时用索引里的摘要兜底，避免为了悬浮提示拉取全文 */}
+            {activeThumbNote.content || activeThumbNote.preview
+              ? truncate(activeThumbNote.content || activeThumbNote.preview || '', 140)
               : <em className="empty">{t('noContent')}</em>
             }
           </div>

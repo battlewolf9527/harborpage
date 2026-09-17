@@ -74,21 +74,25 @@ export const useDragAndDrop = ({
   const draggedIcon = externalDraggedIcon ?? internalDraggedIcon;
   const setDraggedIcon = externalSetDraggedIcon ?? setInternalDraggedIcon;
 
-  // 指针回调注册在 document 上，只注册一次；通过 ref 读取最新值，避免闭包过期
+  // 指针回调注册在 document 上，只注册一次；通过 ref 读取最新值，避免闭包过期。
+  // 渲染期不允许写 ref，统一在每次渲染后的 effect 里同步。
   const iconsRef = useRef(icons);
-  iconsRef.current = icons;
   const allowFolderCreationRef = useRef(allowFolderCreation);
-  allowFolderCreationRef.current = allowFolderCreation;
   const onHandleDropRef = useRef(onHandleDrop);
-  onHandleDropRef.current = onHandleDrop;
   const onIconsChangeRef = useRef(onIconsChange);
-  onIconsChangeRef.current = onIconsChange;
   const onDragMovePointRef = useRef(onDragMovePoint);
-  onDragMovePointRef.current = onDragMovePoint;
   const onDragEndPointRef = useRef(onDragEndPoint);
-  onDragEndPointRef.current = onDragEndPoint;
   const onDragCancelRef = useRef(externalOnDragCancel);
-  onDragCancelRef.current = externalOnDragCancel;
+
+  useEffect(() => {
+    iconsRef.current = icons;
+    allowFolderCreationRef.current = allowFolderCreation;
+    onHandleDropRef.current = onHandleDrop;
+    onIconsChangeRef.current = onIconsChange;
+    onDragMovePointRef.current = onDragMovePoint;
+    onDragEndPointRef.current = onDragEndPoint;
+    onDragCancelRef.current = externalOnDragCancel;
+  });
 
   /**
    * 本次会话正在拖拽的图标。

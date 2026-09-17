@@ -1,4 +1,13 @@
-export { TRACKED_KEYS, isTrackedKey } from '../shared/constants';
+export {
+  TRACKED_KEYS,
+  isTrackedKey,
+  NOTES_INDEX_KEY,
+  NOTE_KEY_PREFIX,
+  noteContentKey,
+  NOTE_ID_RE,
+  NOTE_PREVIEW_LIMIT,
+  buildNotePreview,
+} from '../shared/constants';
 export { API_ERROR_CODES, isApiErrorCode, ICON_SOURCE_CODES, isIconSourceCode } from '../shared/apiErrors';
 export type { ApiErrorCode, IconSourceCode } from '../shared/apiErrors';
 
@@ -14,6 +23,10 @@ export const STORAGE_KEYS = {
   AUTO_SAVE_DURATION: `${STORAGE_PREFIX}autoSaveDuration`,
   AUTO_SAVE_ENABLED: `${STORAGE_PREFIX}autoSaveEnabled`,
   LIGHTNESS_PREVIEW_ENABLED: `${STORAGE_PREFIX}lightnessPreviewEnabled`,
+  /** 本浏览器是否已确认笔记分片存储格式（确认后才允许从本地镜像剥离正文） */
+  NOTES_SHARDED: `${STORAGE_PREFIX}notesSharded`,
+  /** 本浏览器确认已存在于云端索引的笔记 id（启动对账用，避免误删从未上云的本地新笔记） */
+  NOTES_SYNCED: `${STORAGE_PREFIX}notesSynced`,
 };
 
 // 导出文件名前缀

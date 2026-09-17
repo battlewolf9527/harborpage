@@ -1,6 +1,7 @@
 import type { UserData, Website, SearchEngine, Todo, Note, Settings, WallpaperType, Page, PaletteHexMap, PaletteAliasMap } from '../types';
 import ChangeTracker from './ChangeTracker';
 import DataRepository from './DataRepository';
+import NotesRepository from './NotesRepository';
 import { STORAGE_KEYS } from '../constants';
 import { mergeById } from '../utils/importExportUtils';
 import { normalizeAliasMap, normalizeLightness, normalizePaletteMap } from '../utils/paletteColors';
@@ -30,6 +31,7 @@ class DataManager {
     if (localData) {
       this.data = localData;
       ChangeTracker.loadState();
+      await this.reconcileNotesOnInit();
       return;
     }
 
@@ -39,6 +41,24 @@ class DataManager {
       DataRepository.flushLocal(this.data);
       ChangeTracker.clearAll();
     }
+  }
+
+  /**
+   * 启动对账：本机镜像里「曾确认上云、但云端索引已没有」的笔记按云端为准本地移除。
+   * 用于让别的浏览器上的删除在本机生效；只认 NotesRepository 记录过的云端 id，
+   * 从未上云的本地新笔记不受影响；拉取失败时保持原样，下次启动再对账。
+   */
+  private async reconcileNotesOnInit(): Promise<void> {
+    const notes = this.data.notes;
+    if (!notes || notes.length === 0 || !NotesRepository.isSharded()) return;
+
+    const removedIds = await NotesRepository.findNotesDeletedOnCloud(notes.map((note) => note.id));
+    if (!removedIds || removedIds.length === 0) return;
+
+    const removed = new Set(removedIds);
+    this.data = { ...this.data, notes: notes.filter((note) => !removed.has(note.id)) };
+    DataRepository.flushLocal(this.data);
+    logger.warn(`Removed ${removedIds.length} note(s) already deleted on cloud: ${removedIds.join(', ')}`);
   }
 
   public async saveChanges(): Promise<{ performed: boolean; error?: string }> {
@@ -54,7 +74,11 @@ class DataManager {
 
       for (const key of changedKeys) {
         const data = dataSnapshot[key as keyof UserData];
-        const success = await DataRepository.saveKeyToAPI(key, data ?? {});
+        // 笔记已拆分为分片存储：这里只提交本轮 diff 出来的增量（正文分片 + 一次索引），
+        // 不再整包上传全部笔记
+        const success = key === 'notes'
+          ? await NotesRepository.flushPending()
+          : await DataRepository.saveKeyToAPI(key, data ?? {});
         if (!success) {
           // 回滚：将已成功保存的 key 重新标记为已变更，以便下次重试
           for (const savedKey of savedKeys) {
@@ -200,6 +224,9 @@ class DataManager {
         imported.settings.defaultSearchEngineId,
       );
     }
+
+    // 导入的笔记携带正文，先整体入队，待保存时按「每篇一个分片 + 一次索引」落到云端
+    NotesRepository.enqueueAll(merged.notes ?? []);
 
     DataRepository.flushLocal(this.data);
 
@@ -386,10 +413,104 @@ class DataManager {
     });
   }
 
+  /**
+   * 笔记变更入口：与当前数据做 diff，只把真正的增量交给 NotesRepository（改一条只写一条分片），
+   * 「加载正文」不构成变更，避免静默加载触发保存提示。初始化期间只更新内存、不入队。
+   */
   public updateNotes(notes: Note[]): void {
-    this.updateData('notes', () => {
-      this.data = { ...this.data, notes: notes };
-    });
+    const changed = this.isInitializing() ? false : this.diffNotes(this.data.notes ?? [], notes);
+    this.updateData(
+      'notes',
+      () => {
+        this.data = { ...this.data, notes: notes };
+      },
+      undefined,
+      { markAsChanged: changed },
+    );
+  }
+
+  /**
+   * 对比前后两份笔记，把差异入队到 NotesRepository。
+   * 返回是否存在「真实变更」（用于 markChanged）；正文由「未加载」变为「已加载」不算变更。
+   */
+  private diffNotes(previous: Note[], next: Note[]): boolean {
+    const prevById = new Map(previous.map((note) => [note.id, note]));
+    let changed = false;
+
+    for (const note of next) {
+      const before = prevById.get(note.id);
+      if (!before) {
+        // 新增笔记：正文与元数据都写
+        NotesRepository.enqueue(note);
+        changed = true;
+        continue;
+      }
+
+      const wasLoaded = before.contentLoaded === true || before.content !== '';
+      const isLoading = !wasLoaded && note.contentLoaded === true;
+      if (before.content !== note.content && !isLoading) {
+        NotesRepository.enqueue(note);
+        changed = true;
+      } else if (
+        before.title !== note.title ||
+        before.preview !== note.preview ||
+        before.color !== note.color ||
+        before.colorSlot !== note.colorSlot ||
+        before.updatedAt !== note.updatedAt ||
+        before.pinned !== note.pinned
+      ) {
+        // 仅元数据变化（标题/摘要/颜色/时间），不重写正文分片
+        NotesRepository.enqueueMeta(note);
+        changed = true;
+      }
+    }
+
+    const nextIds = new Set(next.map((note) => note.id));
+    for (const before of previous) {
+      if (!nextIds.has(before.id)) {
+        NotesRepository.enqueueDelete(before.id);
+        changed = true;
+      }
+    }
+
+    const orderChanged =
+      previous.length !== next.length || next.some((note, index) => previous[index]?.id !== note.id);
+    if (orderChanged) {
+      NotesRepository.enqueueOrder(next.map((note) => note.id));
+      changed = true;
+    }
+
+    return changed;
+  }
+
+  /**
+   * 初始化完成后的笔记同步（在本地镜像写盘前同步执行）：
+   * · 已确认分片格式：仅当上次退出时确有未保存的 notes 变更，才整包补交（正文只取本地仍持有的）；
+   * · 尚未确认分片格式：本地镜像里可能存着旧格式正文，静默全量推送一次，成功后才允许剥离本地正文。
+   */
+  public async syncNotesAfterInit(): Promise<void> {
+    const notes = this.data.notes ?? [];
+
+    if (NotesRepository.isSharded()) {
+      if (ChangeTracker.getChangedKeys().includes('notes')) {
+        NotesRepository.enqueueAll(notes);
+      }
+      return;
+    }
+
+    if (!notes.some((note) => note.contentLoaded === true || note.content !== '')) {
+      // 本地没有正文（新设备/新装）：云端已是分片格式，直接确认
+      NotesRepository.markSharded();
+      return;
+    }
+
+    NotesRepository.enqueueAll(notes);
+    const ok = await NotesRepository.flushPending();
+    if (ok) {
+      NotesRepository.markSharded();
+    } else {
+      logger.warn('Initial notes migration to sharded storage failed, will retry on next launch');
+    }
   }
 
   public updatePalette(palette: PaletteHexMap): void {

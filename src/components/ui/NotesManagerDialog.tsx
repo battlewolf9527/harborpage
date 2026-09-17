@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import './NotesManagerDialog.css';
@@ -23,11 +23,13 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
     notes,
     deleteNote,
     reorderNotes,
+    loadAllContents,
   } = useNotesStore(
     useShallow((s) => ({
       notes: s.notes,
       deleteNote: s.deleteNote,
       reorderNotes: s.reorderNotes,
+      loadAllContents: s.loadAllContents,
     })),
   );
   const slots = usePaletteStore((s) => s.slots);
@@ -57,7 +59,25 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
   // 搜索过滤：在标题或内容中包含关键字即命中（不区分大小写）
+  // 正文分片存储后不在初始化数据里，有关键字时先按需拉全量正文再做全文匹配
   const keyword = useMemo(() => search.trim().toLowerCase(), [search]);
+  const [searchLoadFailed, setSearchLoadFailed] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen || !keyword) return;
+    let cancelled = false;
+    void loadAllContents().then((failed) => {
+      if (!cancelled) setSearchLoadFailed(failed > 0);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, keyword, loadAllContents]);
+
+  // 加载中（仍有正文未取回且未失败）——由数据推导，避免在 effect 里同步 setState
+  const searching =
+    keyword !== '' && !searchLoadFailed && notes.some((note) => !note.contentLoaded);
+
   const filteredIds = useMemo(() => {
     if (!keyword) return null;
     const kw = keyword;
@@ -172,7 +192,9 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
               )}
             </div>
             <div className="notes-mgr-stats">
-              {filteredIds ? (
+              {searching ? (
+                <span>{t('manager.searching')}</span>
+              ) : filteredIds ? (
                 <span>{t('manager.statsFiltered', { visible: visibleNotes.length, total: notes.length })}</span>
               ) : (
                 <span>{t('manager.stats', { total: notes.length })}</span>
@@ -189,7 +211,7 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
         </div>
 
         <div className="notes-mgr-body">
-          {visibleNotes.length === 0 ? (
+          {visibleNotes.length === 0 && !searching ? (
             <div className="notes-mgr-empty">
               <div className="notes-mgr-empty-emoji">📭</div>
               <h3>{filteredIds ? t('manager.emptyFilteredTitle') : t('manager.emptyTitle')}</h3>
@@ -231,9 +253,12 @@ const NotesManagerDialog: React.FC<NotesManagerDialogProps> = ({ isOpen, onClose
                         <span className="notes-mgr-item-title">{note.title || t('untitled')}</span>
                       </div>
                       <div className="notes-mgr-item-content">
+                        {/* 正文未加载时用索引里的摘要兜底，列表无需为了预览拉全文 */}
                         {note.content
                           ? note.content.replace(/\s+/g, ' ').slice(0, 120) || t('blankContent')
-                          : <em>{t('noContent')}</em>
+                          : note.preview
+                            ? note.preview
+                            : <em>{t('noContent')}</em>
                         }
                       </div>
                       <div className="notes-mgr-item-meta">

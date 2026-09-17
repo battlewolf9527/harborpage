@@ -1,14 +1,23 @@
 import type { Env } from '../types';
 import { requireAuth } from '../middleware/auth';
 import { TRACKED_KEYS, isTrackedKey, API_ERROR_CODES } from '../utils/constants';
+import { loadNoteIndex, writeNotesAsShards, clearAllNotes } from './notes';
 
 // 单个数据项最大允许大小：1MB（防止滥用和性能问题）
 const MAX_DATA_SIZE = 1024 * 1024;
+
+// 笔记走分片存储（notes:index + note:{id}），'notes' 键在此仅作为兼容入口转发
+const NOTES_KEY = 'notes';
 
 async function handleGetAll(_request: Request, _url: URL, env: Env): Promise<Response> {
   // 并行读取所有 KV 键，避免串行往返延迟
   const entries = await Promise.all(
     TRACKED_KEYS.map(async (k) => {
+      if (k === NOTES_KEY) {
+        // 笔记已拆分为索引 + 分片，这里返回索引中的元数据列表
+        const index = await loadNoteIndex(env);
+        return [k, index.items] as const;
+      }
       const raw = await env.USER_DATA.get(k);
       if (!raw) return [k, undefined] as const;
       try {
@@ -35,6 +44,10 @@ async function handleGetByKey(url: URL, env: Env): Promise<Response> {
   }
   if (!isTrackedKey(key)) {
     return Response.json({ error: API_ERROR_CODES.INVALID_KEY }, { status: 400 });
+  }
+  if (key === NOTES_KEY) {
+    const index = await loadNoteIndex(env);
+    return Response.json(index.items);
   }
   const data = await env.USER_DATA.get(key);
   if (!data) {
@@ -70,6 +83,12 @@ async function handlePost(request: Request, url: URL, env: Env): Promise<Respons
     );
   }
 
+  // 兼容兜底：整包笔记写入时改写成「每篇一个分片 + 索引」，避免复活旧键
+  if (key === NOTES_KEY) {
+    await writeNotesAsShards(env, data);
+    return Response.json({ success: true });
+  }
+
   await env.USER_DATA.put(key, jsonData);
   return Response.json({ success: true });
 }
@@ -78,6 +97,10 @@ async function handleDelete(url: URL, env: Env): Promise<Response> {
   const key = url.searchParams.get('key');
   if (!key || !isTrackedKey(key)) {
     return Response.json({ error: API_ERROR_CODES.INVALID_KEY }, { status: 400 });
+  }
+  if (key === NOTES_KEY) {
+    await clearAllNotes(env);
+    return Response.json({ success: true });
   }
   await env.USER_DATA.delete(key);
   return Response.json({ success: true });

@@ -183,6 +183,48 @@
   font-size: var(--font-sm);
 }
 
+/* 正文加载失败：提示文案 + 小尺寸重试按钮 */
+.note-editor-load-error {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--semantic-danger) 88%, #fff);
+}
+.note-editor-retry {
+  flex: none;
+  padding: 0 12px;
+  min-height: 28px;
+  border-radius: var(--radius-xs);
+  border: 1px solid color-mix(in srgb, var(--semantic-danger) 34%, transparent);
+  background: var(--glass-surface-300);
+  color: color-mix(in srgb, var(--semantic-danger) 90%, #fff);
+  font-size: var(--font-xs);
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--motion-fast);
+}
+.note-editor-retry:hover {
+  background: var(--semantic-danger);
+  color: #fff;
+  border-color: var(--semantic-danger);
+}
+
+/* 正文未就绪时的禁用态：只用半透明灰，不加斜线/删除线 */
+.note-editor-title:disabled,
+.note-editor-content:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.note-editor-btn:disabled,
+.note-editor-btn:disabled:hover {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 /* ── Footer ── */
 .note-editor-footer {
   padding: clamp(12px, 0.9vw, 16px) clamp(18px, 1.4vw, 28px);
