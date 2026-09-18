@@ -1,10 +1,10 @@
-import type { UserData, Website, SearchEngine, Todo, Note, Settings, WallpaperType, Page, PaletteHexMap, PaletteAliasMap } from '../types';
+import type { UserData, Website, SearchEngine, Todo, Note, Settings, WallpaperType, Page, PaletteHexMap, PaletteAliasMap, PaletteScheme } from '../types';
 import ChangeTracker from './ChangeTracker';
 import DataRepository from './DataRepository';
 import NotesRepository from './NotesRepository';
 import { STORAGE_KEYS } from '../constants';
 import { mergeById } from '../utils/importExportUtils';
-import { normalizeAliasMap, normalizeLightness, normalizePaletteMap } from '../utils/paletteColors';
+import { normalizeAliasMap, normalizeLightness, normalizePaletteMap, normalizeSchemeList } from '../utils/paletteColors';
 import { createDefaultPage } from '../store/usePagesStore';
 import createLogger from '../utils/logger';
 import i18n from '../i18n';
@@ -61,7 +61,12 @@ class DataManager {
     logger.warn(`Removed ${removedIds.length} note(s) already deleted on cloud: ${removedIds.join(', ')}`);
   }
 
-  public async saveChanges(): Promise<{ performed: boolean; error?: string }> {
+  /**
+   * 提交所有待保存的变更。
+   * offline=true 表示请求因断网未能发出：此时不返回 error，
+   * 改动已回滚为「待保存」，等联网后由 SavePrompt 自动补交。
+   */
+  public async saveChanges(): Promise<{ performed: boolean; error?: string; offline?: boolean }> {
     if (this.isSyncing) return { performed: false, error: i18n.t('system:data.syncing') };
     if (!ChangeTracker.hasChanges()) return { performed: false };
 
@@ -83,6 +88,12 @@ class DataManager {
           // 回滚：将已成功保存的 key 重新标记为已变更，以便下次重试
           for (const savedKey of savedKeys) {
             ChangeTracker.markChanged(savedKey);
+          }
+          // 断网导致的失败不算错误：改动已回滚为「待保存」，联网后自动补交，
+          // 因此不返回 error，避免把「离线」当成用户可见的保存报错
+          if (!navigator.onLine) {
+            logger.warn(`Offline, ${key} kept pending (${savedKeys.length} saved key(s) rolled back)`);
+            return { performed: false, offline: true };
           }
           logger.error(`Failed to save ${key}, rolled back ${savedKeys.length} saved key(s)`);
           return { performed: false, error: i18n.t('system:data.saveFailed') };
@@ -196,6 +207,11 @@ class DataManager {
           ...(current.paletteAliases ?? {}),
           ...(normalizedImported.paletteAliases ?? {}),
         }),
+        // 配色方案按 id 合并（normalizeSchemeList 保留首个同名项）：导入项在前，同 id 以导入覆盖
+        paletteSchemes: normalizeSchemeList([
+          ...(normalizedImported.paletteSchemes ?? []),
+          ...(current.paletteSchemes ?? []),
+        ]),
       };
       // 全局明暗度：导入覆盖、未导入保留（undefined 不写，避免覆盖当前值）
       if (normalizedImported.paletteLightness !== undefined) {
@@ -243,6 +259,9 @@ class DataManager {
     }
     if (normalizedImported.paletteAliases) {
       ChangeTracker.markChanged('paletteAliases');
+    }
+    if (normalizedImported.paletteSchemes) {
+      ChangeTracker.markChanged('paletteSchemes');
     }
 
     return merged;
@@ -522,6 +541,12 @@ class DataManager {
   public updatePaletteAliases(aliases: PaletteAliasMap): void {
     this.updateData('paletteAliases', () => {
       this.data = { ...this.data, paletteAliases: normalizeAliasMap(aliases) };
+    });
+  }
+
+  public updatePaletteSchemes(schemes: PaletteScheme[]): void {
+    this.updateData('paletteSchemes', () => {
+      this.data = { ...this.data, paletteSchemes: normalizeSchemeList(schemes) };
     });
   }
 

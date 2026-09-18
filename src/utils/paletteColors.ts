@@ -2,52 +2,37 @@
  * 全局调色板（16 槽）核心定义与解析
  * ---------------------------------------------------------------
  * 语义：
- * - 系统固定 16 个调色板槽，槽 id 为位置标识（palette-1 … palette-16，顺序沿用出厂
- *   16 色排列），**不含颜色语义**：颜色始终由「槽当前色」决定，用户可任意修改某槽颜色，
- *   id 不会随之失真（旧版曾以预设色名做 id，改色后语义错位，现已改为位置 id，
- *   并保留旧预设名的兼容读取）。
- * - 出厂默认 16 色 = DEFAULT_PALETTE_HEXES（palette-N → hex，取值来自 4×8 取色矩阵），
- *   是「恢复默认」与槽位缺省显示的基准。
+ * - 系统固定 16 个调色板槽，槽 id 为位置标识（palette-1 … palette-16），**不含颜色语义**：
+ *   颜色始终由「槽当前色」决定，用户可任意修改某槽颜色，id 不会随之失真（旧版曾以预设色名
+ *   做 id，改色后语义错位，现已改为位置 id，并保留旧预设名的兼容读取）。
+ * - 出厂默认 16 色 = DEFAULT_PALETTE_HEXES（palette-N → hex），取值来自「配色方案」中的
+ *   默认方案（极光，见 paletteSchemePresets.BUILTIN_PALETTE_SCHEMES），是「恢复默认」与
+ *   槽位缺省显示的基准。
+ * - 配色方案（PaletteScheme）是只读模板：内置 7 套由代码常量提供，自建方案由用户
+ *   「保存为方案」从当前调色板快照生成；应用方案 = 直接改写调色板（slots + aliases），
+ *   之后用户改调色板不回写方案。
  * - 元素（文件夹/站点图标/便签）取色时：选某个槽 → 写入 colorSlot=槽id + color=当前色快照；
  *   该元素实时跟随槽位当前色。选自定义 → 仅写 color=#rrggbb（无 colorSlot，静态）。
  * - 旧数据（无 colorSlot）一律视为静态自定义色：预设名按 noteColors 旧出厂色解析（不随
  *   新槽默认色变化，保证老数据不跳色）、hex 原样，不参与槽位联动。
  * ---------------------------------------------------------------
  */
-import type { PaletteHexMap, PaletteAliasMap } from '../types';
+import type { PaletteHexMap, PaletteAliasMap, PaletteScheme } from '../types';
 import i18n from '../i18n';
 import type sitesResources from '../i18n/locales/zh-CN/sites.json';
 import { hexToHslCssVars } from './colorUtils';
+import { generateId } from './idUtils';
 import { isHexColor, NOTE_COLOR_PRESETS, resolveNoteColor } from './noteColors';
+import { BUILTIN_PALETTE_SCHEMES, DEFAULT_SCHEME_HEXES } from './paletteSchemePresets';
 
 /** 快捷预设色的展示名 key（sites:colorNames.*），由语言包结构推导，保证字面量类型合法 */
 type QuickColorKey = `colorNames.${keyof typeof sitesResources.colorNames}`;
 
 /**
- * 出厂 16 槽默认色 = 预设矩阵「第 1 行（淡彩糖果色）+ 第 3 行（宝石深色）」共 16 色，
- * 按列序拼接（白 → … → 淡紫，深灰 → … → 深紫）。取值均为 QUICK_PRESET_COLORS 成员，
- * 保证「恢复默认」的基准色必然是取色器中的一个预设，可精确命中并显示中文色名。
+ * 出厂 16 槽默认色 = 默认配色方案「极光」的 16 色（见 paletteSchemePresets）。
+ * 1 号槽为该方案主色（未设色图标/文件夹的缺省材质色取 1 号槽，不再是纯白）。
  */
-const FACTORY_PALETTE_HEXES: readonly string[] = [
-  // 第 1 行（淡彩糖果色）
-  '#ffffff', // 白色
-  '#ff8a8a', // 粉红（糖果粉）
-  '#ffb366', // 淡橙（蜜桃）
-  '#ffe566', // 淡黄（香槟黄）
-  '#8cd98c', // 淡绿（嫩草绿）
-  '#7ad9d9', // 淡青（冰晶青）
-  '#7ab8ff', // 淡蓝（天蓝）
-  '#c28cff', // 淡紫（丁香紫）
-  // 第 3 行（宝石深色）
-  '#7a7a7a', // 深灰（金属灰）
-  '#d90000', // 深赤（宝石红）
-  '#d97000', // 深橙（柿子橙）
-  '#d9a800', // 深黄（金盏黄）
-  '#00a34a', // 深绿（翡翠绿）
-  '#0099a8', // 深青（深海青）
-  '#0055d9', // 深蓝（皇家蓝）
-  '#8a2be2', // 深紫（帝王紫）
-];
+const FACTORY_PALETTE_HEXES: readonly string[] = DEFAULT_SCHEME_HEXES;
 
 /** 16 槽稳定 id：palette-1 … palette-16（位置标识，不含颜色语义） */
 export const PALETTE_SLOT_IDS: readonly string[] = Array.from(
@@ -69,7 +54,7 @@ export function normalizeLightness(value?: number): number {
   return Math.round(Math.min(LIGHTNESS_MAX, Math.max(LIGHTNESS_MIN, value)));
 }
 
-/** 出厂默认 16 色：槽 id（palette-N）→ 出厂 hex（不可变基准，均取自 32 色预设矩阵） */
+/** 出厂默认 16 色：槽 id（palette-N）→ 出厂 hex（不可变基准，取自默认配色方案「极光」） */
 export const DEFAULT_PALETTE_HEXES: Readonly<Record<string, string>> = Object.fromEntries(
   PALETTE_SLOT_IDS.map((id, i) => [id, FACTORY_PALETTE_HEXES[i]]),
 ) as Readonly<Record<string, string>>;
@@ -102,8 +87,8 @@ export function slotNumber(slotId: string): number {
 }
 
 /**
- * 颜色提示文本（兜底）：32 色预设与出厂槽色的中文名统一走 describeQuickColor；
- * 本函数仅把两者都未命中的自定义色以 hex 文本形式返回（不暴露语义）。
+ * 颜色提示文本（兜底）：32 色预设与命中预设的槽色走 describeQuickColor 的中文色名；
+ * 本函数把未命中的自定义色 / 配色方案色以 hex 文本形式返回（不暴露语义）。
  */
 export function describeColor(hex?: string): string {
   return normalizeHex(hex);
@@ -121,8 +106,8 @@ export function normalizeHex(hex?: string): string {
  *   淡彩糖果 → 高饱和亮色（iOS 系统色） → 浓郁宝石深色 → 带色相的通透极深暗调
  *   （深档均保留饱和度、不发灰发闷）。
  * 列表按「行序（明度档）」排列、由 8 列网格逐行填充后，同列自动对齐同一色系。
- * 出厂 16 槽默认色取自本矩阵（FACTORY_PALETTE_HEXES），保证默认色与候选精确命中；
- * 本组仅作取色快捷候选，**不参与**全局调色板槽位。
+ * 本组仅作取色快捷候选（含中文色名），**不参与**全局调色板槽位；配色方案色若未命中本矩阵，
+ * 槽位提示文本按 hex 展示。
  */
 export interface QuickPresetColor {
   hex: string;
@@ -169,7 +154,7 @@ export const QUICK_PRESET_COLORS: readonly QuickPresetColor[] = [
   { hex: '#5b1a8b', colorKey: 'colorNames.extraDarkPurple' },
 ];
 
-/** 取色器预设描述：命中 32 色候选 → 中文色名；否则返回 hex（出厂 16 色均在候选内，无需单独兜底） */
+/** 取色器预设描述：命中 32 色候选 → 中文色名；否则返回 hex（如配色方案中的非预设色） */
 export function describeQuickColor(hex?: string): string {
   const normalized = normalizeHex(hex);
   if (!normalized) return '';
@@ -220,9 +205,10 @@ export function describeSlotLabel(
   aliases?: PaletteAliasMap,
 ): string {
   const id = canonicalSlotId(slotId) || slotId;
-  const alias = (aliases?.[id] ?? '').trim();
+  // 别名可能是 i18n key（内置方案自带别名），展示前翻译
+  const alias = displayAlias(aliases?.[id]);
   const hex = normalizeHex(slots?.[id]) || DEFAULT_PALETTE_HEXES[id] || '';
-  // 颜色名：命中 32 色预设（含出厂 16 槽默认色）→ 中文色名；否则 hex 兜底
+  // 颜色名：命中 32 色预设 → 中文色名；否则 hex 兜底（如配色方案中的非预设色）
   const colorText = hex ? describeQuickColor(hex) : '';
   const number = slotNumber(id);
   return alias
@@ -316,4 +302,144 @@ export function resolveIconHslVars(
   const hex =
     resolveColorHex(buildSelection(icon.iconColor, icon.colorSlot), slots) || defaultMaterialHex(slots);
   return hexToHslCssVars(hex, lightness);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   配色方案（PaletteScheme）工具
+   方案是只读模板：内置 7 套来自代码常量，自建方案持久化在 UserData.paletteSchemes；
+   应用方案 = 把方案的 16 色与别名写入调色板（slots + aliases），不回写方案。
+   ════════════════════════════════════════════════════════════════ */
+
+/** 自建方案 id 前缀（内置方案为 'builtin-' 前缀，二者互斥） */
+export const SCHEME_CUSTOM_ID_PREFIX = 'custom-';
+
+/** 全部可选方案：内置 7 套 + 用户自建方案 */
+export function allSchemes(custom: readonly PaletteScheme[] = []): PaletteScheme[] {
+  return [...BUILTIN_PALETTE_SCHEMES, ...custom];
+}
+
+/** 按 id 查找方案（内置 + 自建）；找不到返回 undefined */
+export function findScheme(
+  id: string,
+  custom: readonly PaletteScheme[] = [],
+): PaletteScheme | undefined {
+  return allSchemes(custom).find((scheme) => scheme.id === id);
+}
+
+/**
+ * 动态 key 翻译：i18n.t 的类型层要求字面量 key，而内置方案名（即 key）存在数据里，
+ * 故在此单点降级为通用签名调用（运行期 i18next 支持任意字符串 key）。
+ */
+const translateDynamic = (key: string): string =>
+  (i18n.t as unknown as (key: string) => string)(key);
+
+/** 方案名展示：内置方案走 i18n（name 即语言包 key），自建方案用用户输入名 */
+export function describeSchemeName(scheme: PaletteScheme): string {
+  return scheme.builtin ? translateDynamic(scheme.name) : scheme.name;
+}
+
+/**
+ * 别名展示：内置方案的别名存的是 i18n key（settings:palette.schemes.aliases.<方案>.<序号>），
+ * 展示时翻译成当前语言；用户自己输入的自定义别名不含 ':'，原样返回。
+ */
+export function displayAlias(rawAlias?: string): string {
+  const raw = (rawAlias ?? '').trim();
+  if (!raw) return '';
+  return raw.includes(':') ? translateDynamic(raw) : raw;
+}
+
+/** 由方案的 16 色数组构建槽色 map（始终含全部槽位，非法/缺失槽回退出厂默认色） */
+export function schemeHexMap(scheme: PaletteScheme): PaletteHexMap {
+  const map: PaletteHexMap = {};
+  PALETTE_SLOT_IDS.forEach((id, i) => {
+    const hex = normalizeHex(scheme.hexes[i]);
+    if (hex) map[id] = hex;
+  });
+  return normalizePaletteMap(map);
+}
+
+/** 以当前调色板（色 + 别名）快照生成自建方案 */
+export function schemeFromPalette(
+  name: string,
+  slots: PaletteHexMap,
+  aliases: PaletteAliasMap,
+): PaletteScheme {
+  const normalized = normalizePaletteMap(slots);
+  return {
+    id: generateId(SCHEME_CUSTOM_ID_PREFIX),
+    name: name.trim(),
+    hexes: PALETTE_SLOT_IDS.map((id) => normalized[id] ?? DEFAULT_PALETTE_HEXES[id] ?? ''),
+    aliases: normalizeAliasMap(aliases),
+  };
+}
+
+/** 方案内容是否与当前调色板（16 色 + 别名）完全一致（判定「当前生效的方案」） */
+export function schemeMatchesPalette(
+  scheme: PaletteScheme,
+  slots: PaletteHexMap,
+  aliases: PaletteAliasMap,
+): boolean {
+  const hexMap = schemeHexMap(scheme);
+  const schemeAliases = normalizeAliasMap(scheme.aliases);
+  const currentAliases = normalizeAliasMap(aliases);
+  // 内置方案的别名是出厂模板：调色板一个别名都没设过时（如沿用出厂默认色的用户）
+  // 视为仍在使用该方案，不因「别名尚未落地」判成自定义配色
+  const aliasMatched =
+    (scheme.builtin === true && Object.keys(currentAliases).length === 0) ||
+    PALETTE_SLOT_IDS.every(
+      (id) => (schemeAliases[id] ?? '') === (currentAliases[id] ?? ''),
+    );
+  return (
+    aliasMatched && PALETTE_SLOT_IDS.every((id) => hexMap[id] === normalizeHex(slots[id]))
+  );
+}
+
+/**
+ * 解析「当前生效的方案」，用于下拉框的选中项。
+ * 识别以 **方案 id** 为准（`preferredId` = 用户最后一次应用的方案，见 usePaletteStore.activeSchemeId），
+ * 颜色内容只作为校验与兜底，不承担识别职责：
+ * 1. `preferredId` 命中的方案，且其内容（16 色 + 别名）仍与当前调色板一致 → 采用它（多套方案内容
+ *    完全相同时也能各自选中，例如把内置「极光」原样另存为自建方案后，两者仍可分别选中）；
+ * 2. id 缺失/方案已删除/内容已被手工改动 → 回落到内容匹配：自建方案优先（取最近保存的一套），
+ *    再退到内置方案；
+ * 3. 都不一致返回 null（UI 显示「自定义配色」）。
+ */
+export function resolveActiveScheme(
+  custom: readonly PaletteScheme[],
+  slots: PaletteHexMap,
+  aliases: PaletteAliasMap,
+  preferredId?: string | null,
+): PaletteScheme | null {
+  if (preferredId) {
+    const preferred = allSchemes(custom).find((s) => s.id === preferredId);
+    if (preferred && schemeMatchesPalette(preferred, slots, aliases)) return preferred;
+  }
+  for (let i = custom.length - 1; i >= 0; i -= 1) {
+    const scheme = custom[i];
+    if (scheme && schemeMatchesPalette(scheme, slots, aliases)) return scheme;
+  }
+  return BUILTIN_PALETTE_SCHEMES.find((s) => schemeMatchesPalette(s, slots, aliases)) ?? null;
+}
+
+/**
+ * 规范化自建方案列表：逐项校验并清洗，丢弃非法项——
+ * id 必须为 'custom-' 前缀、name 非空、hexes 恰好 16 个合法 hex；id 去重（保留首个）。
+ */
+export function normalizeSchemeList(raw?: readonly PaletteScheme[]): PaletteScheme[] {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set<string>();
+  const result: PaletteScheme[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const id = typeof item.id === 'string' ? item.id.trim() : '';
+    const name = typeof item.name === 'string' ? item.name.trim() : '';
+    if (!id.startsWith(SCHEME_CUSTOM_ID_PREFIX) || !name || seen.has(id)) continue;
+    const hexes: readonly string[] = Array.isArray(item.hexes) ? item.hexes : [];
+    if (hexes.length !== PALETTE_SLOT_IDS.length) continue;
+    const normalizedHexes = hexes.map((hex) => normalizeHex(hex));
+    if (normalizedHexes.some((hex) => !hex)) continue;
+    seen.add(id);
+    result.push({ id, name, hexes: normalizedHexes, aliases: normalizeAliasMap(item.aliases) });
+  }
+  return result;
 }

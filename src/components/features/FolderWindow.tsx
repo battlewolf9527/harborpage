@@ -376,13 +376,31 @@ const FolderWindow: React.FC<FolderWindowProps> = memo(({
   const surfaceFolderColor = adjustHexLightness(effectiveFolderColor, lightness);
 
   // 文件夹窗口主题：把有效色换算为 --fc-hue/--fc-sat/--fc-lit，
-  // 注入 .folder-window 供 CSS 派生半透明色系分层（底色/描边/内外光）；lit 叠加全局明暗度
+  // 注入 .folder-window 供 CSS 派生半透明色系分层（棱线/光晕/受光带/色晕）；lit 叠加全局明暗度。
+  // 另注入两个「材质气质档位」（无单位数值 0~1，CSS 里直接当 alpha / 强度系数用）：
+  //   frost → 亮色文件夹走「霜化水晶」：高光强、含乳白霜纱、外光晕柔亮
+  //   depth → 暗且无彩（黑 / 灰）走「黑曜石」：内壁暗角深、几乎不外发光
+  // 纯白与纯黑没有色相可染，只能靠这两档气质区分，而不是靠刷明暗硬碰。
   const folderHsl = hexToHsl(effectiveFolderColor);
+  const folderLit = folderHsl ? Math.min(100, Math.max(0, folderHsl.l + lightness)) : 0;
+  const folderSat = folderHsl ? folderHsl.s : 0;
+  // 亮度 42% 以下不霜化、97% 以上满霜化；暗色档由「暗度」乘上「无彩度」得到，
+  // 彩色深色文件夹被色度抵消（不触发暗角），避免重演「深色文件夹把窗口压沉」
+  const folderFrost = Math.min(1, Math.max(0, (folderLit - 42) / 55));
+  const folderDepth =
+    Math.min(1, Math.max(0, (50 - folderLit) / 50)) * (1 - Math.min(1, folderSat / 25));
+  // 色浓度：0 = 无彩色（白/灰/黑，身体薄染维持原强度，观感不变）；1 = 高饱和彩色。
+  // 彩色文件夹的「身体薄染」按它衰减，使窗口是深色玻璃里透出一点材质色，而不是整窗被染满；
+  // 材质色的辨识度交给棱线（0.52）、顶部内高光、外圈光晕这三支光去承担。
+  const folderChroma = Math.min(1, folderSat / 45);
   const folderThemeStyle = folderHsl
     ? ({
         '--fc-hue': String(Math.round(folderHsl.h)),
         '--fc-sat': `${Math.round(folderHsl.s)}%`,
-        '--fc-lit': `${Math.round(Math.min(100, Math.max(0, folderHsl.l + lightness)))}%`,
+        '--fc-lit': `${Math.round(folderLit)}%`,
+        '--fc-frost': folderFrost.toFixed(3),
+        '--fc-depth': folderDepth.toFixed(3),
+        '--fc-chroma': folderChroma.toFixed(3),
       } as React.CSSProperties)
     : undefined;
 

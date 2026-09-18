@@ -86,6 +86,7 @@ function syncToDataManager(): void {
     dataManager.updatePalette(p.slots);
     dataManager.updatePaletteAliases(p.aliases);
     dataManager.updatePaletteLightness(p.lightness);
+    dataManager.updatePaletteSchemes(p.schemes);
   });
 
   safeSync('pages', () => {
@@ -128,7 +129,7 @@ export function initializeAllStores(data: UserData): void {
   safeInit('search', () => useSearchStore.getState().initialize(data.searchEngines, data.settings?.defaultSearchEngineId));
   safeInit('todos', () => useTodoStore.getState().initialize(data.todos ?? data.todoList ?? []));
   safeInit('notes', () => useNotesStore.getState().initialize(data.notes));
-  safeInit('palette', () => usePaletteStore.getState().initialize(data.palette, data.paletteAliases, data.paletteLightness));
+  safeInit('palette', () => usePaletteStore.getState().initialize(data.palette, data.paletteAliases, data.paletteLightness, data.paletteSchemes));
 
   const failedStores = Object.entries(initResults)
     .filter(([, success]) => !success)
@@ -168,7 +169,7 @@ export async function initializeAllStoresAsync(
     ['search', 65, i18n.t('system:store.progress.initializingSearchEngines'), () => useSearchStore.getState().initialize(data.searchEngines, data.settings?.defaultSearchEngineId)],
     ['todos', 77, i18n.t('system:store.progress.initializingTodos'), () => useTodoStore.getState().initialize(data.todos ?? data.todoList ?? [])],
     ['notes', 87, i18n.t('system:store.progress.initializingNotes'), () => useNotesStore.getState().initialize(data.notes)],
-    ['palette', 92, i18n.t('system:store.progress.initializingPalette'), () => usePaletteStore.getState().initialize(data.palette, data.paletteAliases, data.paletteLightness)],
+    ['palette', 92, i18n.t('system:store.progress.initializingPalette'), () => usePaletteStore.getState().initialize(data.palette, data.paletteAliases, data.paletteLightness, data.paletteSchemes)],
   ];
 
   for (const [name, percent, task, fn] of steps) {

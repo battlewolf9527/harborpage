@@ -16,6 +16,8 @@ const SavePrompt: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveProgress, setSaveProgress] = useState({ current: 0, total: 0 });
   const [saveError, setSaveError] = useState<string | null>(null);
+  // 断网导致保存未能提交：改动仍在待保存队列中，按「待同步」而非「失败」呈现
+  const [isOfflinePending, setIsOfflinePending] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -61,7 +63,14 @@ const SavePrompt: React.FC = () => {
   }, []);
 
   const performSave = useCallback(async () => {
-    if (isSaving) return;
+    if (isSaving) return false;
+    // 断网时不发无意义的请求：改动仍在待保存队列里，联网后由下方 effect 自动补交。
+    // 这里直接读 navigator.onLine（而非组件里的 isOnline 快照），
+    // 避免「online 事件刚触发、重渲染尚未提交」时读到过期的 false 而漏掉补交。
+    if (!navigator.onLine) {
+      setIsOfflinePending(true);
+      return false;
+    }
     setIsSaving(true);
     setSaveProgress({ current: 0, total: 0 });
     setSaveError(null);
@@ -72,8 +81,15 @@ const SavePrompt: React.FC = () => {
       await useIconsStore.getState().processPendingDeletes((current, total) => {
         setSaveProgress({ current, total });
       });
+      setIsOfflinePending(false);
       handleSaveSuccess();
+    } else if (result.offline) {
+      // 提交途中断网：同样按待同步处理，不弹保存失败
+      setSaveError(null);
+      setIsOfflinePending(true);
+      setIsSaving(false);
     } else if (result.error) {
+      setIsOfflinePending(false);
       handleSaveError(result.error);
     } else {
       setIsSaving(false);
@@ -94,6 +110,19 @@ const SavePrompt: React.FC = () => {
     resetCountdownRef.current = resetCountdown;
   }, [resetCountdown]);
 
+  // 恢复联网后自动补交离线期间的改动，无需用户手动点保存。
+  // 订阅 window 的 online 事件（该事件只在「离线 → 联网」这一刻触发），
+  // 既不会干扰正常的自动保存倒计时，也不必在 effect 体内同步调用 performSave。
+  useEffect(() => {
+    const handleOnline = () => {
+      if (dataManager.hasChanges()) {
+        performSave();
+      }
+    };
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [dataManager, performSave]);
+
   useEffect(() => {
     const handleChanges = (hasChanges: boolean) => {
       setHasUnsavedChanges(hasChanges);
@@ -110,6 +139,7 @@ const SavePrompt: React.FC = () => {
         setIsVisible(true);
         setIsExiting(false);
         setSaveError(null);
+        setIsOfflinePending(false);
         setShowTooltip(false);
         setToast(null);
       } else if (!isSavingRef.current) {
@@ -233,6 +263,7 @@ const SavePrompt: React.FC = () => {
           {showTooltip && (
             <SaveTooltip
               saveError={saveError}
+              isOfflinePending={isOfflinePending}
               isSaving={isSaving}
               saveProgress={saveProgress}
               autoSaveEnabled={autoSaveEnabled}

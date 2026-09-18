@@ -12,6 +12,8 @@
     "retrySave": "重试保存",
     "saveNow": "立即保存",
     "saveNowWithCountdown": "立即保存 ({{seconds}}s)",
+    "pendingOffline": "离线，待同步",
+    "pendingOfflineHint": "当前处于离线状态，改动已保留在本机，恢复网络后会自动同步到云端。",
     "autoSave": "自动保存"
   },
   "saveProgress": {

@@ -1,0 +1,79 @@
+/* ════════════════════════════════════════════════════════════════
+   HintTip.css — 问号徽标 + 悬停提示气泡
+   气泡左对齐徽标、向下展开：面板内容区（.settings-scroll）是 overflow-x: hidden，
+   气泡宽度必须受视口约束，否则会被裁掉。
+   ════════════════════════════════════════════════════════════════ */
+
+.hint-tip-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── 问号徽标 ── */
+.hint-tip {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--text-tertiary);
+  font-size: var(--font-xs);
+  font-weight: 600;
+  line-height: 1;
+  cursor: help;
+  user-select: none;
+  transition: background var(--motion-fast), color var(--motion-fast), border-color var(--motion-fast);
+}
+.hint-tip:hover,
+.hint-tip:focus-visible {
+  background: color-mix(in srgb, var(--aurora-2) 22%, transparent);
+  border-color: color-mix(in srgb, var(--aurora-2) 45%, transparent);
+  color: var(--text-primary);
+  outline: none;
+}
+
+/* ── 提示气泡 ── */
+.hint-tip-bubble {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  width: max-content;
+  /* 徽标本身已距内容区左缘约 70px，再留出面板右侧内边距，避免横向被裁 */
+  max-width: min(280px, calc(100vw - 150px));
+  padding: 10px 12px;
+  background: var(--glass-surface-300);
+  backdrop-filter: var(--glass-blur-soft);
+  -webkit-backdrop-filter: var(--glass-blur-soft);
+  border: var(--glass-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-glass-md);
+  color: var(--text-primary);
+  font-size: var(--font-sm);
+  font-weight: 400;
+  line-height: 1.7;
+  text-align: left;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity var(--motion-fast), transform var(--motion-fast);
+}
+/* 指向问号的小三角 */
+.hint-tip-bubble::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 5px;
+  border: 5px solid transparent;
+  border-bottom-color: var(--glass-surface-300);
+}
+.hint-tip-wrapper:hover .hint-tip-bubble,
+.hint-tip-wrapper:focus-within .hint-tip-bubble {
+  opacity: 1;
+  transform: translateY(0);
+}

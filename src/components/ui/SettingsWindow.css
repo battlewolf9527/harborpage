@@ -274,8 +274,7 @@
 }
 .palette-manage-head {
   display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
 }
 .palette-manage-title {
@@ -284,9 +283,10 @@
   color: var(--text-secondary);
   line-height: 1.4;
 }
-.palette-manage-hint {
-  font-size: var(--font-xs);
-  color: var(--text-quaternary);
+/* 「保存为方案」按钮靠右（语义：把当前调色板存为方案） */
+.palette-manage-head > button {
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 /* ── 全局明暗度调节（调色板块内）──
@@ -310,13 +310,14 @@
   font-size: var(--font-md);
   font-weight: 500;
   color: var(--text-secondary);
-  margin-right: auto;
   line-height: 1.4;
 }
 .palette-lightness-value {
   font-size: var(--font-sm);
   font-weight: 600;
   color: var(--text-primary);
+  /* 左推：标题与问号提示贴左，数值与实时预览开关靠右 */
+  margin-left: auto;
   font-variant-numeric: tabular-nums;
   min-width: 64px;
   text-align: right;
@@ -344,9 +345,11 @@
   width: 14px;
   height: 14px;
 }
+/* 滑杆两端标记：暗在左、亮在右（说明文案已改为标题旁的问号提示） */
 .palette-lightness-foot {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
   margin-top: 2px;
 }
@@ -355,21 +358,16 @@
   color: var(--text-quaternary);
   user-select: none;
 }
-.palette-lightness-hint {
-  flex: 1;
-  text-align: center;
-  font-size: var(--font-xs);
-  color: var(--text-quaternary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 
 /* ── 通用按钮：玻璃幽灵 + 10px 圆 ──
-   紧凑图标按钮用 :not() 排除，避免被拉伸成通栏玻璃按钮：
-   · .palette-cell      → 调色板自带色块按钮
-   · .engine-action-btn → 搜索引擎列表行内的图标按钮（需保持 28×28 透明无边框） */
-.settings-panel button:not(.palette-cell):not(.engine-action-btn) {
+   紧凑图标按钮与「自带完整规格的弹窗按钮」用 :not() 排除，避免被拉伸成通栏玻璃按钮：
+   · .palette-cell         → 调色板自带色块按钮
+   · .engine-action-btn    → 搜索引擎列表行内的图标按钮（需保持 28×28 透明无边框）
+   · .scheme-icon-btn      → 配色方案的重命名/删除图标按钮（24×24）
+   · .folder-name-button   → 命名弹窗（文件夹/配色方案）的主/次按钮
+   · .confirm-dialog-btn   → 确认弹窗按钮（渐变主按钮 / 语义红 danger 变体）
+   后两类弹窗虽渲染在面板 DOM 内，但视觉应保持全站统一（与从主界面打开时一致）。 */
+.settings-panel button:not(.palette-cell):not(.engine-action-btn):not(.scheme-icon-btn):not(.folder-name-button):not(.confirm-dialog-btn) {
   padding: 0 16px;
   min-height: var(--btn-h);
   border: var(--glass-border);
@@ -390,13 +388,13 @@
   line-height: 1;
   text-align: center;
 }
-.settings-panel button:hover:not(:disabled):not(.palette-cell):not(.engine-action-btn) {
+.settings-panel button:hover:not(:disabled):not(.palette-cell):not(.engine-action-btn):not(.scheme-icon-btn):not(.folder-name-button):not(.confirm-dialog-btn) {
   background: var(--glass-surface-hover);
   color: var(--text-primary);
   border-color: rgba(255, 255, 255, 0.18);
   transform: translateY(-1px);
 }
-.settings-panel button:active:not(.palette-cell):not(.engine-action-btn) { transform: translateY(0); }
+.settings-panel button:active:not(.palette-cell):not(.engine-action-btn):not(.scheme-icon-btn):not(.folder-name-button):not(.confirm-dialog-btn) { transform: translateY(0); }
 
 .settings-panel button:disabled {
   opacity: 0.45;
@@ -405,12 +403,12 @@
   box-shadow: none;
 }
 
-.settings-section button:not(.palette-cell) {
+.settings-section button:not(.palette-cell):not(.scheme-icon-btn):not(.folder-name-button):not(.confirm-dialog-btn) {
   background: var(--glass-surface-300);
   border: var(--glass-border);
   color: var(--text-secondary);
 }
-.settings-section button:hover:not(:disabled):not(.palette-cell) {
+.settings-section button:hover:not(:disabled):not(.palette-cell):not(.scheme-icon-btn):not(.folder-name-button):not(.confirm-dialog-btn) {
   background: var(--glass-surface-hover);
   border-color: rgba(255, 255, 255, 0.18);
   transform: translateY(-1px);

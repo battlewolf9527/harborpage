@@ -10,5 +10,6 @@
   "close": "关闭",
   "loading": "加载中...",
   "processing": "处理中...",
+  "offlineBadge": "离线模式",
   "defaultSiteTitle": "我的导航"
 }

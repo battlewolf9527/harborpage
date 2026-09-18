@@ -14,6 +14,7 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 import ImportProgressOverlay from './components/common/ImportProgressOverlay';
 import MoveToPageDialog from './components/common/MoveToPageDialog';
 import FeatureDock from './components/common/FeatureDock';
+import OfflineBadge from './components/common/OfflineBadge';
 import { useSettingsSelector, useIconsDataSelector, useIconsUISelector, useImportSelector, usePagesSelector } from './store/selectors'
 import type { Website, SearchEngine } from './types'
 import { useAuth } from './hooks/useAuth';
@@ -204,6 +205,8 @@ function App() {
       <div className="app-container" data-click-area="empty">
         <Background />
         <LoginModal onLogin={handleLogin} />
+        {/* 登录页也显示离线状态：无有效 token 时离线只能停留在此页 */}
+        <OfflineBadge />
       </div>
     );
   }
@@ -364,6 +367,8 @@ function App() {
       />
       
       <SavePrompt />
+
+      <OfflineBadge />
 
       <ImportProgressOverlay 
         isImporting={isImporting}

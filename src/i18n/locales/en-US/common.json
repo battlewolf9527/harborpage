@@ -10,5 +10,6 @@
   "close": "Close",
   "loading": "Loading...",
   "processing": "Processing...",
+  "offlineBadge": "Offline mode",
   "defaultSiteTitle": "My Dashboard"
 }

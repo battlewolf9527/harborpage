@@ -11,6 +11,7 @@ import {
   canonicalSlotId,
   customSelection,
   describeSlotLabel,
+  displayAlias,
   normalizeHex,
   resolveColorHex,
   slotNumber,
@@ -89,10 +90,19 @@ export const Palette: React.FC<PaletteProps> = ({
 
   /** 取色弹窗标题：有别名 → 「修改「别名（调色板 N）」」；无别名 → 「修改调色板 N 号」 */
   const slotEditTitle = (slotId: string): string => {
-    const alias = (aliases[slotId] ?? '').trim();
+    const alias = displayAlias(aliases[slotId]);
     return alias
       ? t('palette.editSlotWithAlias', { alias, number: slotNumber(slotId) })
       : t('palette.editSlot', { number: slotNumber(slotId) });
+  };
+
+  /**
+   * 提交槽位别名：内置方案自带别名存的是 i18n key，输入框里显示的是译文，
+   * 用户未改动别名就点确定时跳过回写，避免把译文固化成别名而丢掉方案识别。
+   */
+  const handleAliasCommit = (slotId: string, alias: string): void => {
+    if (alias === displayAlias(aliases[slotId])) return;
+    setSlotAlias(slotId, alias);
   };
 
   const pickerTitle =
@@ -161,8 +171,8 @@ export const Palette: React.FC<PaletteProps> = ({
         {...(pickerDefaultHex ? { defaultHex: pickerDefaultHex } : {})}
         {...(pickerTarget?.kind === 'slot'
           ? {
-              alias: aliases[pickerTarget.slotId] ?? '',
-              onAliasCommit: (alias) => setSlotAlias(pickerTarget.slotId, alias),
+              alias: displayAlias(aliases[pickerTarget.slotId]),
+              onAliasCommit: (alias: string) => handleAliasCommit(pickerTarget.slotId, alias),
             }
           : {})}
         onConfirm={handlePickerConfirm}

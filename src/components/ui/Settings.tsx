@@ -8,6 +8,9 @@ import IconSettings from './IconSettings';
 import AutoSaveSettings from './AutoSaveSettings';
 import FaviconSettings from './FaviconSettings';
 import { Palette } from '../common/PalettePicker';
+import SchemePicker from '../common/SchemePicker';
+import SaveSchemeButton from '../common/SaveSchemeButton';
+import HintTip from '../common/HintTip';
 import ImportPresetDialog from './ImportPresetDialog';
 import ImportExport from './ImportExport';
 import ConfirmDialog from '../common/ConfirmDialog';
@@ -296,15 +299,22 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
           {/* 调色板：全局 16 槽（设置模式 2×8）；点任意槽弹取色器改色，
               弹窗内可为该槽设置别名（显示为「别名（调色板 N）：颜色」），使用该槽位的元素自动跟随 */}
           <div className="palette-manage-block">
+            {/* 配色方案：语义上「选方案 → 决定调色板色调」，故置于调色板标题与色块之前。
+                内置 7 套 + 用户自建，下拉选中即一键改写 16 槽颜色（使用槽位的元素自动跟随） */}
+            <SchemePicker />
             <div className="palette-manage-head">
               <span className="palette-manage-title">{t('palette.title')}</span>
-              <span className="palette-manage-hint">{t('palette.hint')}</span>
+              <HintTip text={t('palette.hint')} />
+              {/* 保存为方案：把当前调色板快照存为自建方案，故与调色板标题同排 */}
+              <SaveSchemeButton />
             </div>
+            <Palette mode="settings" />
             {/* 全局明暗度：不修改各槽颜色，仅在实际使用（图标/文件夹/便签表面）时叠加亮度，
                 实现整站颜色统一调亮/调暗；下方滑杆 0 = 原色 */}
             <div className="palette-lightness-block">
               <div className="palette-lightness-head">
                 <span className="palette-lightness-title">{t('lightness.title')}</span>
+                <HintTip text={t('lightness.hint')} />
                 <span className="palette-lightness-value">{lightnessLabel}</span>
                 <div
                   className="palette-lightness-preview"
@@ -333,11 +343,9 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
               />
               <div className="palette-lightness-foot">
                 <span className="palette-lightness-mark">{t('lightness.dim')}</span>
-                <span className="palette-lightness-hint">{t('lightness.hint')}</span>
                 <span className="palette-lightness-mark">{t('lightness.bright')}</span>
               </div>
             </div>
-            <Palette mode="settings" />
           </div>
         </div>
 

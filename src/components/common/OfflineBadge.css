@@ -1,0 +1,52 @@
+/* ════════════════════════════════════════════════════════════════
+   OfflineBadge.css — 离线模式徽标（左下角常驻）
+   四角占用：左上=天气组件，右上=设置按钮/保存提示，左右中=侧栏入口球，
+   底部中=便签入口球 —— 因此离线徽标落在左下角。
+   ════════════════════════════════════════════════════════════════ */
+
+.offline-badge {
+  position: fixed;
+  bottom: calc(24px + var(--safe-bottom));
+  left: calc(24px + var(--safe-left));
+  z-index: 900;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  background: var(--glass-surface-300);
+  backdrop-filter: var(--glass-blur-soft);
+  -webkit-backdrop-filter: var(--glass-blur-soft);
+  border: 1px solid color-mix(in srgb, var(--semantic-warn) 42%, transparent);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-glass-md), var(--glass-inner-hl);
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  user-select: none;
+  /* 纯状态提示：不拦截桌面图标的长按/拖拽等空白区交互 */
+  pointer-events: none;
+  animation: offlineBadgeIn var(--motion-normal);
+}
+
+.offline-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--semantic-warn);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--semantic-warn) 70%, transparent);
+}
+
+@keyframes offlineBadgeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .offline-badge {
+    bottom: calc(16px + var(--safe-bottom));
+    left: calc(16px + var(--safe-left));
+    padding: 6px 10px;
+  }
+}

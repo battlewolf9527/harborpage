@@ -153,6 +153,25 @@ export type PaletteHexMap = Record<string, string>;
 // 调色板槽别名：槽 id（palette-N）→ 用户自定义名称（可选；仅存设置了别名的槽）
 export type PaletteAliasMap = Record<string, string>;
 
+/**
+ * 配色方案（只读模板）：16 槽颜色 + 该方案自带的一套槽别名。
+ * - 内置方案由代码常量提供（paletteSchemePresets.BUILTIN_PALETTE_SCHEMES），不持久化；
+ * - 自建方案由「保存为方案」从当前调色板快照生成，持久化到 UserData.paletteSchemes；
+ * - 方案内容不可编辑：应用方案 = 直接改写调色板，之后改调色板不回写方案。
+ */
+export interface PaletteScheme {
+  /** 自建 'custom-<uuid>'；内置 'builtin-*' */
+  id: string;
+  /** 自建 = 用户输入名；内置 = i18n key（settings:palette.schemes.builtin.*） */
+  name: string;
+  /** 16 槽 hex，顺序对应 palette-1 … palette-16 */
+  hexes: string[];
+  /** 该方案自带的槽别名（内置方案为空 = 应用后显示「调色板 N」） */
+  aliases: PaletteAliasMap;
+  /** true = 内置方案（不可重命名/删除） */
+  builtin?: boolean;
+}
+
 // 用户数据类型
 export interface UserData {
   settings?: Settings;
@@ -168,6 +187,11 @@ export interface UserData {
   palette?: PaletteHexMap;
   /** 调色板槽别名（palette-N → 用户自定义名称）；未设置 = 无别名，按「调色板 N」展示 */
   paletteAliases?: PaletteAliasMap;
+  /**
+   * 自建配色方案（内置 7 套由代码常量提供，不在此列）；未设置 = 只有内置方案。
+   * 应用方案 = 把方案的 16 色与别名写入 palette / paletteAliases，方案本身只读。
+   */
+  paletteSchemes?: PaletteScheme[];
   /**
    * 全局显示明暗度偏移（-50..50，0 = 原色）：不改动任何已存 hex，
    * 仅在元素真实使用颜色（图标材质/文件夹窗口/便签表面）时叠加到 HSL 亮度通道，

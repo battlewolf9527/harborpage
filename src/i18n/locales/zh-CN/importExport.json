@@ -12,6 +12,7 @@
     "pagesSites": "{{pages}}页/{{sites}}站",
     "slots": "{{count}} 槽",
     "aliases": "{{count}} 别名",
+    "schemes": "{{count}} 方案",
     "items": "{{count}} 个"
   },
   "summary": {
@@ -23,6 +24,7 @@
     "settings": "设置项",
     "paletteSlots": "调色板 {{count}} 槽",
     "paletteAliases": "调色板别名 {{count}} 个",
+    "paletteSchemes": "配色方案 {{count}} 套",
     "separator": "，",
     "fileContains": "文件包含：{{list}}。",
     "empty": "文件中无有效数据。"

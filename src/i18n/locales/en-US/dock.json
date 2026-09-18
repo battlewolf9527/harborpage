@@ -12,6 +12,8 @@
     "retrySave": "Retry Save",
     "saveNow": "Save Now",
     "saveNowWithCountdown": "Save Now ({{seconds}}s)",
+    "pendingOffline": "Offline, pending sync",
+    "pendingOfflineHint": "You are offline. Your changes are kept on this device and will sync to the cloud automatically once the connection is back.",
     "autoSave": "Auto Save"
   },
   "saveProgress": {

@@ -12,6 +12,7 @@
     "pagesSites": "{{pages}} pages / {{sites}} sites",
     "slots": "{{count}} slots",
     "aliases": "{{count}} aliases",
+    "schemes": "{{count}} schemes",
     "items": "{{count}}"
   },
   "summary": {
@@ -23,6 +24,7 @@
     "settings": "Settings",
     "paletteSlots": "{{count}} palette slots",
     "paletteAliases": "{{count}} palette aliases",
+    "paletteSchemes": "{{count}} color schemes",
     "separator": ", ",
     "fileContains": "File contains: {{list}}.",
     "empty": "The file contains no valid data."

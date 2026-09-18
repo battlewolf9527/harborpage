@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 
 interface SaveTooltipProps {
   saveError: string | null;
+  /** 断网导致保存未能提交：改动仍在待保存队列，联网后自动补交 */
+  isOfflinePending: boolean;
   isSaving: boolean;
   saveProgress: { current: number; total: number };
   autoSaveEnabled: boolean;
@@ -15,6 +17,7 @@ interface SaveTooltipProps {
 
 const SaveTooltip: React.FC<SaveTooltipProps> = React.memo(({
   saveError,
+  isOfflinePending,
   isSaving,
   saveProgress,
   autoSaveEnabled,
@@ -25,6 +28,23 @@ const SaveTooltip: React.FC<SaveTooltipProps> = React.memo(({
   onMouseLeave,
 }) => {
   const { t } = useTranslation('dock');
+
+  const autoSaveControl = (
+    <div className="auto-save-control">
+      <span>{t('saveTooltip.autoSave')}</span>
+      <label className="toggle-switch">
+        <input
+          type="checkbox"
+          checked={autoSaveEnabled}
+          onChange={(e) => {
+            onToggleAutoSave(e.target.checked);
+          }}
+        />
+        <span className="toggle-slider"></span>
+      </label>
+    </div>
+  );
+
   return (
     <div
       className="save-tooltip"
@@ -39,6 +59,13 @@ const SaveTooltip: React.FC<SaveTooltipProps> = React.memo(({
             <button className="save-button" onClick={onManualSave} disabled={isSaving}>
               {isSaving ? t('saveTooltip.saving') : t('saveTooltip.retrySave')}
             </button>
+          </>
+        ) : isOfflinePending ? (
+          /* 离线：改动仍在待保存队列，联网后自动补交，因此不给无效的「立即保存」按钮 */
+          <>
+            <h3>{t('saveTooltip.pendingOffline')}</h3>
+            <p>{t('saveTooltip.pendingOfflineHint')}</p>
+            {autoSaveControl}
           </>
         ) : (
           <>
@@ -66,19 +93,7 @@ const SaveTooltip: React.FC<SaveTooltipProps> = React.memo(({
                 ></div>
               </div>
             )}
-            <div className="auto-save-control">
-              <span>{t('saveTooltip.autoSave')}</span>
-              <label className="toggle-switch">
-                <input
-                  type="checkbox"
-                  checked={autoSaveEnabled}
-                  onChange={(e) => {
-                    onToggleAutoSave(e.target.checked);
-                  }}
-                />
-                <span className="toggle-slider"></span>
-              </label>
-            </div>
+            {autoSaveControl}
           </>
         )}
       </div>

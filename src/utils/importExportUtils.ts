@@ -1,4 +1,4 @@
-import type { Website, ImportableWebsite, SearchEngine, Todo, Note, Settings, UserData, Page, PaletteHexMap, PaletteAliasMap } from '../types';
+import type { Website, ImportableWebsite, SearchEngine, Todo, Note, Settings, UserData, Page, PaletteHexMap, PaletteAliasMap, PaletteScheme } from '../types';
 import { EXPORT_FILE_PREFIX } from '../constants';
 import ConfigService from '../services/ConfigService';
 import { generateId } from './idUtils';
@@ -8,7 +8,9 @@ import {
   isPaletteSlotId,
   normalizeAliasMap,
   normalizePaletteMap,
+  normalizeSchemeList,
   PALETTE_SLOT_IDS,
+  SCHEME_CUSTOM_ID_PREFIX,
 } from './paletteColors';
 
 // 导出数据格式
@@ -251,6 +253,8 @@ export interface FullExportData {
   palette?: PaletteHexMap;
   /** 调色板槽别名（palette-N → 用户自定义名称；仅导出设置了别名的槽，与 palette 同属「调色板」分类） */
   paletteAliases?: PaletteAliasMap;
+  /** 用户自建配色方案（内置 7 套由代码常量提供，不导出；与 palette 同属「调色板」分类） */
+  paletteSchemes?: PaletteScheme[];
 }
 
 // 导出/导入数据勾选项
@@ -380,6 +384,11 @@ export const buildFullExportData = (data: UserData, selection: DataSelection): F
     if (Object.keys(aliases).length > 0) {
       result.paletteAliases = aliases;
     }
+    // 自建配色方案同样跟随「调色板」勾选项（内置 7 套由代码提供，不入文件）
+    const schemes = normalizeSchemeList(cleaned.paletteSchemes);
+    if (schemes.length > 0) {
+      result.paletteSchemes = schemes;
+    }
   }
   return result;
 };
@@ -450,6 +459,24 @@ const validatePage = (item: unknown): item is Page => {
   );
 };
 
+// 校验配色方案对象（仅自建方案：id 带 custom- 前缀、name 非空、恰好 16 个合法 hex、别名合法）
+const validatePaletteScheme = (item: unknown): item is PaletteScheme => {
+  if (typeof item !== 'object' || item === null) return false;
+  const scheme = item as PaletteScheme;
+  if (typeof scheme.id !== 'string' || !scheme.id.startsWith(SCHEME_CUSTOM_ID_PREFIX)) return false;
+  if (typeof scheme.name !== 'string' || !scheme.name.trim()) return false;
+  if (!Array.isArray(scheme.hexes) || scheme.hexes.length !== PALETTE_SLOT_IDS.length) return false;
+  if (!scheme.hexes.every((hex) => typeof hex === 'string' && isHexColor(hex))) return false;
+  if (scheme.aliases !== undefined) {
+    if (typeof scheme.aliases !== 'object' || scheme.aliases === null || Array.isArray(scheme.aliases)) return false;
+    for (const [slotId, alias] of Object.entries(scheme.aliases as PaletteAliasMap)) {
+      if (!isPaletteSlotId(slotId)) return false;
+      if (typeof alias !== 'string' || !alias.trim()) return false;
+    }
+  }
+  return true;
+};
+
 // 校验全量导入数据（字段可选，至少存在一个数据字段）
 export const validateFullImportData = (data: unknown): data is FullExportData => {
   if (typeof data !== 'object' || data === null) return false;
@@ -483,10 +510,16 @@ export const validateFullImportData = (data: unknown): data is FullExportData =>
     }
   }
 
+  // 配色方案：数组，逐项校验（id/name/16 色/别名）
+  if (d.paletteSchemes !== undefined) {
+    if (!Array.isArray(d.paletteSchemes) || d.paletteSchemes.length === 0) return false;
+    if (!d.paletteSchemes.every(validatePaletteScheme)) return false;
+  }
+
   // 至少要有一个数据字段
   const hasAnyData = d.websites !== undefined || d.pages !== undefined || d.searchEngines !== undefined ||
     d.todos !== undefined || d.notes !== undefined || d.settings !== undefined || d.palette !== undefined ||
-    d.paletteAliases !== undefined;
+    d.paletteAliases !== undefined || d.paletteSchemes !== undefined;
   if (!hasAnyData) return false;
 
   return true;

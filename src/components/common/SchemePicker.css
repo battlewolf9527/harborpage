@@ -1,0 +1,70 @@
+/* ════════════════════════════════════════════════════════════════
+   SchemePicker.css — 配色方案选择器视觉（设置 → 个性化 → 调色板块内）
+   结构（标题行 → 控件行，规格与 .palette-manage-* 一致）：
+   .scheme-picker
+   ├ .scheme-picker-head    标题 + 问号提示（HintTip，悬停浮出说明）
+   └ .scheme-picker-row
+       ├ .scheme-select         下拉框（内置 7 套 + 自建；无匹配时显示「自定义配色」）
+       └ .scheme-picker-actions 选中自建方案时出现的重命名 / 删除图标按钮
+   ════════════════════════════════════════════════════════════════ */
+
+.scheme-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.scheme-picker-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.scheme-picker-title {
+  font-size: var(--font-md);
+  font-weight: 500;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* ── 控件行：下拉框占满剩余宽度，自建方案的操作图标紧随其后 ── */
+.scheme-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+/* 视觉复用 .settings-panel select（输入框规格 + 自绘箭头），此处只调占位 */
+.scheme-select {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── 自建方案的重命名 / 删除（复用搜索引擎行内图标按钮规格）── */
+.scheme-picker-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.scheme-icon-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-xs);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-tertiary);
+  font-size: var(--font-sm);
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--motion-fast);
+}
+.scheme-icon-btn:hover {
+  background: var(--glass-surface-300);
+  color: var(--text-primary);
+}
+.scheme-icon-btn-delete:hover {
+  background: color-mix(in srgb, var(--semantic-danger) 18%, transparent);
+  color: #fff;
+}

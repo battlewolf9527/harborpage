@@ -17,9 +17,9 @@ import {
 } from '../../utils/importExportUtils';
 import { EXPORT_FILE_PREFIX } from '../../constants';
 import type importExportResources from '../../i18n/locales/zh-CN/importExport.json';
-import type { UserData, Website, Page, PaletteHexMap, PaletteAliasMap } from '../../types';
+import type { UserData, Website, Page, PaletteHexMap, PaletteAliasMap, PaletteScheme } from '../../types';
 import { createDefaultPage } from '../../store/usePagesStore';
-import { DEFAULT_PALETTE_HEXES, PALETTE_SLOT_IDS, normalizeAliasMap, normalizePaletteMap } from '../../utils/paletteColors';
+import { DEFAULT_PALETTE_HEXES, PALETTE_SLOT_IDS, normalizeAliasMap, normalizePaletteMap, normalizeSchemeList } from '../../utils/paletteColors';
 import './ImportExport.css';
 
 // 数据分类配置
@@ -68,7 +68,11 @@ const countPaletteModifications = (palette?: PaletteHexMap): number => {
 const countPaletteAliases = (aliases?: PaletteAliasMap): number =>
   Object.keys(normalizeAliasMap(aliases)).length;
 
-type CellCounts = Record<CategoryKey, number | null> & { pageSiteCount: number; paletteAliasCount: number };
+/** 统计自建配色方案数量（清洗后计数，内置 7 套不入文件故不计） */
+const countPaletteSchemes = (schemes?: readonly PaletteScheme[]): number =>
+  normalizeSchemeList(schemes).length;
+
+type CellCounts = Record<CategoryKey, number | null> & { pageSiteCount: number; paletteAliasCount: number; paletteSchemeCount: number };
 
 /** 生成分类行的数量文案；无数据返回 null（调色板行合并展示槽色与别名） */
 const formatCellCount = (key: CategoryKey, counts: CellCounts): string | null => {
@@ -82,6 +86,7 @@ const formatCellCount = (key: CategoryKey, counts: CellCounts): string | null =>
     const parts: string[] = [];
     if (count) parts.push(i18n.t('importExport:categoryCount.slots', { count }));
     if (counts.paletteAliasCount) parts.push(i18n.t('importExport:categoryCount.aliases', { count: counts.paletteAliasCount }));
+    if (counts.paletteSchemeCount) parts.push(i18n.t('importExport:categoryCount.schemes', { count: counts.paletteSchemeCount }));
     return parts.length > 0 ? parts.join(' · ') : null;
   }
   if (count === null || count === 0) return null;
@@ -91,11 +96,11 @@ const formatCellCount = (key: CategoryKey, counts: CellCounts): string | null =>
 interface ImportPreview {
   raw: FullExportData;
   available: DataSelection;
-  counts: Record<CategoryKey, number | null> & { pageSiteCount: number; paletteAliasCount: number };
+  counts: CellCounts;
 }
 
 /** 导出对话框中各分类的现有数据量（settings 无数量概念，固定 null） */
-type ExportCounts = Record<CategoryKey, number | null> & { pageSiteCount: number; paletteAliasCount: number };
+type ExportCounts = CellCounts;
 
 const EMPTY_EXPORT_COUNTS: ExportCounts = {
   searchEngines: 0,
@@ -107,6 +112,7 @@ const EMPTY_EXPORT_COUNTS: ExportCounts = {
   settings: null,
   palette: 0,
   paletteAliasCount: 0,
+  paletteSchemeCount: 0,
 };
 
 interface ToastState {
@@ -153,6 +159,7 @@ const computeExportCounts = (): ExportCounts => {
     settings: null,
     palette: countPaletteModifications(data.palette),
     paletteAliasCount: countPaletteAliases(data.paletteAliases),
+    paletteSchemeCount: countPaletteSchemes(data.paletteSchemes),
   };
 };
 
@@ -176,6 +183,8 @@ const buildImportSummary = (data: FullExportData): string => {
   if (paletteCount > 0) parts.push(i18n.t('importExport:summary.paletteSlots', { count: paletteCount }));
   const aliasCount = countPaletteAliases(data.paletteAliases);
   if (aliasCount > 0) parts.push(i18n.t('importExport:summary.paletteAliases', { count: aliasCount }));
+  const schemeCount = countPaletteSchemes(data.paletteSchemes);
+  if (schemeCount > 0) parts.push(i18n.t('importExport:summary.paletteSchemes', { count: schemeCount }));
   if (parts.length === 0) return i18n.t('importExport:summary.empty');
   return i18n.t('importExport:summary.fileContains', {
     list: parts.join(i18n.t('importExport:summary.separator')),
@@ -265,8 +274,11 @@ const ImportExport: React.FC = () => {
         todos: !!(raw.todos?.length),
         notes: !!(raw.notes?.length),
         settings: !!raw.settings,
-        // 调色板分类包含槽色与槽别名：任一存在即可勾选
-        palette: countPaletteModifications(raw.palette) > 0 || countPaletteAliases(raw.paletteAliases) > 0,
+        // 调色板分类包含槽色 / 槽别名 / 自建配色方案：任一存在即可勾选
+        palette:
+          countPaletteModifications(raw.palette) > 0 ||
+          countPaletteAliases(raw.paletteAliases) > 0 ||
+          countPaletteSchemes(raw.paletteSchemes) > 0,
       };
       const counts: ImportPreview['counts'] = {
         searchEngines: raw.searchEngines?.length ?? null,
@@ -278,6 +290,7 @@ const ImportExport: React.FC = () => {
         settings: null,
         palette: countPaletteModifications(raw.palette) || null,
         paletteAliasCount: countPaletteAliases(raw.paletteAliases),
+        paletteSchemeCount: countPaletteSchemes(raw.paletteSchemes),
       };
       setImportSelection({ ...available });
       setImportPreview({ raw, available, counts });
@@ -360,13 +373,16 @@ const ImportExport: React.FC = () => {
     if (importSelection.settings && raw.settings) {
       imported.settings = raw.settings;
     }
-    // 调色板分类：槽色与槽别名一同导入
+    // 调色板分类：槽色、槽别名与自建配色方案一同导入
     if (importSelection.palette) {
       if (raw.palette) {
         imported.palette = raw.palette;
       }
       if (raw.paletteAliases) {
         imported.paletteAliases = raw.paletteAliases;
+      }
+      if (raw.paletteSchemes) {
+        imported.paletteSchemes = raw.paletteSchemes;
       }
     }
 

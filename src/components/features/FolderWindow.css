@@ -34,34 +34,69 @@
   --fc-hue: 232;
   --fc-sat: 100%;
   --fc-lit: 80%;
-  /* 半透明玻璃 + 文件夹色系分层薄染：上缘略亮、中部最透、下缘微沉，整窗带材质色调。
-     亮度注：材质光各层 alpha/lightness 高于同类玻璃件，且 lightness 下限 clamp 到 ~42%，
-     避免深色文件夹把整窗压成暗沉（用户反馈"颜色过暗"）。 */
+  /* 材质气质档位（FolderWindow.tsx 注入的无单位数值 0~1，CSS 里直接当 alpha / 强度系数用）：
+     --fc-frost = 1 → 亮色文件夹：霜化水晶，高光强、含一层乳白霜纱、外光晕柔而亮
+     --fc-depth = 1 → 暗色且无彩（黑 / 灰）：黑曜石，内壁暗角深、几乎不外发光
+     两档一起负责「纯白与纯黑看起来不一样」——白与黑没有色相可染，不能靠刷明暗硬碰。 */
+  --fc-frost: 0.5;
+  --fc-depth: 0;
+  /* 色浓度（FolderWindow.tsx 注入的无单位数值 0~1）：0 = 无彩色、1 = 高饱和彩色。
+     彩色文件夹的身体薄染按 (1 - chroma × 系数) 衰减 —— 窗口是深色玻璃里透出一点材质色，
+     而不是整窗被染满；无彩色 chroma=0，白/灰/黑的观感与调优版完全一致。 */
+  --fc-chroma: 1;
+  /* 身体薄染的衰减系数（0.62 → 高饱和彩色只剩 38% 强度） */
+  --fc-veil: calc(1 - var(--fc-chroma) * 0.62);
+  /* 受光带 / 回光带 / 窗内色晕的衰减系数（0.45 → 高饱和彩色只剩 55%） */
+  --fc-band: calc(1 - var(--fc-chroma) * 0.45);
+
+  /* ═══ 颜色当光，不当漆 ═══
+     窗口主体始终是全站统一的深色玻璃（绝不按所选色铺底，否则整窗变实色板、玻璃感全失），
+     所选色只出现在有「折射 / 反射」语义的光上，像彩色水晶而不是彩色塑料：
+       ① 棱线（描边）—— 磨亮的玻璃边，亮度跟随所选色：白得银白棱、黑得暗棱
+       ② 外圈环境光晕 —— 材质色向外溢出的柔光，黑曜石几乎不外发
+       ③ 顶部受光带 / 底部回光带 —— 光从上方进入玻璃最先照到的地方
+       ④ 窗内色晕（content 顶部径向漫射）+ 霜纱（亮色专属的乳白漫射层）
+     这四支光的强度都乘上气质档位，所以同一种光在霜化与黑曜石两种气质下表现不同。 */
+
+  /* 棱线色：饱和度按比例收敛（无彩色保持中性、不会因兜底色相 0 带出偏色），亮度跟随所选色 */
+  --fc-rim: hsl(var(--fc-hue), calc(var(--fc-sat) * 0.75),
+    clamp(30%, calc(var(--fc-lit) + 22%), 86%));
+
   background:
+    /* 材质色分层薄染：上缘略亮、中部最透、下缘微沉。
+       下限放宽到 20~30%：深色文件夹得到的是「暗色光泽」而不是被抬成中灰的灰浆
+       （lit ≥ 42 时 lit±16/-4/-14 都高于下限，数值与原调优版完全一致） */
     linear-gradient(165deg,
-      hsla(var(--fc-hue), var(--fc-sat), clamp(58%, calc(var(--fc-lit) + 16%), 80%), 0.20) 0%,
-      hsla(var(--fc-hue), var(--fc-sat), clamp(46%, calc(var(--fc-lit) - 4%), 64%), 0.06) 52%,
-      hsla(var(--fc-hue), var(--fc-sat), clamp(42%, calc(var(--fc-lit) - 14%), 62%), 0.16) 100%),
+      hsla(var(--fc-hue), var(--fc-sat), clamp(30%, calc(var(--fc-lit) + 16%), 80%), calc(0.20 * var(--fc-veil))) 0%,
+      hsla(var(--fc-hue), var(--fc-sat), clamp(26%, calc(var(--fc-lit) - 4%), 64%), calc(0.06 * var(--fc-veil))) 52%,
+      hsla(var(--fc-hue), var(--fc-sat), clamp(20%, calc(var(--fc-lit) - 14%), 62%), calc(0.16 * var(--fc-veil))) 100%),
     /* 中性提亮层：垫在材质光下、玻璃基底上，缓解暗底压沉感 */
     linear-gradient(180deg,
       rgba(186, 196, 228, 0.15) 0%,
       rgba(186, 196, 228, 0.05) 46%,
       rgba(186, 196, 228, 0.12) 100%),
+    /* 霜纱：亮色专属的乳白漫射层（黑曜石 frost=0，这层等于不存在） */
+    linear-gradient(180deg,
+      hsla(0, 0%, 100%, calc(var(--fc-frost) * 0.10)) 0%,
+      hsla(0, 0%, 100%, calc(var(--fc-frost) * 0.03)) 50%,
+      hsla(0, 0%, 100%, calc(var(--fc-frost) * 0.07)) 100%),
     var(--glass-surface-700);
   border-radius: var(--radius-lg);
-  /* 描边混入材质亮调，比纯玻璃描边更有色彩感 */
-  border: 1px solid color-mix(in srgb,
-    hsla(var(--fc-hue), var(--fc-sat), clamp(60%, calc(var(--fc-lit) + 26%), 84%), 0.52) 62%,
-    var(--glass-border));
+  /* 棱线：亮度即气质（霜化的银白棱清晰、黑曜石的暗棱几乎隐入暗处） */
+  border: 1px solid color-mix(in srgb, var(--fc-rim) 52%, transparent);
   backdrop-filter: blur(var(--glass-blur)) saturate(155%);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(155%);
   box-shadow:
-    /* 顶部内高光带一点材质色（玻璃厚度感） */
-    inset 0 1px 0 hsla(var(--fc-hue), var(--fc-sat), clamp(62%, calc(var(--fc-lit) + 24%), 84%), 0.18),
+    /* 顶部内高光（玻璃厚度感）：霜化最强，黑曜石只剩一线 */
+    inset 0 1px 0 hsla(var(--fc-hue), var(--fc-sat),
+      clamp(46%, calc(var(--fc-lit) + 26%), 90%), calc(0.10 + var(--fc-frost) * 0.26)),
     var(--glass-inner-hl),
     var(--shadow-glass-lg),
-    /* 窗外一圈低调的材质色环境光晕 */
-    0 0 90px hsla(var(--fc-hue), var(--fc-sat), clamp(40%, calc(var(--fc-lit) - 20%), 60%), 0.18);
+    /* 黑曜石内壁暗角：只有暗色无彩文件夹吃光，彩色深色文件夹不受影响 */
+    inset 0 0 64px rgba(0, 0, 0, calc(var(--fc-depth) * 0.32)),
+    /* 窗外一圈材质色环境光晕：霜化柔而亮、黑曜石几乎不外发 */
+    0 0 90px hsla(var(--fc-hue), var(--fc-sat),
+      clamp(38%, calc(var(--fc-lit) + 8%), 74%), calc(0.10 + var(--fc-frost) * 0.20));
   min-width: clamp(900px, 65%, 1800px);
   max-width: clamp(900px, 65%, 1800px);
   max-height: 80vh;
@@ -89,13 +124,16 @@
   justify-content: space-between;
   align-items: center;
   padding: clamp(14px, 1.8vw, 20px) clamp(18px, 2.2vw, 24px);
-  border-bottom: 1px solid color-mix(in srgb, var(--glass-border) 90%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--fc-rim) 34%, transparent);
   gap: clamp(10px, 1vw, 16px);
-  /* 头部 = 材质色最浓的受光带：从顶部内高光渐变到底部回归中性玻璃 */
+  /* 头部 = 受光带：光从上方进入玻璃最先照到这里。
+     亮度区间放宽后白与黑不再共用同一档灰光，叠加强度再乘气质档位 */
   background:
     linear-gradient(180deg,
-      hsla(var(--fc-hue), var(--fc-sat), clamp(60%, calc(var(--fc-lit) + 18%), 82%), 0.24) 0%,
-      hsla(var(--fc-hue), var(--fc-sat), clamp(46%, calc(var(--fc-lit) - 8%), 64%), 0.06) 100%),
+      hsla(var(--fc-hue), var(--fc-sat),
+        clamp(24%, calc(var(--fc-lit) + 20%), 88%), calc((0.12 + var(--fc-frost) * 0.16) * var(--fc-band))) 0%,
+      hsla(var(--fc-hue), var(--fc-sat),
+        clamp(22%, calc(var(--fc-lit) - 6%), 70%), calc((0.04 + var(--fc-frost) * 0.04) * var(--fc-band))) 100%),
     color-mix(in srgb, var(--glass-surface-500) 50%, transparent);
 }
 
@@ -124,6 +162,7 @@
   margin: 0;
   font-size: var(--font-xl);
   font-weight: 600;
+  /* 窗口主体保持深色玻璃 → 文字仍用全局浅色正文色，不需要按明暗翻转 */
   color: var(--text-primary);
   font-family: inherit;
   letter-spacing: 0.005em;
@@ -403,10 +442,12 @@
   max-height: calc(80vh - 80px);
   max-height: calc(80dvh - 80px);
   color: var(--text-primary);
-  /* 内容区仅留顶部一缕材质色漫射光，主体保持中性玻璃，避免影响图标观感 */
+  /* 窗内色晕：内容区仅留顶部一缕材质色漫射光，主体保持中性玻璃，避免影响图标观感。
+     亮度区间放宽（不再挤进 52%~72%）后，白得一层霜白漫散、黑几乎无光 */
   background:
     radial-gradient(130% 55% at 50% 0%,
-      hsla(var(--fc-hue), var(--fc-sat), clamp(52%, calc(var(--fc-lit) + 2%), 72%), 0.09) 0%,
+      hsla(var(--fc-hue), var(--fc-sat), clamp(40%, calc(var(--fc-lit) + 6%), 84%),
+        calc((0.04 + var(--fc-frost) * 0.12) * var(--fc-band))) 0%,
       transparent 62%);
 }
 
@@ -455,14 +496,14 @@
   justify-content: center; /* 功能动作居中（左右留白对称） */
   gap: 16px;
   padding: 16px 24px;
-  border-top: 1px solid color-mix(in srgb,
-    hsla(var(--fc-hue), var(--fc-sat), clamp(56%, calc(var(--fc-lit) + 10%), 78%), 0.26) 60%,
-    transparent);
-  /* 底部 = 材质色回光带：中部回归中性玻璃，下缘再次带上材质亮调 */
+  border-top: 1px solid color-mix(in srgb, var(--fc-rim) 30%, transparent);
+  /* 底部 = 回光带：光在底边重新亮起（同受光带，强度乘气质档位） */
   background:
     linear-gradient(180deg,
-      hsla(var(--fc-hue), var(--fc-sat), clamp(44%, calc(var(--fc-lit) - 14%), 62%), 0.05) 0%,
-      hsla(var(--fc-hue), var(--fc-sat), clamp(58%, calc(var(--fc-lit) + 14%), 80%), 0.18) 100%),
+      hsla(var(--fc-hue), var(--fc-sat), clamp(26%, calc(var(--fc-lit) - 12%), 66%),
+        calc((0.03 + var(--fc-frost) * 0.03) * var(--fc-band))) 0%,
+      hsla(var(--fc-hue), var(--fc-sat), clamp(30%, calc(var(--fc-lit) + 16%), 86%),
+        calc((0.10 + var(--fc-frost) * 0.12) * var(--fc-band))) 100%),
     color-mix(in srgb, var(--glass-surface-500) 45%, transparent);
 }
 

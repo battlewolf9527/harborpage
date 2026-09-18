@@ -123,7 +123,40 @@ class AuthService {
       }
       return false;
     } catch (error) {
-      logger.error('Failed to check authentication status', error);
+      // 请求未能发出（离线）时回落到本地 token 判断：
+      // 否则已登录设备一断网就被踢回登录页，而登录本身依赖服务端校验、离线不可能成功，
+      // 用户会被彻底挡在应用外——离线可用也就无从谈起。
+      logger.warn('Auth status check failed, falling back to local token', error);
+      return this.isTokenUsableOffline();
+    }
+  }
+
+  /**
+   * 离线时判断本地 token 是否仍可放行（只校验有效期，不验签）。
+   *
+   * 【为何不验签】
+   * 该结果只用于决定「离线时是否放行到本机镜像数据」，而本机镜像本来就在这台设备的
+   * localStorage 里，伪造 token 读不到任何额外内容；真正的鉴权仍由服务端 JWT 校验负责。
+   *
+   * 【为何不用 jose】
+   * jose 目前只被 Worker 端使用，引入客户端会把整包打进首屏 chunk；
+   * 这里只需要 exp，手工解 base64url 即可。
+   */
+  private isTokenUsableOffline(): boolean {
+    if (!this.token) return false;
+    try {
+      const payloadSegment = this.token.split('.')[1];
+      if (!payloadSegment) return false;
+      const base64 = payloadSegment.replace(/-/g, '+').replace(/_/g, '/');
+      const binary = atob(base64);
+      const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+      const payload: unknown = JSON.parse(new TextDecoder().decode(bytes));
+      const exp = (payload as { exp?: unknown }).exp;
+      // 无 exp 视为不可用，避免离线状态下无限期放行
+      if (typeof exp !== 'number') return false;
+      return exp * 1000 > Date.now();
+    } catch (error) {
+      logger.error('Failed to decode token payload', error);
       return false;
     }
   }

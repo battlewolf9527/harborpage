@@ -1,9 +1,17 @@
-import { defineConfig, type Plugin } from 'vite'
+import { defineConfig, normalizePath, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react-swc'
+import { VitePWA } from 'vite-plugin-pwa'
 
 import { cloudflare } from "@cloudflare/vite-plugin";
 import { existsSync, rmSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
+
+/**
+ * 客户端静态资源根目录（wrangler.jsonc 的 assets.directory 指向此处）。
+ * @cloudflare/vite-plugin 会把浏览器构建产物落到 dist/client/client，
+ * 而不是根配置的 build.outDir（dist/client）。
+ */
+const CLIENT_ASSET_DIR = "dist/client/client";
 
 /**
  * 从构建产物中移除 .dev.vars 文件。
@@ -128,9 +136,126 @@ function stripLegacyFonts(): Plugin {
   };
 }
 
+/**
+ * PWA / 离线支持。
+ *
+ * 【缓存策略分层】
+ * 1) 预缓存（precache）：构建产物（index.html、各 chunk、CSS、字体、图标）
+ *    全部按 revision 打进 sw.js，离线时可完整启动应用，包括 Settings / Weather
+ *    等懒加载分包。
+ * 2) 运行时缓存：仅图片走 StaleWhileRevalidate。壁纸与图标分属 R2 CDN、
+ *    cn.bing.com、unsplash 等跨域主机（无 CORS 头时为 opaque 响应），
+ *    因此 cacheableResponse 必须放行 status 0。
+ * 3) 刻意不缓存 /api/*：数据离线由 localStorage 镜像承担，
+ *    缓存 API 响应会导致换用户或删除后读到陈旧内容。
+ *
+ * 【outDir 必须显式指定】
+ * 插件默认用根配置 build.outDir（dist/client），但客户端产物实际在
+ * dist/client/client。不覆盖会同时踩两个坑：sw.js 被写到静态资源根之外
+ * （永远请求不到），且 glob 会扫到同级 Worker 产物目录 dist/client/harborpage。
+ */
+function pwaPlugin(): Plugin[] {
+  return VitePWA({
+    outDir: CLIENT_ASSET_DIR,
+    // 新 SW 就绪后直接接管并刷新，避免用户停留在旧版本
+    registerType: "autoUpdate",
+    injectRegister: "auto",
+    includeAssets: ["favicon.png"],
+    manifest: {
+      name: "HarborPage",
+      short_name: "HarborPage",
+      description: "Personal start page with bookmarks, notes, todos and weather.",
+      start_url: "/",
+      scope: "/",
+      display: "standalone",
+      background_color: "#050814",
+      theme_color: "#6366f1",
+      // 192/512 是 Chrome 判定「可安装」的硬性门槛：只声明 favicon.png（128×128）
+      // 时浏览器不会给出安装入口。两个尺寸由 favicon.png 用 lanczos3 放大生成，
+      // 与原图同一套视觉（源图内容为平滑渐变，放大后几乎没有损失）。
+      icons: [
+        {
+          src: "/pwa-192x192.png",
+          sizes: "192x192",
+          type: "image/png",
+          purpose: "any",
+        },
+        {
+          src: "/pwa-512x512.png",
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "any",
+        },
+      ],
+    },
+    workbox: {
+      globPatterns: ["**/*.{js,css,html,woff2,png,svg,ico,webmanifest}"],
+      // 防御性排除：机密文件不应进入预缓存清单（正常情况下 devVarsCleanup 已删除）
+      globIgnores: ["**/.dev.vars", "**/*.dev.vars"],
+      navigateFallbackDenylist: [/^\/api\//],
+      cleanupOutdatedCaches: true,
+      runtimeCaching: [
+        {
+          urlPattern: ({ request }) => request.destination === "image",
+          handler: "StaleWhileRevalidate",
+          options: {
+            cacheName: "harbor-images",
+            cacheableResponse: { statuses: [0, 200] },
+            expiration: { maxEntries: 200, maxAgeSeconds: 30 * 24 * 60 * 60 },
+          },
+        },
+      ],
+    },
+    // 本地 wrangler dev 不做 SW 拦截，避免开发时被缓存干扰
+    devOptions: { enabled: false },
+  });
+}
+
+/**
+ * 让 PWA 产物只落在客户端资源目录。
+ *
+ * 【问题根因】
+ * vite-plugin-pwa 的 generateBundle 对每个构建环境都会执行 emitFile，
+ * 于是 manifest.webmanifest / registerSW.js 会被同时写进 Worker 产物目录
+ * （dist/client/harborpage）。该目录在静态资源根之外，这两个文件永远请求不到，
+ * 只会污染 Worker 输出。
+ *
+ * 处理方式与 devVarsCleanup 一致：在 generateBundle 阶段从 bundle 对象里删除条目，
+ * 使其永不落盘。只对「输出目录 ≠ 客户端资源根」的环境生效。
+ *
+ * 【为何必须是 enforce: 'post' 且排在最后】
+ * vite-plugin-pwa 的构建插件自带 enforce: 'post'，其 generateBundle 在 post 阶段执行。
+ * 本插件若停留在 normal 阶段，会在 emit 之前跑完、什么都删不到；
+ * 同为 post 时按数组顺序执行，因此必须排在 pwaPlugin 之后。
+ */
+function pwaClientOnly(): Plugin {
+  let resolvedRoot = "";
+
+  return {
+    name: "pwa-client-only",
+    apply: "build",
+    enforce: "post",
+    configResolved(config) {
+      resolvedRoot = config.root;
+    },
+    generateBundle(_options, bundle) {
+      // 环境级 build.outDir 是相对于项目根的路径（如 dist\client\client），
+      // 而 config.root 可能是带正斜杠的形式，故先 resolve 再用 normalizePath 统一分隔符
+      const envOutDir = normalizePath(resolve(resolvedRoot, this.environment.config.build.outDir));
+      const clientOutDir = normalizePath(join(resolvedRoot, CLIENT_ASSET_DIR));
+      if (envOutDir === clientOutDir) return;
+      for (const fileName of Object.keys(bundle)) {
+        if (fileName === "manifest.webmanifest" || fileName === "registerSW.js") {
+          delete bundle[fileName];
+        }
+      }
+    },
+  };
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), cloudflare(), devVarsCleanup(), stripLegacyFonts()],
+  plugins: [react(), cloudflare(), devVarsCleanup(), stripLegacyFonts(), pwaPlugin(), pwaClientOnly()],
   server: {
     port: 5173,
     proxy: {
