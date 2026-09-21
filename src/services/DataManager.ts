@@ -1,4 +1,4 @@
-import type { UserData, Website, SearchEngine, Todo, Note, Settings, WallpaperType, Page, PaletteHexMap, PaletteAliasMap, PaletteScheme } from '../types';
+import type { UserData, Website, SearchEngine, Todo, Note, Settings, WallpaperType, WallpaperData, Page, PaletteHexMap, PaletteAliasMap, PaletteScheme } from '../types';
 import ChangeTracker from './ChangeTracker';
 import DataRepository from './DataRepository';
 import NotesRepository from './NotesRepository';
@@ -30,6 +30,7 @@ class DataManager {
     const localData = DataRepository.loadFromLocal();
     if (localData) {
       this.data = localData;
+      this.stripWallpaperDeviceState();
       ChangeTracker.loadState();
       await this.reconcileNotesOnInit();
       return;
@@ -38,6 +39,7 @@ class DataManager {
     const apiData = await DataRepository.loadFromAPI();
     if (apiData) {
       this.data = apiData;
+      this.stripWallpaperDeviceState();
       DataRepository.flushLocal(this.data);
       ChangeTracker.clearAll();
     }
@@ -130,6 +132,7 @@ class DataManager {
 
   public setData(data: UserData): void {
     this.data = data;
+    this.stripWallpaperDeviceState();
     ChangeTracker.clearAll();
   }
 
@@ -291,6 +294,18 @@ class DataManager {
     DataRepository.saveToLocal(this.data);
   }
 
+  /**
+   * 移除旧数据里遗留的壁纸计时锚点字段。
+   * 该字段表达的是「这台设备上次换图的时间」，属本机状态（现由 useWallpaperStore 存 localStorage），
+   * 不再随 wallpaper 入云；历史数据里可能残留，加载时清掉，避免它继续跟着 wallpaper 被上传。
+   */
+  private stripWallpaperDeviceState(): void {
+    const current = this.data.wallpaper;
+    if (!current || !('lastAutoChangeAt' in current)) return;
+    const { lastAutoChangeAt: _legacy, ...rest } = current as WallpaperData & { lastAutoChangeAt?: number };
+    this.data = { ...this.data, wallpaper: rest };
+  }
+
   private updateSettingsField<K extends keyof Settings>(field: K, value: Settings[K]): void {
     this.updateData('settings', () => {
       this.data = {
@@ -398,18 +413,6 @@ class DataManager {
         wallpaper: current
           ? { ...current, autoChangeEnabled, autoChangeIntervalHours }
           : { url: null, type: 'gradient', autoChangeEnabled, autoChangeIntervalHours },
-      };
-    });
-  }
-
-  public updateWallpaperLastChangeAt(lastAutoChangeAt: number): void {
-    this.updateData('wallpaper', () => {
-      const current = this.data.wallpaper;
-      this.data = {
-        ...this.data,
-        wallpaper: current
-          ? { ...current, lastAutoChangeAt }
-          : { url: null, type: 'gradient', lastAutoChangeAt },
       };
     });
   }

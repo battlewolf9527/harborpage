@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import type { WallpaperData, WallpaperType } from '../types';
 import { setupAutoPersist } from './persistence';
 import { getServices } from '../services/serviceContainer';
+import DataRepository from '../services/DataRepository';
+import { STORAGE_KEYS } from '../constants';
 import { loadLocalWallpaper } from '../utils/wallpaperStorage';
 
 interface WallpaperState {
@@ -14,7 +16,7 @@ interface WallpaperState {
   autoChangeEnabled: boolean;
   /** 自动更换间隔（小时） */
   autoChangeIntervalHours: number;
-  /** 最近一次壁纸切换时间戳，作为自动更换计时的锚点 */
+  /** 最近一次壁纸切换时间戳，作为自动更换计时的锚点（本机状态，只存本地） */
   lastAutoChangeAt: number;
 
   setWallpaper: (wallpaper: string | null, type: WallpaperType) => void;
@@ -28,6 +30,22 @@ interface WallpaperState {
   initialize: (wallpaperData?: WallpaperData) => void;
 }
 
+/**
+ * 读取本机记录的自动更换计时锚点。
+ * 锚点表达的是「这台设备上次换图的时间」，属本机状态而非用户配置：
+ * 存本地即可满足刷新后继续计时，入云没有意义（换设备后图源本就重新拉取），
+ * 且会平白触发一次「未保存」提示。读不到时返回 0，表示尚未换过。
+ */
+const readLastAutoChangeAt = (): number => {
+  const raw = Number(DataRepository.loadConfigValue(STORAGE_KEYS.WALLPAPER_LAST_AUTO_CHANGE));
+  return Number.isFinite(raw) && raw > 0 ? raw : 0;
+};
+
+/** 写入本机计时锚点（不入云、不触发变更标记；写入失败静默忽略） */
+const persistLastAutoChangeAt = (timestamp: number): void => {
+  DataRepository.saveConfigValue(STORAGE_KEYS.WALLPAPER_LAST_AUTO_CHANGE, String(timestamp));
+};
+
 const initialState: Omit<WallpaperState, 'setWallpaper' | 'setWallpaperSilent' | 'setBlurLevel' | 'setOverlayLevel' | 'setSolidColor' | 'setAutoChangeEnabled' | 'setAutoChangeIntervalHours' | 'initialize'> = {
   wallpaper: null,
   wallpaperType: 'gradient',
@@ -36,7 +54,7 @@ const initialState: Omit<WallpaperState, 'setWallpaper' | 'setWallpaperSilent' |
   solidColor: '#667eea',
   autoChangeEnabled: false,
   autoChangeIntervalHours: 24,
-  lastAutoChangeAt: 0,
+  lastAutoChangeAt: readLastAutoChangeAt(),
 };
 
 export const useWallpaperStore = create<WallpaperState>((set, get) => ({
@@ -44,11 +62,13 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
 
   setWallpaper: (wallpaper, type) => {
     const { autoChangeEnabled } = get();
+    // 自动更换开启时，任何一次切换都重置锚点，从该时刻起重新计时
+    const anchor = autoChangeEnabled ? Date.now() : null;
+    if (anchor !== null) persistLastAutoChangeAt(anchor);
     set({
       wallpaper,
       wallpaperType: type,
-      // 自动更换开启时，任何一次切换都重置锚点，从该时刻起重新计时
-      ...(autoChangeEnabled ? { lastAutoChangeAt: Date.now() } : {}),
+      ...(anchor !== null ? { lastAutoChangeAt: anchor } : {}),
     });
   },
 
@@ -71,11 +91,14 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
   },
 
   setAutoChangeEnabled: (enabled) => {
-    set(() => ({
-      autoChangeEnabled: enabled,
-      // 开启时重置锚点，保证从开启时刻起满一个间隔后才首次更换
-      ...(enabled ? { lastAutoChangeAt: Date.now() } : {}),
-    }));
+    if (!enabled) {
+      set({ autoChangeEnabled: false });
+      return;
+    }
+    // 开启时重置锚点，保证从开启时刻起满一个间隔后才首次更换
+    const anchor = Date.now();
+    persistLastAutoChangeAt(anchor);
+    set({ autoChangeEnabled: true, lastAutoChangeAt: anchor });
   },
 
   setAutoChangeIntervalHours: (hours) => {
@@ -97,7 +120,7 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
         solidColor: wallpaperData.solidColor || '#667eea',
         autoChangeEnabled: wallpaperData.autoChangeEnabled ?? false,
         autoChangeIntervalHours: wallpaperData.autoChangeIntervalHours ?? 24,
-        lastAutoChangeAt: wallpaperData.lastAutoChangeAt ?? 0,
+        // 计时锚点不随 wallpaperData 入云，保留本机 localStorage 中的值
       });
       // 如果是 IndexedDB 标记，异步加载实际 data URL
       if (wallpaper === 'indexeddb://wallpaper') {
@@ -160,5 +183,5 @@ setupAutoPersist(useWallpaperStore, [
   { key: 'solidColor', persist: (v) => getDM().updateSolidColor(v as string) },
   { key: 'autoChangeEnabled', persist: persistAutoChangeSettings },
   { key: 'autoChangeIntervalHours', persist: persistAutoChangeSettings },
-  { key: 'lastAutoChangeAt', persist: (v) => getDM().updateWallpaperLastChangeAt(v as number) },
+  // lastAutoChangeAt 是本机计时锚点，由 persistLastAutoChangeAt 单独写 localStorage，不走云端
 ]);

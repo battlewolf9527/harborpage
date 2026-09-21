@@ -112,8 +112,6 @@ export interface WallpaperData extends VisualSettings {
   autoChangeEnabled?: boolean;
   /** 自动更换间隔（小时） */
   autoChangeIntervalHours?: number;
-  /** 最近一次壁纸切换时间戳，作为自动更换计时的锚点 */
-  lastAutoChangeAt?: number;
 }
 
 // Favicon源配置（可自定义的favicon下载源）

@@ -60,7 +60,7 @@ function syncToDataManager(): void {
     const w = useWallpaperStore.getState();
     dataManager.updateWallpaper(w.wallpaper, w.wallpaperType);
     dataManager.updateWallpaperAutoChange(w.autoChangeEnabled, w.autoChangeIntervalHours);
-    dataManager.updateWallpaperLastChangeAt(w.lastAutoChangeAt);
+    // lastAutoChangeAt 是本机计时锚点（存 localStorage），不同步进 DataManager
     if (w.solidColor) dataManager.updateSolidColor(w.solidColor);
     if (w.blurLevel !== undefined) dataManager.updateBlurLevel(w.blurLevel);
     if (w.overlayLevel !== undefined) dataManager.updateOverlayLevel(w.overlayLevel);

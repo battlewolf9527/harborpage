@@ -25,6 +25,8 @@ export const STORAGE_KEYS = {
   LIGHTNESS_PREVIEW_ENABLED: `${STORAGE_PREFIX}lightnessPreviewEnabled`,
   /** 本浏览器最后一次应用的配色方案 id（本机 UI 偏好，不入云；用于下拉框的选中项识别） */
   ACTIVE_SCHEME_ID: `${STORAGE_PREFIX}activeSchemeId`,
+  /** 本浏览器最近一次自动更换壁纸的时间戳（本机计时锚点，不入云） */
+  WALLPAPER_LAST_AUTO_CHANGE: `${STORAGE_PREFIX}wallpaperLastAutoChange`,
   /** 本浏览器是否已确认笔记分片存储格式（确认后才允许从本地镜像剥离正文） */
   NOTES_SHARDED: `${STORAGE_PREFIX}notesSharded`,
   /** 本浏览器确认已存在于云端索引的笔记 id（启动对账用，避免误删从未上云的本地新笔记） */

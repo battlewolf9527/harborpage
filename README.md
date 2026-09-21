@@ -131,7 +131,7 @@ Windows and dialogs:
 - Local image upload (R2 or IndexedDB fallback storage)
 - Blur and overlay opacity adjustment
 - Wallpaper proxy support (with domain allowlist restriction)
-- Automatic scheduled rotation: enable it and set a 1–24 hour interval (only effective for Bing daily / random Bing / custom URL, with `lastAutoChangeAt` as the anchor for the countdown)
+- Automatic scheduled rotation: enable it and set a 1–24 hour interval (only effective for Bing daily / random Bing / custom URL; the countdown anchor is stored locally and never synced to the cloud)
 
 ### 📤 Data Import/Export
 - Categorized export: search engines, pages (including websites), websites (old format), todo list, notes, other settings, palette
