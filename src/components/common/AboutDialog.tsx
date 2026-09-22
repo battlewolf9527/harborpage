@@ -2,7 +2,8 @@ import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import './AboutDialog.css';
 
-/** 构建期由 vite.config.ts 的 define 注入；取不到 git/CI 信息时为空串 */
+/** 构建期由 vite.config.ts 的 define 注入；取不到版本/提交号时为空串 */
+declare const __APP_VERSION__: string;
 declare const __BUILD_COMMIT__: string;
 declare const __BUILD_TIME__: string;
 
@@ -118,6 +119,9 @@ const AboutDialog: React.FC<AboutDialogProps> = ({ isOpen, onClose }) => {
             </a>
             <span className="about-dialog-build-info">
               <span className="about-dialog-build-label">{t('build')}</span>
+              {__APP_VERSION__ ? (
+                <span className="about-dialog-build-version">v{__APP_VERSION__}</span>
+              ) : null}
               {__BUILD_COMMIT__ ? (
                 <code className="about-dialog-build-commit">{__BUILD_COMMIT__}</code>
               ) : null}

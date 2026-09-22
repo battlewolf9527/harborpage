@@ -4,7 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 import { cloudflare } from "@cloudflare/vite-plugin";
 import { execSync } from "node:child_process";
-import { existsSync, rmSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, readdirSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 /**
@@ -36,7 +36,18 @@ function resolveBuildCommit(): string {
   }
 }
 
+/** 读取 package.json 的版本号（直接读文件，不依赖 npm 脚本注入的环境变量） */
+function resolveAppVersion(): string {
+  try {
+    const raw = readFileSync(new URL("./package.json", import.meta.url), "utf8");
+    return (JSON.parse(raw) as { version?: string }).version ?? "";
+  } catch {
+    return "";
+  }
+}
+
 // 构建期常量：构建一次固定，随产物打进前端（类型声明见 AboutDialog.tsx）
+const APP_VERSION = resolveAppVersion();
 const BUILD_COMMIT = resolveBuildCommit();
 const BUILD_TIME = new Date().toISOString();
 
@@ -285,6 +296,7 @@ export default defineConfig({
   plugins: [react(), cloudflare(), devVarsCleanup(), stripLegacyFonts(), pwaPlugin(), pwaClientOnly()],
   define: {
     // About 弹窗展示的构建版本信息
+    __APP_VERSION__: JSON.stringify(APP_VERSION),
     __BUILD_COMMIT__: JSON.stringify(BUILD_COMMIT),
     __BUILD_TIME__: JSON.stringify(BUILD_TIME),
   },

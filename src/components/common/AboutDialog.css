@@ -220,7 +220,7 @@
   font-size: var(--font-xs);
 }
 
-/* 构建版本信息：提交短 ID + 构建时间 */
+/* 构建版本信息：版本号 + 提交短 ID + 构建时间 */
 .about-dialog-build-info {
   display: inline-flex;
   align-items: center;
@@ -228,6 +228,15 @@
   color: var(--text-quaternary);
   font-size: var(--font-xs);
   min-width: 0;
+}
+.about-dialog-build-version {
+  padding: 1px 8px;
+  border: 1px solid color-mix(in srgb, var(--aurora-2) 28%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--aurora-2) 14%, transparent);
+  color: color-mix(in srgb, var(--aurora-2) 85%, #fff);
+  font-size: var(--font-xs);
+  font-weight: 600;
 }
 .about-dialog-build-commit {
   padding: 1px 6px;
