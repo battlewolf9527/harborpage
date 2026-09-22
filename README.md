@@ -1,5 +1,7 @@
 # HarborPage - Personal Navigation Page
 
+[中文](README_CN.md) | [English](README.md)
+
 A modern personal navigation page built with React + Vite + Cloudflare Workers, supporting website icon management, folder categorization, search engine switching, weather display, to-do lists, notes, data import/export, and more, with a built-in Simplified Chinese / English bilingual interface.
 
 ## 📸 Interface Preview

@@ -1,5 +1,7 @@
 # HarborPage - 个人导航页面
 
+[中文](README_CN.md) | [English](README.md)
+
 一个基于 React + Vite + Cloudflare Workers 构建的现代化个人导航页面，支持网站图标管理、文件夹分类、搜索引擎切换、天气显示、待办事项、笔记、数据导入导出等功能，并内置简体中文 / English 双语界面。
 
 ## 📸 界面预览
