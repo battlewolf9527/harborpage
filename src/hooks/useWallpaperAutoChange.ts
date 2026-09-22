@@ -28,16 +28,17 @@ export function useWallpaperAutoChange(isAuthenticated: boolean, isCheckingAuth:
       if (disposed) return;
       const state = useWallpaperStore.getState();
       const type = state.wallpaperType;
+      // 一律走 setWallpaperByAutoChange：只改本机运行时壁纸并刷新本机锚点，
+      // 不写云端，因此不会弹出「未保存」提示
       if (type === 'bing') {
         const url = await fetchBingWallpaperUrl(state.wallpaper);
         if (disposed) return;
-        // setWallpaper 会刷新锚点（lastAutoChangeAt），下一轮据此重新计时
-        state.setWallpaper(url, 'bing');
+        state.setWallpaperByAutoChange(url, 'bing');
       } else if (type === 'randomBing') {
-        state.setWallpaper(getRandomBingWallpaperUrl(), 'randomBing');
+        state.setWallpaperByAutoChange(getRandomBingWallpaperUrl(), 'randomBing');
       } else if (type === 'custom' && state.wallpaper) {
         // 自定义地址可能指向动态图源（如 picsum），追加缓存破坏参数强制重新拉取
-        state.setWallpaper(addCacheBustToUrl(state.wallpaper), 'custom');
+        state.setWallpaperByAutoChange(addCacheBustToUrl(state.wallpaper), 'custom');
       }
       scheduleNext();
     };

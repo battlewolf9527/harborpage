@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react-swc'
 import { VitePWA } from 'vite-plugin-pwa'
 
 import { cloudflare } from "@cloudflare/vite-plugin";
+import { execSync } from "node:child_process";
 import { existsSync, rmSync, readdirSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 
@@ -12,6 +13,32 @@ import { join, resolve } from "node:path";
  * 而不是根配置的 build.outDir（dist/client）。
  */
 const CLIENT_ASSET_DIR = "dist/client/client";
+
+/**
+ * 解析构建对应的提交短 ID，供 About 弹窗展示当前部署版本。
+ *
+ * 优先取本机 git（即工作树当前提交）；无 .git 的环境（产物目录内构建、
+ * 部分 CI 的浅克隆）回退到平台注入的环境变量；仍取不到则返回空串，
+ * 由 UI 自行省略该段，不影响构建。
+ */
+function resolveBuildCommit(): string {
+  try {
+    return execSync("git rev-parse --short HEAD", {
+      stdio: ["ignore", "pipe", "ignore"],
+    }).toString().trim();
+  } catch {
+    const fromEnv =
+      process.env.WORKERS_CI_COMMIT_SHA ??
+      process.env.CF_PAGES_COMMIT_SHA ??
+      process.env.GITHUB_SHA ??
+      "";
+    return fromEnv.slice(0, 7);
+  }
+}
+
+// 构建期常量：构建一次固定，随产物打进前端（类型声明见 AboutDialog.tsx）
+const BUILD_COMMIT = resolveBuildCommit();
+const BUILD_TIME = new Date().toISOString();
 
 /**
  * 从构建产物中移除 .dev.vars 文件。
@@ -256,6 +283,11 @@ function pwaClientOnly(): Plugin {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), cloudflare(), devVarsCleanup(), stripLegacyFonts(), pwaPlugin(), pwaClientOnly()],
+  define: {
+    // About 弹窗展示的构建版本信息
+    __BUILD_COMMIT__: JSON.stringify(BUILD_COMMIT),
+    __BUILD_TIME__: JSON.stringify(BUILD_TIME),
+  },
   server: {
     port: 5173,
     proxy: {

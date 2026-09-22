@@ -220,6 +220,29 @@
   font-size: var(--font-xs);
 }
 
+/* 构建版本信息：提交短 ID + 构建时间 */
+.about-dialog-build-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-quaternary);
+  font-size: var(--font-xs);
+  min-width: 0;
+}
+.about-dialog-build-commit {
+  padding: 1px 6px;
+  border: var(--glass-border-subtle);
+  border-radius: var(--radius-xs);
+  background: var(--glass-surface-300);
+  color: var(--text-tertiary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--font-xs);
+  letter-spacing: 0.2px;
+}
+.about-dialog-build-time {
+  white-space: nowrap;
+}
+
 /* 底部：按钮 */
 .about-dialog-buttons {
   display: flex;

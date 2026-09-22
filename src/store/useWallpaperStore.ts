@@ -22,6 +22,12 @@ interface WallpaperState {
   setWallpaper: (wallpaper: string | null, type: WallpaperType) => void;
   /** 静默更新壁纸（不触发持久化），用于自动刷新 Bing/随机壁纸 */
   setWallpaperSilent: (wallpaper: string | null, type: WallpaperType) => void;
+  /**
+   * 系统自动更换壁纸：只改本机运行时壁纸并刷新本机计时锚点，
+   * 不写云端（因此不触发「未保存」提示）。远程类型的 URL 本就每次重新拉取、云端不会被复用，
+   * 自定义地址的 cache-bust 参数也只是运行时需要，故无需入云。
+   */
+  setWallpaperByAutoChange: (wallpaper: string | null, type: WallpaperType) => void;
   setBlurLevel: (blurLevel: number) => void;
   setOverlayLevel: (overlayLevel: number) => void;
   setSolidColor: (color: string) => void;
@@ -46,7 +52,7 @@ const persistLastAutoChangeAt = (timestamp: number): void => {
   DataRepository.saveConfigValue(STORAGE_KEYS.WALLPAPER_LAST_AUTO_CHANGE, String(timestamp));
 };
 
-const initialState: Omit<WallpaperState, 'setWallpaper' | 'setWallpaperSilent' | 'setBlurLevel' | 'setOverlayLevel' | 'setSolidColor' | 'setAutoChangeEnabled' | 'setAutoChangeIntervalHours' | 'initialize'> = {
+const initialState: Omit<WallpaperState, 'setWallpaper' | 'setWallpaperSilent' | 'setWallpaperByAutoChange' | 'setBlurLevel' | 'setOverlayLevel' | 'setSolidColor' | 'setAutoChangeEnabled' | 'setAutoChangeIntervalHours' | 'initialize'> = {
   wallpaper: null,
   wallpaperType: 'gradient',
   blurLevel: 0,
@@ -75,6 +81,14 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
   setWallpaperSilent: (wallpaper, type) => {
     suppressWallpaperPersist = true;
     set({ wallpaper, wallpaperType: type });
+    suppressWallpaperPersist = false;
+  },
+
+  setWallpaperByAutoChange: (wallpaper, type) => {
+    const anchor = Date.now();
+    persistLastAutoChangeAt(anchor);
+    suppressWallpaperPersist = true;
+    set({ wallpaper, wallpaperType: type, lastAutoChangeAt: anchor });
     suppressWallpaperPersist = false;
   },
 
@@ -142,7 +156,7 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
 
 const getDM = () => getServices().dataManager;
 
-/** 抑制壁纸持久化标志，用于 setWallpaperSilent 阻止自动刷新触发未保存提示 */
+/** 抑制壁纸持久化标志，用于 setWallpaperSilent / setWallpaperByAutoChange 阻止自动刷新触发未保存提示 */
 let suppressWallpaperPersist = false;
 
 // 防抖持久化壁纸状态（wallpaper 和 wallpaperType 应该一起更新）
